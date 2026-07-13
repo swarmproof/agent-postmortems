@@ -28,7 +28,7 @@ Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml), fill it in, and o
 
 Each incident becomes a [stampede](https://github.com/swarmproof/stampede) chaos scenario, a [costbomb](https://github.com/swarmproof/costbomb) fuzz seed, and evidence for the trust thesis — *"replay last month's real incidents against your stack."*
 
-## Part of the Agent Reliability toolkit
+## Part of the Swarm Proof toolkit
 
 *Trust infrastructure for the agent economy — seven projects, one thesis.*
 
