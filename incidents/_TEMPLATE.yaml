@@ -1,0 +1,18 @@
+incident_id: YYYY-short-slug
+date: YYYY-MM-DD
+system:
+  framework: ""          # e.g. LangGraph, CrewAI, custom
+  models: []             # e.g. ["gpt-4o", "claude-haiku"]
+  tools: []              # e.g. ["whatsapp-mcp", "stripe"]
+failure_class: other     # runaway-loop | tool-misuse | prompt-injection | double-side-effect | cost-blowup | data-exfiltration | unsafe-action | other
+trigger: ""              # what set it off
+blast_radius:
+  cost_usd: null
+  data: ""               # what data was exposed/lost, if any
+  user_harm: ""          # who was harmed and how
+root_cause: ""
+detection: ""            # how it was noticed
+recovery: ""             # how it was stopped/fixed
+prevention: ""           # what would stop a recurrence
+sources:                 # REQUIRED — public, linkable. No rumors, no speculation.
+  - "https://"
