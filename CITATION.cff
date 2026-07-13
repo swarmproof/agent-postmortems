@@ -5,8 +5,8 @@ abstract: "A structured incident database + post-mortem standard for agent failu
 authors:
   - family-names: Boudoukha
     given-names: Maroua
-repository-code: "https://github.com/AgentReliability/agent-postmortems"
-url: "https://github.com/AgentReliability/agent-postmortems"
+repository-code: "https://github.com/swarmproof/agent-postmortems"
+url: "https://github.com/swarmproof/agent-postmortems"
 license: Apache-2.0
 type: software
 keywords:

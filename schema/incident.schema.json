@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/AgentReliability/agent-postmortems/schema/incident.schema.json",
+  "$id": "https://github.com/swarmproof/agent-postmortems/schema/incident.schema.json",
   "title": "Agent Incident Post-Mortem",
   "type": "object",
   "required": ["incident_id", "date", "system", "failure_class", "trigger", "blast_radius", "root_cause", "detection", "recovery", "prevention", "sources"],

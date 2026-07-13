@@ -26,7 +26,7 @@ Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml), fill it in, and o
 
 ## How it feeds the toolkit
 
-Each incident becomes a [stampede](https://github.com/AgentReliability/stampede) chaos scenario, a [costbomb](https://github.com/AgentReliability/costbomb) fuzz seed, and evidence for the trust thesis — *"replay last month's real incidents against your stack."*
+Each incident becomes a [stampede](https://github.com/swarmproof/stampede) chaos scenario, a [costbomb](https://github.com/swarmproof/costbomb) fuzz seed, and evidence for the trust thesis — *"replay last month's real incidents against your stack."*
 
 ## Part of the Agent Reliability toolkit
 
@@ -34,13 +34,13 @@ Each incident becomes a [stampede](https://github.com/AgentReliability/stampede)
 
 | Project | What it does |
 |---------|--------------|
-| [stampede](https://github.com/AgentReliability/stampede) | Point a herd of realistic agents at your system before real ones arrive |
-| [mockworld](https://github.com/AgentReliability/mockworld) | A synthetic internet for agents — fake Stripe, Gmail, exchange, instantly |
-| [mcp-probe](https://github.com/AgentReliability/mcp-probe) | The CI quality suite for MCP servers — lint, contract-test, benchmark, load |
-| [costbomb](https://github.com/AgentReliability/costbomb) | Denial-of-wallet fuzzing — find the inputs that make your agent spend $500 |
-| [exactly-once](https://github.com/AgentReliability/exactly-once) | Idempotency middleware so agent side-effects fire once |
+| [stampede](https://github.com/swarmproof/stampede) | Point a herd of realistic agents at your system before real ones arrive |
+| [mockworld](https://github.com/swarmproof/mockworld) | A synthetic internet for agents — fake Stripe, Gmail, exchange, instantly |
+| [mcp-probe](https://github.com/swarmproof/mcp-probe) | The CI quality suite for MCP servers — lint, contract-test, benchmark, load |
+| [costbomb](https://github.com/swarmproof/costbomb) | Denial-of-wallet fuzzing — find the inputs that make your agent spend $500 |
+| [exactly-once](https://github.com/swarmproof/exactly-once) | Idempotency middleware so agent side-effects fire once |
 | **agent-postmortems** ← *you are here* | A structured incident database + post-mortem standard for agent failures |
-| [awesome-agent-reliability](https://github.com/AgentReliability/awesome-agent-reliability) | The curated map of the field |
+| [awesome-agent-reliability](https://github.com/swarmproof/awesome-agent-reliability) | The curated map of the field |
 
 ## License
 
