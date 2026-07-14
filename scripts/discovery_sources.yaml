@@ -1,0 +1,47 @@
+# Discovery sources for the weekly curation pipeline (scripts/discover_incidents.py).
+# All sources are keyless and public. Add/remove feeds here — no code change needed.
+
+# Google News RSS queries. Each becomes news.google.com/rss/search?q=<query>.
+# Keep queries agent-action-oriented (the engineering lens), not generic "AI news".
+google_news_queries:
+  - '"AI agent" (deleted OR wiped OR leaked OR "prompt injection")'
+  - '"AI chatbot" (lawsuit OR hallucinated OR "made up" OR rogue)'
+  - '"MCP server" (vulnerability OR exfiltration OR "tool poisoning")'
+  - '"coding agent" (deleted files OR "production database" OR destructive)'
+  - '"AI agent" (denial of wallet OR runaway OR "cost blowup" OR overspend)'
+  - 'autonomous agent (misuse OR jailbreak OR "reward hacking")'
+
+# arXiv API category+keyword searches (for hazards / demonstrated PoCs).
+arxiv_queries:
+  - 'all:"prompt injection" AND (cat:cs.CR OR cat:cs.AI)'
+  - 'all:"agent" AND all:"tool" AND cat:cs.CR'
+  - 'all:"LLM agent" AND all:"security"'
+
+# Plain RSS/Atom feeds from primary-research sources worth watching.
+# (Only feeds that exist and are stable; failures are non-fatal.)
+rss_feeds:
+  - "https://simonwillison.net/atom/everything/"
+
+# Relevance keywords — a candidate's score is the count of these it matches in
+# its title/summary. Used only to rank; humans still decide.
+relevance_keywords:
+  - agent
+  - agentic
+  - autonomous
+  - chatbot
+  - copilot
+  - mcp
+  - "tool"
+  - "prompt injection"
+  - jailbreak
+  - exfiltration
+  - "data leak"
+  - deleted
+  - wiped
+  - destructive
+  - "reward hacking"
+  - hallucinat
+  - runaway
+  - "denial of wallet"
+  - overspend
+  - supply chain
