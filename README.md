@@ -42,6 +42,11 @@ Each incident becomes a [stampede](https://github.com/swarmproof/stampede) chaos
 | **agent-postmortems** ← *you are here* | A structured incident database + post-mortem standard for agent failures |
 | [awesome-agent-reliability](https://github.com/swarmproof/awesome-agent-reliability) | The curated map of the field |
 
-## License
+## Licensing
 
-[Apache-2.0](./LICENSE). Citable via [`CITATION.cff`](./CITATION.cff).
+This project is dual-licensed to separate the tooling from the corpus:
+
+- **Code** (schema, validators, scripts, site) — [Apache-2.0](./LICENSE).
+- **Incident data & schema content** (the `incidents/` corpus and `SCHEMA.md`) — [CC-BY-4.0](./LICENSE-DATA). Reuse freely with attribution.
+
+Citable via [`CITATION.cff`](./CITATION.cff).
