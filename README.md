@@ -4,7 +4,7 @@
 
 > A public, structured database of real agent failures in the wild — plus a post-mortem *standard* for reporting them. Each team relearns the same failures privately; this makes the field's mistakes legible so they stop recurring.
 
-> **Status:** 📖 v0. Standard first, then seeded incidents. Ships in the first wave.
+> **Status:** ✅ v1 live. Standard + taxonomy + rigor CI + 18 sourced incidents + machine-readable export. Site is the next wave.
 
 ---
 
@@ -14,19 +14,19 @@ Agents fail in production in novel, repeating ways — runaway loops, tool misus
 
 ## The post-mortem standard
 
-Every incident conforms to the schema in [`SCHEMA.md`](./SCHEMA.md) (JSON Schema in [`schema/incident.schema.json`](./schema/incident.schema.json)), validated in CI:
+Every incident is one YAML file conforming to [`schema/incident.schema.json`](./schema/incident.schema.json) (draft 2020-12), documented in [`SCHEMA.md`](./SCHEMA.md) and validated fail-closed in CI. The record carries a small required core — `incident_id` · `title` · `date` · `incident_type` · `system` · `primary_failure_class` · `failure_classes` · `trigger` · `blast_radius` · `root_cause` · `detection` · `recovery` · `prevention` · `sources` — plus an optional body (`severity`, `confidence`, `causation`, `attack_vector`, `timeline`, cross-references, and more).
 
-`incident_id` · `date` · `system` (framework/models/tools) · `failure_class` (taxonomy) · `trigger` · `blast_radius` (cost / data / user harm) · `root_cause` · `detection` · `recovery` · `prevention` · `sources`.
+Failures are classified as an ordered causal **chain** against the versioned taxonomy in [`TAXONOMY.md`](./TAXONOMY.md) (authority file: [`schema/taxonomy.yaml`](./schema/taxonomy.yaml)). Realized incidents and demonstrated hazards/near-misses are both recorded, labeled honestly via `incident_type`.
 
-**The one rule:** every incident needs a public, linkable source. No rumors, no speculation, no editorializing. Report failures factually; name systems without attacking them. The trust brand depends on this rigor.
+**The one rule:** every incident needs a public, linkable source. No rumors, no speculation, no editorializing. Report failures factually; name systems without attacking them. The trust brand depends on this rigor — and CI enforces it (schema, taxonomy, id-uniqueness, link-liveness, and a neutrality lint).
 
 ## Contribute an incident
 
-Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml), fill it in, and open a PR. CI validates it against the schema. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml), fill it in, validate locally with `uv run scripts/validate.py`, and open a PR. The PR template carries the sourcing + neutrality checklist; CI runs every gate. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## How it feeds the toolkit
 
-Each incident becomes a [stampede](https://github.com/swarmproof/stampede) chaos scenario, a [costbomb](https://github.com/swarmproof/costbomb) fuzz seed, and evidence for the trust thesis — *"replay last month's real incidents against your stack."*
+CI regenerates a machine-readable export under [`export/`](./export/): the full corpus (`incidents.json`), a [stampede](https://github.com/swarmproof/stampede) chaos-scenario feed (`scenarios.json`), and a [costbomb](https://github.com/swarmproof/costbomb) denial-of-wallet seed feed (`seeds.json`) — the contract behind *"replay last month's real incidents against your stack."* Export shapes are natural-language triggers, never runnable exploit payloads.
 
 ## Part of the Swarm Proof toolkit
 
