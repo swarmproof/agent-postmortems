@@ -24,6 +24,10 @@ Failures are classified as an ordered causal **chain** against the versioned tax
 
 Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml), fill it in, validate locally with `uv run scripts/validate.py`, and open a PR. The PR template carries the sourcing + neutrality checklist; CI runs every gate. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
+## Automated discovery
+
+A weekly workflow finds new and not-yet-documented agent incidents and files them for review — **it automates the toil (discovery, de-dup, drafting, validation) but never merges anything without a human**. Layer 1 opens a ranked "candidate incidents" issue with zero setup; Layer 2 (opt-in, set an `ANTHROPIC_API_KEY` secret) has Claude draft schema-valid records into review PRs. See [`docs/CURATION-PIPELINE.md`](./docs/CURATION-PIPELINE.md).
+
 ## How it feeds the toolkit
 
 CI regenerates a machine-readable export under [`export/`](./export/): the full corpus (`incidents.json`), a [stampede](https://github.com/swarmproof/stampede) chaos-scenario feed (`scenarios.json`), and a [costbomb](https://github.com/swarmproof/costbomb) denial-of-wallet seed feed (`seeds.json`) — the contract behind *"replay last month's real incidents against your stack."* Export shapes are natural-language triggers, never runnable exploit payloads.

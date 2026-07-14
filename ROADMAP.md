@@ -10,6 +10,7 @@
 - ⬜ Announce via a Trust Layer issue: "We Need Post-Mortems for Agents"
 
 ## Ongoing cadence
+- ✅ Weekly automated discovery pipeline: finds new/undocumented incidents, de-dupes, and files them for human review — never auto-merges (`docs/CURATION-PIPELINE.md`)
 - Add one incident per notable public failure (steady, low-effort, permanent)
 - Weekly scheduled link re-check; open issues on rot, never auto-delete (ADR-0008)
 - Monthly export refresh
