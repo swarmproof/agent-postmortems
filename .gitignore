@@ -7,3 +7,6 @@ _site/
 
 # local agent guidance — do not publish
 CLAUDE.md
+
+# internal planning & strategy — never publish to the public repo
+planning/

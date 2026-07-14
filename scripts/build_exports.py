@@ -5,15 +5,15 @@
 # ///
 """Build the machine-readable export contract from incidents/*.yaml.
 
-Produces three artifacts (ARCHITECTURE.md section 7), each versioned and validated
+Produces three artifacts, each versioned and validated
 against schema/export/*.schema.json:
   export/incidents.json  full corpus (researcher dataset)          — REQ-A1
   export/scenarios.json  stampede replayable-chaos contract         — REQ-A2
   export/seeds.json      costbomb denial-of-wallet fuzz contract    — REQ-A3
 
-Safety boundary (NG5): scenarios/seeds carry natural-language trigger/seed *shapes*
+Safety boundary: scenarios/seeds carry natural-language trigger/seed *shapes*
 and success criteria, never runnable exploit payloads. A lint refuses to emit an
-entry whose shape contains a fenced code block or obvious payload markers (TS-23).
+entry whose shape contains a fenced code block or obvious payload markers.
 
 Usage:
   uv run scripts/build_exports.py            # write export/*.json

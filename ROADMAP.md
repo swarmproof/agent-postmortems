@@ -1,21 +1,20 @@
 # agent-postmortems — Roadmap
 
-## v1 (shipped)
-- ✅ Post-mortem standard v1 — JSON Schema (`schema/incident.schema.json`) + human-readable `SCHEMA.md`
-- ✅ Versioned two-level failure taxonomy (`schema/taxonomy.yaml` + `TAXONOMY.md`), cairn-aligned
-- ✅ Fail-closed CI: schema, taxonomy conformance, id-uniqueness, link-liveness, neutrality lint, drift check
-- ✅ 18 well-documented, sourced public incidents (all schema-valid, all sources live)
-- ✅ Machine-readable export contract (`export/incidents.json`, `scenarios.json`, `seeds.json`) + export schemas
-- ✅ Contribution flow: v1 template, PR template with sourcing/neutrality checklist, ADRs
-- ⬜ Announce via a Trust Layer issue: "We Need Post-Mortems for Agents"
+## Shipped
+- Post-mortem standard — JSON Schema (`schema/incident.schema.json`) + human-readable `SCHEMA.md`
+- Versioned two-level failure taxonomy (`schema/taxonomy.yaml` + `TAXONOMY.md`)
+- Fail-closed CI: schema, taxonomy conformance, id-uniqueness, link-liveness, neutrality lint, drift check
+- Seed corpus of 18 well-documented, sourced public incidents (all schema-valid, all sources live)
+- Machine-readable export (`export/incidents.json`, `scenarios.json`, `seeds.json`) + export schemas
+- Contribution flow: template, PR template with sourcing/neutrality checklist, architecture decision records
+- Automated weekly discovery pipeline that finds and files candidate incidents for human review (`docs/CURATION-PIPELINE.md`)
 
-## Ongoing cadence
-- ✅ Weekly automated discovery pipeline: finds new/undocumented incidents, de-dupes, and files them for human review — never auto-merges (`docs/CURATION-PIPELINE.md`)
-- Add one incident per notable public failure (steady, low-effort, permanent)
-- Weekly scheduled link re-check; open issues on rot, never auto-delete (ADR-0008)
-- Monthly export refresh
+## Ongoing
+- Add one incident per notable public failure
+- Weekly link re-check; open issues on rot, never auto-delete (see `adr/0008-never-delete-annotate-disputed.md`)
+- Periodic export refresh
 
-## Later (second wave)
-- Generated static site (agent-postmortems.dev), Astro — permalinks, filters by failure class / blast radius, "Cite this", RSS (ADR-0003)
-- Wire `scenarios.json` / `seeds.json` into stampede and costbomb
-- AIID / OECD auto-cross-linking; full-text search
+## Planned
+- Generated static site with per-incident permalinks, filters by failure class / blast radius, "Cite this", and RSS (see `adr/0003-astro-for-site.md`)
+- Consume the `scenarios.json` / `seeds.json` export in downstream replay/fuzzing tooling
+- Cross-linking with external incident databases; full-text search

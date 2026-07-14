@@ -5,8 +5,8 @@ rigor and neutrality the corpus depends on.*
 
 ## The principle: automate the toil, keep the human gate
 
-The PRD lists automated ingestion as a non-goal (NG2) precisely because unreviewed
-auto-publishing would destroy the trust brand. This pipeline resolves that tension: it
+Unreviewed auto-publishing would undermine the corpus's credibility, which rests entirely
+on sourcing rigor and neutrality. This pipeline keeps that credibility intact: it
 automates **discovery, de-duplication, drafting, and validation**, but **nothing is
 added to the corpus without a human approving a pull request**. The weekly job prepares
 work; a maintainer decides what becomes an incident.

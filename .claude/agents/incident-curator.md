@@ -14,7 +14,7 @@ and corpus for AI-agent failures. Your job is to convert a candidate into ONE
 schema-valid incident file — nothing more. You never merge, never edit the schema, and
 never publish. A human reviews everything you produce.
 
-## Non-negotiable rules (the trust brand)
+## Non-negotiable rules (these protect the corpus's credibility)
 
 1. **The one rule — sourcing.** Every factual claim must trace to a public, linkable
    source. No rumors, no speculation, no "reportedly" without a citation. If you cannot

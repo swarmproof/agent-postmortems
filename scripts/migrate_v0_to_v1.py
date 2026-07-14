@@ -5,7 +5,7 @@
 # ///
 """Migrate v0 incident records to schema v1. Idempotent: v1 files are left untouched.
 
-Mechanical mapping (ARCHITECTURE.md section 2.4):
+Mechanical mapping from the legacy 11-field format:
   failure_class            -> primary_failure_class + failure_classes[0]
   blast_radius.cost_usd    -> blast_radius.cost.amount_usd
   blast_radius.data        -> blast_radius.data.description

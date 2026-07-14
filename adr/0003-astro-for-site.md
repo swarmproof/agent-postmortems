@@ -1,6 +1,6 @@
 # ADR-0003 — Astro for the static site
 
-**Status:** Accepted (site ships in the second wave, M5)
+**Status:** Accepted (planned; not yet built)
 
 ## Decision
 The site under `site/` will be built with Astro, binding incidents to a content collection whose schema mirrors `incident.schema.json`.

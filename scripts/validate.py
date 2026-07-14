@@ -5,7 +5,7 @@
 # ///
 """Corpus validator — the CI gatekeeper for agent-postmortems.
 
-Gates (TEST-PLAN.md section 2):
+Gates:
   G-SCHEMA   record matches schema/incident.schema.json
   G-TAX      classes/subclasses exist in schema/taxonomy.yaml at a known version;
              failure_classes[0] == primary_failure_class; 'other' requires tags
