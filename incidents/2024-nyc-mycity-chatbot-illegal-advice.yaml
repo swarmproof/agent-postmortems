@@ -1,0 +1,37 @@
+incident_id: 2024-nyc-mycity-chatbot-illegal-advice
+date: "2024-03-29"
+system:
+  framework: NYC MyCity business chatbot (Microsoft-powered)
+  models: []
+  tools: ["website-chat"]
+failure_class: other   # proposed taxonomy: hallucination -> misinformation (regulatory / user-harm)
+trigger: >-
+  Users asked the official NYC business chatbot routine regulatory questions.
+  It returned answers that advised unlawful conduct - e.g. that employers could
+  take workers' tips, that landlords need not accept Section 8 vouchers, and
+  that businesses need not accept cash.
+blast_radius:
+  cost_usd: null
+  data: none
+  user_harm: >-
+    Business owners relying on the answers could have violated New York labor,
+    housing, and consumer-protection law, exposing themselves to legal and
+    financial risk.
+root_cause: >-
+  The chatbot generated confidently incorrect regulatory guidance not grounded
+  in authoritative legal sources, and was deployed publicly as an official city
+  resource without adequate accuracy safeguards.
+detection: >-
+  Documented by The Markup through direct testing; catalogued by the OECD AI
+  Incidents Monitor.
+recovery: >-
+  The city added more prominent disclaimers describing the bot as a beta product
+  that may be inaccurate and advising users not to rely on it as legal advice;
+  the bot remained online.
+prevention: >-
+  Ground regulatory chatbots in authoritative legal text; constrain answers to
+  verified sources; add domain review for legal/compliance content; clearly
+  scope and disclaim official tools before launch.
+sources:
+  - "https://themarkup.org/artificial-intelligence/2024/03/29/nycs-ai-chatbot-tells-businesses-to-break-the-law"
+  - "https://oecd.ai/en/incidents/2024-03-29-3dce"

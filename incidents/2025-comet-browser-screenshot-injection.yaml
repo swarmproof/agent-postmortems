@@ -1,0 +1,39 @@
+incident_id: 2025-comet-browser-screenshot-injection
+date: "2025-10-21"
+system:
+  framework: Perplexity Comet (agentic browser) and other AI browsers
+  models: []
+  tools: ["browser", "screenshot"]
+failure_class: prompt-injection   # proposed taxonomy: prompt-injection (multimodal, indirect) -> unsafe cross-domain action
+trigger: >-
+  Instructions were hidden as near-invisible text inside web page content and
+  screenshots (e.g. faint light-blue text on a yellow background). When the user
+  asked the assistant about the page or screenshot, the hidden text was
+  processed as commands rather than as untrusted content.
+blast_radius:
+  cost_usd: null
+  data: >-
+    Demonstrated ability to trigger cross-domain actions with the user's
+    authenticated privileges, potentially reaching banking, healthcare,
+    corporate, email, and cloud-storage sites. Shown by researchers.
+  user_harm: >-
+    Potential unauthorized actions and data access on behalf of the user across
+    authenticated sessions. Shown as a PoC.
+root_cause: >-
+  Agentic browsers execute with the user's authenticated privileges and treat
+  untrusted page/image content as instructions, rendering protections like the
+  same-origin policy irrelevant. Multimodal input widened the injection surface.
+detection: >-
+  Disclosed by Brave security research; corroborated by independent commentary
+  (Simon Willison).
+recovery: >-
+  Responsible disclosure to affected vendors (including Perplexity); vendors
+  advised to harden against indirect and multimodal prompt injection.
+prevention: >-
+  Separate untrusted page/image content from instructions; require explicit
+  confirmation for sensitive cross-domain actions; constrain agent privileges;
+  detect injected text in images.
+sources:
+  - "https://brave.com/blog/unseeable-prompt-injections/"
+  - "https://brave.com/blog/comet-prompt-injection/"
+  - "https://simonwillison.net/2025/Oct/21/unseeable-prompt-injections/"

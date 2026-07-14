@@ -1,5 +1,5 @@
 incident_id: YYYY-short-slug
-date: YYYY-MM-DD
+date: "YYYY-MM-DD"
 system:
   framework: ""          # e.g. LangGraph, CrewAI, custom
   models: []             # e.g. ["gpt-4o", "claude-haiku"]

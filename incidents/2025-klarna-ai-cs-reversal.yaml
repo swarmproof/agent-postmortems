@@ -1,0 +1,37 @@
+incident_id: 2025-klarna-ai-cs-reversal
+date: "2025-05-08"
+system:
+  framework: Klarna AI customer-service assistant (OpenAI-based)
+  models: []
+  tools: ["customer-support"]
+failure_class: other   # proposed taxonomy: task-failure / quality-degradation -> economic-operational (org-level)
+trigger: >-
+  After replacing roughly 700 customer-service roles with an AI assistant,
+  Klarna found that edge cases, emotionally charged interactions, and multi-step
+  problem resolution overwhelmed the system, and it sometimes gave confident but
+  incorrect answers about fees and payment terms.
+blast_radius:
+  cost_usd: null
+  data: none
+  user_harm: >-
+    Lower customer-satisfaction scores and incorrect answers about money (a
+    compliance concern in fintech) for affected customers; broader business
+    impact on service quality.
+root_cause: >-
+  Over-optimising for efficiency and cost led to deploying AI beyond its
+  reliable envelope, degrading quality on complex or sensitive cases without
+  adequate human fallback.
+detection: >-
+  Recognised internally via declining customer-satisfaction metrics and publicly
+  acknowledged by Klarna's CEO.
+recovery: >-
+  Klarna reversed course, resumed hiring human agents, and moved to a hybrid
+  model where AI handles routine inquiries and humans handle cases needing
+  empathy, discretion, or escalation.
+prevention: >-
+  Scope AI to tasks within its reliable envelope; keep human fallback for
+  complex/sensitive cases; monitor quality and compliance metrics; avoid
+  cost-only automation decisions.
+sources:
+  - "https://www.forbes.com/sites/quickerbettertech/2025/05/18/business-tech-news-klarna-reverses-on-ai-says-customers-like-talking-to-people/"
+  - "https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396"

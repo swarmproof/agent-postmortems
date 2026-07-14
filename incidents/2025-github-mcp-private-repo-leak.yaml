@@ -1,0 +1,41 @@
+incident_id: 2025-github-mcp-private-repo-leak
+date: "2025-05-26"
+system:
+  framework: MCP (Model Context Protocol) client
+  models: ["claude-opus-4"]
+  tools: ["github-mcp"]
+failure_class: prompt-injection   # proposed taxonomy: prompt-injection (indirect) -> data-exfiltration
+trigger: >-
+  An attacker filed a malicious issue in a public repository containing hidden
+  instructions. When a user asked their agent to review open issues, the agent
+  read the injected content and followed it, accessing a private repository and
+  leaking its contents via a pull request.
+blast_radius:
+  cost_usd: null
+  data: >-
+    Demonstrated leakage of private-repository contents (e.g. salary
+    information, private project details) into a public pull request in a
+    researcher proof-of-concept.
+  user_harm: >-
+    Potential exposure of confidential source and business data belonging to the
+    repository owner. Shown as a PoC by researchers.
+root_cause: >-
+  An architectural issue, not a server bug: any agent with access to both
+  private repositories and untrusted external content (public issues, PR
+  comments) can be induced to cross that trust boundary. Even highly aligned
+  models remained susceptible.
+detection: >-
+  Discovered and disclosed by Invariant Labs; independently analysed by
+  security researchers including Simon Willison.
+recovery: >-
+  Researchers reported it to GitHub; recommended mitigations are
+  architectural (least-privilege access, per-session scoping) since there is no
+  simple server-side patch.
+prevention: >-
+  Scope agent access to one repository/context at a time; treat repository
+  content as untrusted input; require approval before cross-repository reads or
+  outbound publication; apply guardrail policies between untrusted content and
+  privileged actions.
+sources:
+  - "https://invariantlabs.ai/blog/mcp-github-vulnerability"
+  - "https://simonwillison.net/2025/May/26/github-mcp-exploited/"

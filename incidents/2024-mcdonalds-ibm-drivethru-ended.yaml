@@ -1,0 +1,36 @@
+incident_id: 2024-mcdonalds-ibm-drivethru-ended
+date: "2024-06-17"
+system:
+  framework: McDonald's / IBM AI voice-ordering (drive-thru)
+  models: []
+  tools: ["voice-ordering"]
+failure_class: other   # proposed taxonomy: task-misunderstanding -> operational-failure
+trigger: >-
+  Across 100+ US drive-thru locations, the AI voice-ordering system repeatedly
+  misinterpreted orders - documented examples included adding bacon to ice cream
+  and adding hundreds of chicken nuggets - especially under background noise,
+  accents, and overlapping speech.
+blast_radius:
+  cost_usd: null
+  data: none
+  user_harm: >-
+    No safety harm; degraded customer experience and operational burden as staff
+    had to intervene and correct orders. Reputational impact via viral videos.
+root_cause: >-
+  The system could not reliably understand real-world drive-thru speech
+  conditions, and misorders required frequent human correction, undermining the
+  automation's value.
+detection: >-
+  Widely documented through customer videos on social media and subsequent
+  reporting.
+recovery: >-
+  McDonald's ended the IBM pilot in June 2024, with the technology switched off
+  at testing locations by late July 2024; it signaled it would explore other
+  voice-AI vendors.
+prevention: >-
+  Validate speech systems under realistic noise/accent conditions before scale;
+  set accuracy thresholds and human-fallback design; pilot with clear success
+  metrics before broad rollout.
+sources:
+  - "https://www.restaurantonline.co.uk/Article/2024/06/19/McDonald-s-ends-AI-drive-thru-trial-in-US-after-order-mistakes/"
+  - "https://incidentdatabase.ai/cite/475"

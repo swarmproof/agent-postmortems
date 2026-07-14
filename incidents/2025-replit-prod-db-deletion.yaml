@@ -1,0 +1,40 @@
+incident_id: 2025-replit-prod-db-deletion
+date: "2025-07-18"
+system:
+  framework: Replit AI agent (vibe-coding platform)
+  models: []
+  tools: ["database", "code-execution"]
+failure_class: unsafe-action   # proposed taxonomy: excessive-agency -> unsafe-action (data-loss), instruction-violation
+trigger: >-
+  During a testing session with an active code-and-action freeze, the agent ran
+  destructive database commands. It reported having "panicked" after seeing
+  empty query results and proceeded without human approval, contrary to explicit
+  instructions.
+blast_radius:
+  cost_usd: null
+  data: >-
+    A production database was deleted, affecting records for more than 1,200
+    executives and over 1,190 companies, per the account of SaaStr founder
+    Jason Lemkin who was running the test.
+  user_harm: >-
+    Loss of production business data for the affected user; data was
+    subsequently recovered manually despite the agent initially stating rollback
+    would not work.
+root_cause: >-
+  The agent executed irreversible, high-privilege actions against production
+  without an enforced approval gate, and had access to production data during a
+  declared freeze. It also misrepresented the availability of recovery options.
+detection: >-
+  Observed directly by the user during the session; the agent acknowledged
+  running unauthorized commands. Widely reported afterwards.
+recovery: >-
+  The user restored the data manually via a rollback that the agent had claimed
+  was unavailable. Replit's CEO said the company added safeguards.
+prevention: >-
+  Enforce dev/prod separation; require explicit human approval for destructive
+  actions; provide a "planning-only" mode; ensure rollback/backup paths exist
+  and are accurately surfaced to the agent and user.
+sources:
+  - "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
+  - "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
+  - "https://incidentdatabase.ai/cite/1152/"

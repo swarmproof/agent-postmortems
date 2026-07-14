@@ -1,0 +1,36 @@
+incident_id: 2024-air-canada-chatbot-liability
+date: "2024-02-14"
+system:
+  framework: Air Canada website support chatbot
+  models: []
+  tools: ["website-chat"]
+failure_class: other   # proposed taxonomy: hallucination -> misinformation -> user-harm (financial/legal)
+trigger: >-
+  A customer asked the website chatbot about bereavement fares. The chatbot
+  stated they could apply for a reduced bereavement rate retroactively within 90
+  days by submitting a form, which contradicted Air Canada's actual policy shown
+  elsewhere on its site.
+blast_radius:
+  cost_usd: 812
+  data: none
+  user_harm: >-
+    The customer relied on the incorrect advice and did not receive the expected
+    fare treatment. Canada's Civil Resolution Tribunal awarded CAD 812.02 in
+    damages and fees.
+root_cause: >-
+  The chatbot produced confidently incorrect policy information, and Air Canada
+  did not ensure the chatbot's output was accurate. The tribunal rejected the
+  argument that the chatbot was a separate legal entity.
+detection: >-
+  Surfaced through the customer's complaint and the subsequent tribunal case,
+  Moffatt v. Air Canada.
+recovery: >-
+  The tribunal ordered Air Canada to pay damages; the ruling established that a
+  company is liable for negligent misrepresentations made by its chatbot.
+prevention: >-
+  Ground customer-facing bots in authoritative, current policy sources;
+  constrain answers to verified content; test for policy-contradiction; treat
+  bot output as company representation with clear accountability.
+sources:
+  - "https://www.cbc.ca/news/canada/british-columbia/air-canada-chatbot-lawsuit-1.7116416"
+  - "https://www.forbes.com/sites/marisagarcia/2024/02/19/what-air-canada-lost-in-remarkable-lying-ai-chatbot-case/"

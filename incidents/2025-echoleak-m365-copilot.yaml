@@ -1,0 +1,40 @@
+incident_id: 2025-echoleak-m365-copilot
+date: "2025-06-11"
+system:
+  framework: Microsoft 365 Copilot (RAG assistant)
+  models: []
+  tools: ["email", "sharepoint", "onedrive", "teams"]
+failure_class: data-exfiltration   # proposed taxonomy: prompt-injection (zero-click) -> data-exfiltration; CVE-2025-32711
+trigger: >-
+  A crafted email containing a hidden prompt payload (e.g. white-on-white text
+  or HTML comment) was retained by Copilot. When the user later asked Copilot a
+  normal question, the RAG engine retrieved the email and executed the hidden
+  instructions, exfiltrating context without any user click.
+blast_radius:
+  cost_usd: null
+  data: >-
+    Any data reachable in Copilot's context (emails, Teams messages, OneDrive,
+    SharePoint, Office files) could be silently exfiltrated. Rated CVSS 9.3
+    (critical).
+  user_harm: >-
+    Potential confidential-data exposure for organisations. Microsoft reported
+    no evidence of malicious exploitation in the wild.
+root_cause: >-
+  Untrusted external content entered the model's trust boundary and was acted on
+  as instructions, chaining multiple bypasses (XPIA classifier evasion,
+  reference-style Markdown link redaction bypass, auto-fetched images, a Teams
+  proxy allowed by the content security policy).
+detection: >-
+  Discovered and disclosed by Aim Security researchers, who named it "EchoLeak"
+  (CVE-2025-32711).
+recovery: >-
+  Microsoft addressed the vulnerability server-side; the fix required no
+  customer action.
+prevention: >-
+  Enforce strict separation between untrusted retrieved content and
+  instructions; harden prompt-injection classifiers; restrict outbound
+  link/image fetching and CSP-allowed proxies; scope what an assistant may
+  return externally.
+sources:
+  - "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
+  - "https://arxiv.org/html/2509.10540v1"

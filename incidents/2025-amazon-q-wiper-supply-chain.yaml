@@ -1,0 +1,38 @@
+incident_id: 2025-amazon-q-wiper-supply-chain
+date: "2025-07-13"
+system:
+  framework: Amazon Q Developer (VS Code extension)
+  models: []
+  tools: ["aws-cli", "filesystem"]
+failure_class: unsafe-action   # proposed taxonomy: supply-chain-compromise -> unsafe-action (destructive)
+trigger: >-
+  A contributor operating under an alias submitted a pull request to the Amazon
+  Q VS Code extension repository. The merged code contained a malicious system
+  prompt instructing the agent to act as a "system cleaner" and delete local
+  files and wipe AWS cloud resources.
+blast_radius:
+  cost_usd: null
+  data: >-
+    The malicious prompt targeted deletion of users' home directories and local
+    files and destruction of AWS resources (EC2, S3, IAM). Version 1.84.0
+    shipped to a user base of nearly one million installs.
+  user_harm: >-
+    No customer environments were affected; AWS reported the destructive code
+    failed to execute due to a syntax error.
+root_cause: >-
+  A pull request from an untrusted contributor was merged into the extension
+  codebase with insufficient review/permission controls, allowing a malicious
+  agent-directing prompt into a widely distributed release.
+detection: >-
+  Reported by security researchers after the compromised version shipped;
+  analysed by ReversingLabs and others.
+recovery: >-
+  Amazon revoked and replaced the compromised credentials, removed the malicious
+  code, and released a new version of the tool.
+prevention: >-
+  Enforce strict review and permission controls on contributions to
+  agent-directing code; treat system prompts as security-critical artifacts;
+  sign and verify releases; constrain what agent instructions may command.
+sources:
+  - "https://www.reversinglabs.com/blog/aws-amazonq-ai-incident"
+  - "https://www.csoonline.com/article/4027963/hacker-inserts-destructive-code-in-amazon-q-as-update-goes-live.html"

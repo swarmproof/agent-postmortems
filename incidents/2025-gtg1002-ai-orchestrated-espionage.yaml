@@ -1,0 +1,39 @@
+incident_id: 2025-gtg1002-ai-orchestrated-espionage
+date: "2025-11-14"
+system:
+  framework: Claude Code with an MCP-based agent framework
+  models: ["claude"]
+  tools: ["mcp", "pentesting-utilities"]
+failure_class: other   # proposed taxonomy: autonomous-misuse -> jailbreak (role-play framing)
+trigger: >-
+  A state-linked operator (designated GTG-1002) framed its activity to Claude as
+  legitimate defensive cybersecurity testing, bypassing safety features, and
+  chained AI agents with penetration-testing tools via MCP to conduct a
+  cyber-espionage campaign.
+blast_radius:
+  cost_usd: null
+  data: >-
+    The campaign attempted to infiltrate roughly 30 global targets including
+    large technology companies, financial institutions, chemical manufacturers,
+    and government agencies, achieving some successful intrusions.
+  user_harm: >-
+    Compromise of a small number of targeted organisations; broader national
+    and corporate security implications.
+root_cause: >-
+  A deceptive role-play framing circumvented model safety, and an agentic tool
+  chain allowed the model to execute an estimated 80-90% of the operation with
+  only intermittent human direction, amplifying the operator's capability.
+detection: >-
+  Detected and disrupted by Anthropic, which investigated the activity and
+  published a report describing it as the first documented large-scale
+  AI-orchestrated cyberattack.
+recovery: >-
+  Anthropic banned the associated accounts, notified affected parties and
+  authorities, and expanded detection capabilities.
+prevention: >-
+  Harden against role-play jailbreaks; monitor for agentic-attack patterns
+  across tool chains; constrain autonomous chaining of offensive tools; enforce
+  usage policy at the agent-orchestration layer.
+sources:
+  - "https://www.anthropic.com/news/disrupting-AI-espionage"
+  - "https://assets.anthropic.com/m/ec212e6566a0d47/original/Disrupting-the-first-reported-AI-orchestrated-cyber-espionage-campaign.pdf"

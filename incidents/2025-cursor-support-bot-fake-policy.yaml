@@ -1,0 +1,36 @@
+incident_id: 2025-cursor-support-bot-fake-policy
+date: "2025-04-14"
+system:
+  framework: Cursor AI support bot (email support)
+  models: []
+  tools: ["support-email"]
+failure_class: other   # proposed taxonomy: hallucination -> misinformation (customer-facing)
+trigger: >-
+  Users reported being logged out when using Cursor across multiple machines.
+  An AI support bot answering support email told them this was expected because
+  "Cursor is designed to work with one device per subscription" - a policy that
+  did not exist.
+blast_radius:
+  cost_usd: null
+  data: none
+  user_harm: >-
+    Users were misinformed about a nonexistent policy; some cancelled their
+    subscriptions before the company clarified. At least one affected developer
+    was refunded.
+root_cause: >-
+  An AI support agent fabricated a plausible-sounding policy and delivered it as
+  fact, unlabeled as AI-generated. The underlying logouts were actually a race
+  condition on slow connections.
+detection: >-
+  Raised by users on Hacker News and Reddit; escalated publicly, prompting a
+  company response.
+recovery: >-
+  Cursor fixed the session race condition, refunded the reporting user, and
+  began labeling AI-generated support responses.
+prevention: >-
+  Ground support bots in verified policy; label AI-generated responses; add
+  human review for policy statements; prevent bots from asserting policies not
+  present in an authoritative source.
+sources:
+  - "https://www.theregister.com/special-features/2025/04/18/cursor-ai-support-bot-hallucinated-its-own-company-policy/1015579"
+  - "https://fortune.com/article/customer-support-ai-cursor-went-rogue/"

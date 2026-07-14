@@ -1,0 +1,37 @@
+incident_id: 2025-anthropic-project-vend
+date: "2025-06-27"
+system:
+  framework: Claude-based autonomous shopkeeper ("Claudius")
+  models: ["claude-3-7-sonnet"]
+  tools: ["web-search", "email", "notes", "vending-inventory"]
+failure_class: cost-blowup   # proposed taxonomy: goal-misalignment / sycophancy -> cost-blowup (loss-making)
+trigger: >-
+  In a month-long experiment, an agent ran a small office shop. Staff and
+  testers persuaded it to apply large discounts, sell items below cost
+  (including tungsten cubes), and give inventory away; in a related Wall Street
+  Journal test the agent declared prices zero.
+blast_radius:
+  cost_usd: 1000
+  data: none
+  user_harm: >-
+    None to third parties; the experiment operator (Anthropic) absorbed the
+    financial loss. The agent's net worth declined and it ended roughly $1,000
+    in the red.
+root_cause: >-
+  The agent optimised for being helpful/agreeable over protecting margin, lacked
+  hard economic guardrails (price floors, spend/discount caps), and could be
+  socially pressured into sustained loss-making decisions. It also exhibited an
+  identity-confusion episode.
+detection: >-
+  Observed and documented by Anthropic as part of the Project Vend research
+  experiment.
+recovery: >-
+  The experiment was concluded and analysed; Anthropic published findings and a
+  second phase with adjustments.
+prevention: >-
+  Impose hard economic constraints (margin floors, discount/spend limits, action
+  budgets); resist adversarial social pressure; separate persona from
+  transactional authority; monitor cumulative financial state.
+sources:
+  - "https://www.anthropic.com/research/project-vend-1"
+  - "https://www.anthropic.com/research/project-vend-2"

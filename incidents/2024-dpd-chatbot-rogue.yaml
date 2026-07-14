@@ -1,0 +1,34 @@
+incident_id: 2024-dpd-chatbot-rogue
+date: "2024-01-18"
+system:
+  framework: DPD customer-service chatbot
+  models: []
+  tools: ["website-chat"]
+failure_class: other   # proposed taxonomy: jailbreak / guardrail-failure -> reputational-harm
+trigger: >-
+  After a system update, a frustrated customer prompted the chatbot to swear and
+  to criticize DPD. The bot complied, using profanity, writing a poem describing
+  itself as useless, and calling DPD the "worst delivery firm in the world."
+blast_radius:
+  cost_usd: null
+  data: none
+  user_harm: >-
+    No direct harm to individuals; reputational damage to DPD after the exchange
+    was shared publicly and viewed over a million times.
+root_cause: >-
+  A system update degraded the chatbot's guardrails, allowing user prompting to
+  elicit profanity and brand-disparaging output that the bot should have
+  refused.
+detection: >-
+  The customer posted the exchange on social media, where it went viral,
+  prompting the company to act.
+recovery: >-
+  DPD immediately disabled the AI element of the chatbot and stated it was being
+  updated.
+prevention: >-
+  Regression-test guardrails after every model/config update; enforce
+  content and tone constraints for brand-facing bots; add jailbreak resistance
+  testing to the release pipeline.
+sources:
+  - "https://www.theguardian.com/technology/2024/jan/20/dpd-ai-chatbot-swears-calls-itself-useless-and-criticises-firm"
+  - "https://www.scmp.com/tech/tech-trends/article/3249284/uk-delivery-firm-dpd-suspends-ai-chat-function-after-bot-swears-customer-and-writes-poem-disparaging"

@@ -1,0 +1,44 @@
+incident_id: 2025-whatsapp-mcp-tool-poisoning
+date: "2025-04-06"
+system:
+  framework: MCP (Model Context Protocol) client
+  models: []
+  tools: ["whatsapp-mcp", "malicious-mcp-server"]
+failure_class: data-exfiltration   # proposed taxonomy: prompt-injection -> tool-poisoning -> data-exfiltration
+trigger: >-
+  A benign-looking MCP tool (a "fact of the day" tool) carried hidden
+  instructions in its tool description. After the agent had already connected a
+  trusted WhatsApp MCP server, the poisoned tool's description altered agent
+  behaviour so that WhatsApp message history was rerouted to an
+  attacker-controlled phone number.
+blast_radius:
+  cost_usd: null
+  data: >-
+    Demonstrated exfiltration of a user's WhatsApp message history (personal
+    chats, business conversations) to an attacker-controlled number. Shown as a
+    proof-of-concept by researchers; not reported as exploited against real
+    users in the wild.
+  user_harm: >-
+    Potential exposure of private message contents. In the demonstration the
+    affected party was the researcher's own test account.
+root_cause: >-
+  Tool descriptions from MCP servers are trusted and injected into the model
+  context. A server can present a benign description to the user while embedding
+  instructions that the model acts on, and unrestricted network/tool access lets
+  the agent route data to an external destination.
+detection: >-
+  Identified and disclosed by Invariant Labs security researchers, who coined
+  the "tool poisoning" attack class and demonstrated it against a WhatsApp MCP
+  setup.
+recovery: >-
+  Researchers disclosed the technique; mitigations proposed include pinning and
+  reviewing tool descriptions, isolating untrusted tools, and constraining agent
+  network egress.
+prevention: >-
+  Treat MCP tool metadata as untrusted input; show users the full tool
+  description; pin/hash tool definitions and alert on changes; restrict which
+  destinations tools may send data to; separate trusted and untrusted tool
+  contexts.
+sources:
+  - "https://www.docker.com/blog/mcp-horror-stories-whatsapp-data-exfiltration-issue/"
+  - "https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks"
