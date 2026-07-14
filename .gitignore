@@ -4,3 +4,6 @@ node_modules/
 dist/
 _site/
 .cache/
+
+# local agent guidance — do not publish
+CLAUDE.md
