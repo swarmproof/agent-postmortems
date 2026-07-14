@@ -13,6 +13,27 @@ Thanks for helping build **agent-postmortems** — part of the [Swarm Proof tool
 3. Keep commits atomic and use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, ...).
 4. Open a PR describing *what* changed and *why*.
 
+## Contributing an incident
+
+1. Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml) to `incidents/<incident_id>.yaml` — the filename must equal `incident_id` (`YYYY-kebab-slug`).
+2. Fill the required core; add as much of the optional body as the sources support. Classify with the taxonomy in [`TAXONOMY.md`](./TAXONOMY.md).
+3. Validate locally: `uv run scripts/validate.py` and `uv run scripts/check_links.py`.
+4. Open a PR — the PR template contains the checklist below, and CI enforces every gate.
+
+### Sourcing rules (the one rule)
+
+- Every incident needs **at least one public, linkable source**. No rumors, no anonymous accounts, no speculation about intent.
+- Prefer the strongest source type available: primary research writeup, vendor disclosure, or court/regulatory record over news coverage.
+- Set `confidence` honestly: `reported` (single source) · `corroborated` (multiple independent) · `confirmed` (first-party/vendor/court) · `disputed` (facts contested).
+- Label researcher PoCs and near-misses `incident_type: hazard` — honesty over drama.
+
+### Neutrality rules
+
+- Report factually; name systems as data, never as targets. No blame adjectives (CI lints for these).
+- Root causes are **systemic, not personal** (blameless post-mortem style).
+- Never identify harmed individuals beyond what public sources already published.
+- If a vendor disputes a record, we add their response as a `vendor-response` source and set `confidence: disputed` — sourced incidents are never deleted (ADR-0008).
+
 ## Principles (shared across the toolkit)
 - **Provider-agnostic** — no hard dependency on a single model vendor.
 - **Honest over impressive** — we don't overpromise guarantees; we document boundaries.

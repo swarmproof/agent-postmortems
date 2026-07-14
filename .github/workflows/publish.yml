@@ -1,0 +1,36 @@
+name: publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "incidents/**"
+      - "schema/**"
+      - "scripts/**"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      # G-ARCHIVE — backfill Wayback snapshots for sources lacking archive_url
+      - name: Backfill source archives
+        run: uv run scripts/check_links.py --backfill
+        continue-on-error: true # archive.org outages must not block publishing
+
+      # Rebuild the machine-readable exports (incidents / scenarios / seeds)
+      - name: Build exports
+        run: uv run scripts/build_exports.py
+
+      - name: Commit refreshed artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add incidents export
+          git diff --cached --quiet || git commit -m "chore(export): refresh exports and source archives [skip ci]"
+          git push

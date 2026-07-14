@@ -1,0 +1,29 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      # G-SCHEMA, G-TAX, G-ID, G-NEUTRAL, G-DRIFT — corpus-wide, fail-closed
+      - name: Validate corpus
+        run: uv run scripts/validate.py
+
+      # Meta-test: fixtures must pass/fail exactly as expected ("test the tests")
+      - name: Validate fixtures
+        run: uv run scripts/validate.py --fixtures
+
+      # G-LINK — every sources[].url reachable (403/429 warn as likely bot-blocks)
+      - name: Check source links
+        run: uv run scripts/check_links.py
+
+      # G-EXPORT — exports rebuild deterministically and validate against their schemas
+      - name: Build and validate exports
+        run: uv run scripts/build_exports.py --check
