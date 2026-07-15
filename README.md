@@ -1,16 +1,10 @@
 # agent-postmortems
 
-### The aviation-incident database for the agent economy
-
-> A public, structured database of real agent failures in the wild — plus a post-mortem *standard* for reporting them. Each team relearns the same failures privately; this makes the field's mistakes legible so they stop recurring.
-
-> **Status:** ✅ v1 live. Standard + taxonomy + rigor CI + 18 sourced incidents + machine-readable export. Site is the next wave.
-
----
+A public, structured database of real AI-agent failures, plus a schema for reporting them.
 
 ## Why
 
-Agents fail in production in novel, repeating ways — runaway loops, tool misuse, prompt-injection incidents, double side-effects, cost blowups — but there's no shared, structured record. Software has public post-mortem culture; aviation has incident reports. The agent economy has nothing. **Publishing a standard is more valuable than the data itself** — it makes the field legible.
+Agents fail in production in novel, repeating ways — runaway loops, tool misuse, prompt injection, double side-effects, cost blowups — but there's no shared, structured record of these failures. This repository provides a reporting schema and a corpus of incidents that conform to it, so the same failures are documented once and reusable across teams.
 
 ## The post-mortem standard
 
@@ -30,25 +24,24 @@ A weekly workflow finds new and not-yet-documented agent incidents and files the
 
 ## How it feeds the toolkit
 
-CI regenerates a machine-readable export under [`export/`](./export/): the full corpus (`incidents.json`), a [stampede](https://github.com/swarmproof/stampede) chaos-scenario feed (`scenarios.json`), and a [costbomb](https://github.com/swarmproof/costbomb) denial-of-wallet seed feed (`seeds.json`) — the contract behind *"replay last month's real incidents against your stack."* Export shapes are natural-language triggers, never runnable exploit payloads.
+CI regenerates a machine-readable export under [`export/`](./export/): the full corpus (`incidents.json`), a scenario feed for [stampede](https://github.com/swarmproof/stampede) (`scenarios.json`), and a seed feed for [costbomb](https://github.com/swarmproof/costbomb) (`seeds.json`). Export entries are natural-language trigger descriptions, never runnable exploit payloads.
 
-## Part of the Swarm Proof toolkit
+## Related projects
 
-*Trust infrastructure for the agent economy — seven projects, one thesis.*
+Part of the Swarm Proof toolkit for agent reliability:
 
 | Project | What it does |
 |---------|--------------|
-| [stampede](https://github.com/swarmproof/stampede) | Point a herd of realistic agents at your system before real ones arrive |
-| [mockworld](https://github.com/swarmproof/mockworld) | A synthetic internet for agents — fake Stripe, Gmail, exchange, instantly |
-| [mcp-probe](https://github.com/swarmproof/mcp-probe) | The CI quality suite for MCP servers — lint, contract-test, benchmark, load |
-| [costbomb](https://github.com/swarmproof/costbomb) | Denial-of-wallet fuzzing — find the inputs that make your agent spend $500 |
-| [exactly-once](https://github.com/swarmproof/exactly-once) | Idempotency middleware so agent side-effects fire once |
-| **agent-postmortems** ← *you are here* | A structured incident database + post-mortem standard for agent failures |
-| [awesome-agent-reliability](https://github.com/swarmproof/awesome-agent-reliability) | The curated map of the field |
+| [stampede](https://github.com/swarmproof/stampede) | Drives simulated agent traffic at a system under test |
+| [mockworld](https://github.com/swarmproof/mockworld) | Mock external services (payments, email, exchange) for agent tests |
+| [mcp-probe](https://github.com/swarmproof/mcp-probe) | Lint, contract-test, benchmark, and load-test MCP servers |
+| [costbomb](https://github.com/swarmproof/costbomb) | Fuzzing for denial-of-wallet / unbounded-spend inputs |
+| [exactly-once](https://github.com/swarmproof/exactly-once) | Idempotency middleware for agent side-effects |
+| [awesome-agent-reliability](https://github.com/swarmproof/awesome-agent-reliability) | Curated list of agent-reliability resources |
 
 ## Licensing
 
-This project is dual-licensed to separate the tooling from the corpus:
+Dual-licensed to separate the tooling from the corpus:
 
 - **Code** (schema, validators, scripts, site) — [Apache-2.0](./LICENSE).
 - **Incident data & schema content** (the `incidents/` corpus and `SCHEMA.md`) — [CC-BY-4.0](./LICENSE-DATA). Reuse freely with attribution.

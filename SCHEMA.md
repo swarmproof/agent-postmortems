@@ -1,6 +1,6 @@
 # The Agent Post-Mortem Standard — v1
 
-A single, boring, rigorous schema so agent failures become comparable across the industry. Publishing the *standard* is the contribution; the data compounds on top of it.
+A schema for recording AI-agent failures in a comparable, machine-validated form.
 
 Machine-validated by [`schema/incident.schema.json`](./schema/incident.schema.json) (JSON Schema draft 2020-12) in CI. Every record carries `schema_version: "1.0"`. The failure taxonomy lives in [`schema/taxonomy.yaml`](./schema/taxonomy.yaml), rendered as [`TAXONOMY.md`](./TAXONOMY.md).
 
@@ -53,7 +53,7 @@ Required-core fields are **bold**; everything else is optional but encouraged.
 
 ## The one rule
 
-Every incident needs at least one **public, linkable source**. Report factually. Name systems without editorializing. Hazards (researcher PoCs, near-misses) are welcome but must be labeled `incident_type: hazard` — honesty over drama. Disputed records are annotated (`confidence: disputed`), never deleted (ADR-0008).
+Every incident needs at least one **public, linkable source**. Report factually. Name systems without editorializing. Hazards (researcher PoCs, near-misses) are recorded but must be labeled `incident_type: hazard`. Disputed records are annotated (`confidence: disputed`), never deleted (ADR-0008).
 
 ## What changed vs. v0
 

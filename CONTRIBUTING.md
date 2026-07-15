@@ -25,7 +25,7 @@ Thanks for helping build **agent-postmortems** — part of the [Swarm Proof tool
 - Every incident needs **at least one public, linkable source**. No rumors, no anonymous accounts, no speculation about intent.
 - Prefer the strongest source type available: primary research writeup, vendor disclosure, or court/regulatory record over news coverage.
 - Set `confidence` honestly: `reported` (single source) · `corroborated` (multiple independent) · `confirmed` (first-party/vendor/court) · `disputed` (facts contested).
-- Label researcher PoCs and near-misses `incident_type: hazard` — honesty over drama.
+- Label researcher PoCs and near-misses `incident_type: hazard`, distinct from realized incidents.
 
 ### Neutrality rules
 
@@ -34,9 +34,9 @@ Thanks for helping build **agent-postmortems** — part of the [Swarm Proof tool
 - Never identify harmed individuals beyond what public sources already published.
 - If a vendor disputes a record, we add their response as a `vendor-response` source and set `confidence: disputed` — sourced incidents are never deleted (ADR-0008).
 
-## Principles (shared across the toolkit)
+## Principles
 - **Provider-agnostic** — no hard dependency on a single model vendor.
-- **Honest over impressive** — we don't overpromise guarantees; we document boundaries.
-- **Watchable & reproducible** — outputs should be seedable and screenshot-worthy.
+- **Factual over promotional** — document what happened and its boundaries; don't editorialize.
+- **Reproducible** — validation and exports regenerate deterministically from the repo.
 
 By contributing you agree your work is licensed under this repo's LICENSE.
