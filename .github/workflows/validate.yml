@@ -24,6 +24,9 @@ jobs:
       - name: Check source links
         run: uv run scripts/check_links.py
 
-      # G-EXPORT — exports rebuild deterministically and validate against their schemas
+      # G-EXPORT — exports build cleanly and validate against their schemas.
+      # We do NOT require exports to be committed in the PR: export/*.json are
+      # generated artifacts, regenerated and committed on main by publish.yml.
+      # Committing them per-PR causes merge conflicts between branches.
       - name: Build and validate exports
-        run: uv run scripts/build_exports.py --check
+        run: uv run scripts/build_exports.py
