@@ -91,8 +91,10 @@ sources:
     publisher: Anthropic
     type: vendor-disclosure
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260825102547/https://www.anthropic.com/news/disrupting-AI-espionage"
   - url: "https://assets.anthropic.com/m/ec212e6566a0d47/original/Disrupting-the-first-reported-AI-orchestrated-cyber-espionage-campaign.pdf"
     title: "Disrupting the first reported AI-orchestrated cyber espionage campaign (report)"
     publisher: Anthropic
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260507124232/https://assets.anthropic.com/m/ec212e6566a0d47/original/Disrupting-the-first-reported-AI-orchestrated-cyber-espionage-campaign.pdf"

@@ -83,8 +83,10 @@ sources:
     publisher: Forbes
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260819092238/https://www.forbes.com/sites/quickerbettertech/2025/05/18/business-tech-news-klarna-reverses-on-ai-says-customers-like-talking-to-people/"
   - url: "https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396"
     title: "Klarna CEO Reverses Course By Hiring More Humans, Not AI"
     publisher: Entrepreneur
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260801231744/https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396"

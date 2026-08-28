@@ -85,8 +85,10 @@ sources:
     publisher: The Markup
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260823144437/https://themarkup.org/artificial-intelligence/2024/03/29/nycs-ai-chatbot-tells-businesses-to-break-the-law"
   - url: "https://oecd.ai/en/incidents/2024-03-29-3dce"
     title: "NYC MyCity chatbot provides incorrect legal advice to business owners"
     publisher: OECD AI Incidents Monitor
     type: other
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260714183612/https://oecd.ai/en/incidents/2024-03-29-3dce"

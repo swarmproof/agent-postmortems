@@ -88,8 +88,10 @@ sources:
     publisher: Anthropic
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260828114555/https://www.anthropic.com/research/project-vend-1"
   - url: "https://www.anthropic.com/research/project-vend-2"
     title: "Project Vend: phase two"
     publisher: Anthropic
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260827212022/https://www.anthropic.com/research/project-vend-2"

@@ -94,8 +94,10 @@ sources:
     publisher: The Hacker News
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260826092442/https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
   - url: "https://arxiv.org/html/2509.10540v1"
     title: "Analysis of the EchoLeak zero-click prompt-injection vulnerability"
     publisher: arXiv
     type: academic
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260801130914/https://arxiv.org/html/2509.10540v1"

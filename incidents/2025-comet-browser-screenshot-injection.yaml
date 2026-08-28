@@ -89,6 +89,7 @@ sources:
     publisher: Brave
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260824223959/https://brave.com/blog/unseeable-prompt-injections/"
   - url: "https://simonwillison.net/2025/Oct/21/unseeable-prompt-injections/"
     title: "Unseeable prompt injections"
     publisher: Simon Willison

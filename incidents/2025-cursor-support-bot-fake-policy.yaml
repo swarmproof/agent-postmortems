@@ -81,8 +81,10 @@ sources:
     publisher: The Register
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260814155734/https://www.theregister.com/special-features/2025/04/18/cursor-ai-support-bot-hallucinated-its-own-company-policy/1015579"
   - url: "https://fortune.com/article/customer-support-ai-cursor-went-rogue/"
     title: "Customer support AI at Cursor went rogue"
     publisher: Fortune
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260822201723/https://fortune.com/article/customer-support-ai-cursor-went-rogue/"

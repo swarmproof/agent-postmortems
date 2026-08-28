@@ -78,6 +78,7 @@ sources:
     publisher: TIME
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260820104235/https://time.com/6564726/ai-chatbot-dpd-curses-criticizes-company/"
   - url: "https://www.theguardian.com/technology/2024/jan/20/dpd-ai-chatbot-swears-calls-itself-useless-and-criticises-firm"
     title: "DPD AI chatbot swears, calls itself 'useless' and criticises firm"
     publisher: The Guardian

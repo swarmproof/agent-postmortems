@@ -83,8 +83,10 @@ sources:
     publisher: Restaurant Online
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20250724135406/https://www.restaurantonline.co.uk/Article/2024/06/19/McDonald-s-ends-AI-drive-thru-trial-in-US-after-order-mistakes/"
   - url: "https://incidentdatabase.ai/cite/475"
     title: "Incident 475: McDonald's AI drive-thru ordering system"
     publisher: AI Incident Database
     type: other
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260308000248/https://incidentdatabase.ai/cite/475"

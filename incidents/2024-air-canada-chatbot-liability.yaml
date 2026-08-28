@@ -83,8 +83,10 @@ sources:
     publisher: CBC News
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260824072455/https://www.cbc.ca/news/canada/british-columbia/air-canada-chatbot-lawsuit-1.7116416"
   - url: "https://www.forbes.com/sites/marisagarcia/2024/02/19/what-air-canada-lost-in-remarkable-lying-ai-chatbot-case/"
     title: "What Air Canada Lost In 'Remarkable' Lying AI Chatbot Case"
     publisher: Forbes
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260809062530/https://www.forbes.com/sites/marisagarcia/2024/02/19/what-air-canada-lost-in-remarkable-lying-ai-chatbot-case/"

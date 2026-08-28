@@ -96,13 +96,16 @@ sources:
     publisher: Fortune
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260815132118/https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
   - url: "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
     title: "Replit AI agent deletes company's production database during code freeze"
     publisher: The Register
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260801132326/https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
   - url: "https://incidentdatabase.ai/cite/1152/"
     title: "Incident 1152: Replit AI Agent Reportedly Deleted Production Database"
     publisher: AI Incident Database
     type: other
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260630061057/https://incidentdatabase.ai/cite/1152/"

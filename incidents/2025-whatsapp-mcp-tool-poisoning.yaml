@@ -95,8 +95,10 @@ sources:
     publisher: Invariant Labs
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260825115656/https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks"
   - url: "https://www.docker.com/blog/mcp-horror-stories-whatsapp-data-exfiltration-issue/"
     title: "MCP Horror Stories: The WhatsApp Data Exfiltration Issue"
     publisher: Docker
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260724232759/https://www.docker.com/blog/mcp-horror-stories-whatsapp-data-exfiltration-issue/"

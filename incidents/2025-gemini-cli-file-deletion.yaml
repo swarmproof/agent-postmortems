@@ -89,8 +89,10 @@ sources:
     publisher: google-gemini/gemini-cli (GitHub)
     type: social-primary
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260714183708/https://github.com/google-gemini/gemini-cli/issues/15821"
   - url: "https://incidentdatabase.ai/cite/1178/"
     title: "Incident 1178: Google Gemini CLI File Deletion"
     publisher: AI Incident Database
     type: other
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260724160136/https://incidentdatabase.ai/cite/1178/"

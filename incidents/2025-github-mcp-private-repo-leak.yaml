@@ -91,8 +91,10 @@ sources:
     publisher: Invariant Labs
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260812222728/https://invariantlabs.ai/blog/mcp-github-vulnerability"
   - url: "https://simonwillison.net/2025/May/26/github-mcp-exploited/"
     title: "GitHub MCP exploited"
     publisher: Simon Willison
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260816023323/https://simonwillison.net/2025/May/26/github-mcp-exploited/"

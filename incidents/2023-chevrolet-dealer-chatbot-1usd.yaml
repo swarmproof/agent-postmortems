@@ -84,8 +84,10 @@ sources:
     publisher: AI Incident Database
     type: other
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260729042720/https://incidentdatabase.ai/cite/622/"
   - url: "https://gizmodo.com/ai-chevy-dealership-chatgpt-bot-customer-service-fail-1851111825"
     title: "Watch a Chevy Dealership's AI Chatbot Sell a Tahoe for $1"
     publisher: Gizmodo
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260820104033/https://gizmodo.com/ai-chevy-dealership-chatgpt-bot-customer-service-fail-1851111825"

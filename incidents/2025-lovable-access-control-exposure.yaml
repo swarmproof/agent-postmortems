@@ -89,8 +89,10 @@ sources:
     publisher: Autonoma
     type: primary-research
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260802153917/https://getautonoma.com/blog/vibe-coding-failures"
   - url: "https://towardsdatascience.com/the-reality-of-vibe-coding-ai-agents-and-the-security-debt-crisis/"
     title: "The Reality of Vibe Coding: AI Agents and the Security Debt Crisis"
     publisher: Towards Data Science
     type: news
     date_accessed: "2026-07-14"
+    archive_url: "https://web.archive.org/web/20260813171746/https://towardsdatascience.com/the-reality-of-vibe-coding-ai-agents-and-the-security-debt-crisis/"
