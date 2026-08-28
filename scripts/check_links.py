@@ -31,7 +31,10 @@ INCIDENTS_DIR = REPO / "incidents"
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 agent-postmortems-linkcheck"}
 RETRIES = 2
-WARN_CODES = {403, 405, 429}
+# "Reachable but refusing this client" — anti-bot / auth responses, not dead links.
+# These warn (verify manually) rather than fail; only 404/410, other 4xx, 5xx and
+# DNS/connection errors block the link gate.
+WARN_CODES = {401, 403, 405, 406, 429, 451}
 
 
 def probe(url: str) -> tuple[str, str]:
