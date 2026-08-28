@@ -101,13 +101,16 @@ sources:
     publisher: The Register
     type: news
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260718042346/https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/"
   - url: "https://thenewstack.io/ai-agents-credential-crisis/"
     title: "How a Cursor AI agent wiped PocketOS's production database in under 10 seconds"
     publisher: The New Stack
     type: news
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260507122934/https://thenewstack.io/ai-agents-credential-crisis/"
   - url: "https://zenity.io/blog/current-events/ai-agent-database-deletion-pocketos"
     title: "AI Agent Destroys Production Database in 9 Seconds"
     publisher: Zenity
     type: primary-research
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260614081638/https://zenity.io/blog/current-events/ai-agent-database-deletion-pocketos"

@@ -255,7 +255,8 @@
           "title": "DPD AI chatbot swears, calls itself 'useless' and criticises firm",
           "publisher": "The Guardian",
           "type": "news",
-          "date_accessed": "2026-07-14"
+          "date_accessed": "2026-07-14",
+          "archive_url": "https://web.archive.org/web/20260828142516/https://www.theguardian.com/technology/2024/jan/20/dpd-ai-chatbot-swears-calls-itself-useless-and-criticises-firm"
         }
       ]
     },
@@ -700,7 +701,8 @@
           "title": "Unseeable prompt injections",
           "publisher": "Simon Willison",
           "type": "primary-research",
-          "date_accessed": "2026-07-14"
+          "date_accessed": "2026-07-14",
+          "archive_url": "https://web.archive.org/web/20260612050629/https://simonwillison.net/2025/Oct/21/unseeable-prompt-injections/"
         }
       ]
     },
@@ -1724,21 +1726,24 @@
           "title": "Cursor-Opus agent snuffs out startup's production database",
           "publisher": "The Register",
           "type": "news",
-          "date_accessed": "2026-08-28"
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260718042346/https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/"
         },
         {
           "url": "https://thenewstack.io/ai-agents-credential-crisis/",
           "title": "How a Cursor AI agent wiped PocketOS's production database in under 10 seconds",
           "publisher": "The New Stack",
           "type": "news",
-          "date_accessed": "2026-08-28"
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260507122934/https://thenewstack.io/ai-agents-credential-crisis/"
         },
         {
           "url": "https://zenity.io/blog/current-events/ai-agent-database-deletion-pocketos",
           "title": "AI Agent Destroys Production Database in 9 Seconds",
           "publisher": "Zenity",
           "type": "primary-research",
-          "date_accessed": "2026-08-28"
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260614081638/https://zenity.io/blog/current-events/ai-agent-database-deletion-pocketos"
         }
       ]
     }
