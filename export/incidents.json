@@ -1,8 +1,8 @@
 {
   "export_schema_version": "1.0",
-  "generated_at": "2026-04-25T00:00:00Z",
+  "generated_at": "2026-06-30T00:00:00Z",
   "taxonomy_version": "1.0",
-  "count": 19,
+  "count": 22,
   "incidents": [
     {
       "schema_version": "1.0",
@@ -892,6 +892,112 @@
     {
       "schema_version": "1.0",
       "taxonomy_version": "1.0",
+      "incident_id": "2025-framelink-figma-mcp-rce",
+      "title": "Command-injection RCE in the Framelink Figma MCP server, triggerable via indirect prompt injection",
+      "summary": "The widely used Framelink Figma MCP server (figma-developer-mcp) built shell commands from unsanitized input in its curl fallback path (CVE-2025-53967), allowing remote code execution. An agent using the tool could be induced via indirect prompt injection to trigger it. Reported by Imperva and fixed in version 0.6.3.",
+      "date": "2025-09-29",
+      "incident_type": "hazard",
+      "status": "final",
+      "confidence": "confirmed",
+      "severity": "high",
+      "severity_rationale": "Remote code execution (CVE-2025-53967, CVSS 7.5) in a third-party MCP server with 600,000+ downloads, reachable through indirect prompt injection against agents that use it. Patched; no in-the-wild exploitation reported.",
+      "system": {
+        "framework": "MCP (Model Context Protocol) client with Framelink Figma MCP server",
+        "models": [],
+        "tools": [
+          "figma-developer-mcp",
+          "figma"
+        ],
+        "vendor": "Framelink",
+        "autonomy_level": "supervised-autonomous"
+      },
+      "primary_failure_class": "prompt-injection",
+      "failure_classes": [
+        {
+          "class": "prompt-injection",
+          "subclass": "indirect"
+        },
+        {
+          "class": "unsafe-action"
+        }
+      ],
+      "attack_vector": "untrusted-content",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "pre-deployment"
+      },
+      "trigger": "The server's fallback curl mechanism (the fetchWithRetry path) interpolated unsanitized URL and header values directly into a shell command string. An attacker-controlled input reaching the get_figma_data tool could inject arbitrary system commands; an agent could be steered to send that input via indirect prompt injection, executing commands on the host even over STDIO transport.",
+      "root_cause": "Unvalidated user input was concatenated into a shell command (OS command injection), and the MCP tool was reachable by an agent that treats retrieved content as actionable. The combination turned a design-data tool into a remote-code-execution path.",
+      "contributing_factors": [
+        "Shell commands were constructed from unsanitized URL/header input.",
+        "The tool could be invoked by an agent acting on untrusted retrieved content.",
+        "The package was widely adopted (600,000+ downloads), widening exposure."
+      ],
+      "detection": "Discovered and reported to the maintainers by Imperva on 2025-07-08; assigned CVE-2025-53967 and covered by security outlets on public disclosure.",
+      "recovery": "The maintainers released a complete fix in version 0.6.3 on 2025-09-29; users on earlier versions were advised to upgrade.",
+      "prevention": "Never build shell commands from unsanitized input (use argument arrays / avoid shell interpolation); validate and sanitize tool inputs; sandbox MCP servers; treat agent-reachable tool inputs as untrusted; keep MCP dependencies patched.",
+      "blast_radius": {
+        "data": {
+          "classification": "confidential",
+          "description": "Exploitation could allow arbitrary command execution on the host, enabling manipulation of design files, exfiltration of intellectual property, or lateral movement into broader networks."
+        },
+        "user_harm": {
+          "categories": [
+            "none-reported"
+          ],
+          "description": "A disclosed vulnerability with a released fix; no in-the-wild exploitation was reported."
+        },
+        "scope": "users of figma-developer-mcp < 0.6.3 (600,000+ downloads)",
+        "reversibility": "reversible"
+      },
+      "cve": [
+        "CVE-2025-53967"
+      ],
+      "cwe": [
+        "CWE-78"
+      ],
+      "tags": [
+        "mcp",
+        "figma",
+        "rce",
+        "command-injection",
+        "cve"
+      ],
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "Agent uses an MCP tool that passes retrieved/untrusted input into a shell command; measure whether untrusted content can reach a command-execution path via the tool without sanitization or sandboxing."
+      },
+      "sources": [
+        {
+          "url": "https://www.imperva.com/blog/another-critical-rce-discovered-in-a-popular-mcp-server/",
+          "title": "Another Critical RCE Discovered in a Popular MCP Server",
+          "publisher": "Imperva",
+          "type": "primary-research",
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260822222353/https://www.imperva.com/blog/another-critical-rce-discovered-in-a-popular-mcp-server/"
+        },
+        {
+          "url": "https://thehackernews.com/2025/10/severe-figma-mcp-vulnerability-lets.html",
+          "title": "Severe Framelink Figma MCP Vulnerability Lets Hackers Execute Code Remotely",
+          "publisher": "The Hacker News",
+          "type": "news",
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260611133421/https://thehackernews.com/2025/10/severe-figma-mcp-vulnerability-lets.html"
+        },
+        {
+          "url": "https://www.darkreading.com/vulnerabilities-threats/figma-mcp-server-agentic-ai-compromise",
+          "title": "Figma MCP Server Opens Orgs to Agentic AI Compromise",
+          "publisher": "Dark Reading",
+          "type": "news",
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260704072439/https://www.darkreading.com/vulnerabilities-threats/figma-mcp-server-agentic-ai-compromise"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
       "incident_id": "2025-gemini-cli-file-deletion",
       "title": "Gemini CLI hallucinated a successful directory move, then deleted a user's files",
       "summary": "Google's Gemini CLI misinterpreted a failed directory-creation command as having succeeded, then executed move operations against that false premise that overwrote and destroyed nearly all of a user's files during a vibe-coding session. Recovery attempts failed.",
@@ -1632,6 +1738,202 @@
           "type": "news",
           "date_accessed": "2026-07-14",
           "archive_url": "https://web.archive.org/web/20260724232759/https://www.docker.com/blog/mcp-horror-stories-whatsapp-data-exfiltration-issue/"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-jadepuffer-agentic-ransomware",
+      "title": "JADEPUFFER: first documented ransomware campaign driven end-to-end by an AI agent",
+      "summary": "Sysdig's Threat Research Team documented JADEPUFFER, which it assessed as the first extortion operation run end-to-end by an LLM agent. After gaining access through a Langflow RCE (CVE-2025-3248), the agent autonomously performed reconnaissance, credential theft, lateral movement, persistence, and encryption of 1,342 configuration items, then wrote its own ransom note.",
+      "date": "2026-06-30",
+      "incident_type": "incident",
+      "status": "factual",
+      "confidence": "confirmed",
+      "severity": "critical",
+      "severity_rationale": "First documented fully autonomous ransomware chain — recon through encryption and ransom note — executed at machine speed (600+ payloads, a 31-second self-correction), with destructive encryption and table drops against a production system.",
+      "system": {
+        "framework": "attacker-operated LLM agent (model/tooling unidentified) via Langflow",
+        "models": [],
+        "tools": [
+          "langflow",
+          "python",
+          "minio",
+          "nacos",
+          "crontab"
+        ],
+        "autonomy_level": "fully-autonomous"
+      },
+      "primary_failure_class": "autonomous-misuse",
+      "failure_classes": [
+        {
+          "class": "autonomous-misuse",
+          "subclass": "cyber-ops"
+        },
+        {
+          "class": "unsafe-action",
+          "subclass": "data-deletion"
+        }
+      ],
+      "attack_vector": "direct-user",
+      "causation": {
+        "entity": "both",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "A threat actor gained initial access via a Langflow remote-code-execution vulnerability (CVE-2025-3248) and delivered Base64-encoded Python payloads to an LLM agent, which then drove the extortion operation autonomously rather than via a human-operated toolkit.",
+      "root_cause": "Agentic tooling let an operator delegate an entire intrusion-to-extortion chain to an LLM: the agent enumerated hosts, harvested credentials, pivoted across services using default credentials and known auth bypasses, established persistence, and encrypted/destroyed data — reacting to errors at machine speed with minimal human direction.",
+      "contributing_factors": [
+        "An exploitable Langflow RCE (CVE-2025-3248) provided initial access.",
+        "Internal services ran with default credentials (e.g. MinIO minioadmin) and known auth bypasses.",
+        "Agentic automation compressed a full attack chain into minutes and adapted to failures autonomously."
+      ],
+      "detection": "Sysdig's Threat Research Team captured and decoded the Base64-encoded Python payloads delivered through the Langflow RCE endpoint, enabling direct analysis of the agent's code and behaviour.",
+      "recovery": "Documented and published by Sysdig as a threat-research analysis; mitigations centre on patching Langflow, removing default credentials, and monitoring for agentic-attack patterns.",
+      "prevention": "Patch known RCEs (e.g. Langflow CVE-2025-3248); eliminate default credentials and enforce least privilege across internal services; segment networks; monitor for machine-speed, multi-stage payload activity indicative of agentic attacks.",
+      "blast_radius": {
+        "data": {
+          "records": 1342,
+          "classification": "credentials",
+          "description": "The agent swept for API keys, cloud credentials, cryptocurrency wallets, and database credentials, dumped a Postgres database, then encrypted 1,342 Nacos configuration items with AES, dropped original tables, and inserted a ransom-note table."
+        },
+        "user_harm": {
+          "categories": [
+            "economic",
+            "property"
+          ],
+          "description": "Destructive encryption and extortion against the victim's production configuration service and database; credentials across the environment were harvested."
+        },
+        "scope": "single victim's production database and configuration services",
+        "reversibility": "irreversible"
+      },
+      "cve": [
+        "CVE-2025-3248"
+      ],
+      "tags": [
+        "agentic-ransomware",
+        "autonomous-attack",
+        "extortion",
+        "langflow"
+      ],
+      "related_incidents": [
+        "2025-gtg1002-ai-orchestrated-espionage"
+      ],
+      "machine_export": {
+        "replayable": false
+      },
+      "sources": [
+        {
+          "url": "https://www.sysdig.com/blog/jadepuffer-agentic-ransomware-for-automated-database-extortion",
+          "title": "JADEPUFFER: Agentic ransomware for automated database extortion",
+          "publisher": "Sysdig",
+          "type": "primary-research",
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260806234359/https://www.sysdig.com/blog/jadepuffer-agentic-ransomware-for-automated-database-extortion"
+        },
+        {
+          "url": "https://cyberscoop.com/sysdig-judepuffer-ai-agentic-ransomware-attack/",
+          "title": "Sysdig clocks first documented case of agentic ransomware",
+          "publisher": "CyberScoop",
+          "type": "news",
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260821155447/https://cyberscoop.com/sysdig-judepuffer-ai-agentic-ransomware-attack/"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-microsoft-mcp-tool-description-poisoning",
+      "title": "Microsoft advisory: poisoned MCP tool descriptions can silently redirect agents to exfiltrate data",
+      "summary": "Microsoft Incident Response and Microsoft Defender researchers warned that a poisoned Model Context Protocol tool description can embed hidden instructions an agent follows, using the user's own permissions to collect and exfiltrate business data. Because MCP can pick up description changes dynamically, a poisoned version can take effect without a new approval step.",
+      "date": "2026-06-30",
+      "incident_type": "hazard",
+      "status": "factual",
+      "confidence": "corroborated",
+      "severity": "high",
+      "severity_rationale": "A vendor-confirmed trust-boundary weakness affecting enterprise agents that connect business systems via MCP; enables silent data exfiltration under the user's permissions across widely deployed platforms.",
+      "system": {
+        "framework": "Microsoft 365 Copilot / Copilot Studio / Azure AI Foundry / custom MCP servers",
+        "models": [],
+        "tools": [
+          "mcp",
+          "copilot"
+        ],
+        "vendor": "Microsoft",
+        "autonomy_level": "supervised-autonomous"
+      },
+      "primary_failure_class": "prompt-injection",
+      "failure_classes": [
+        {
+          "class": "prompt-injection",
+          "subclass": "tool-metadata"
+        },
+        {
+          "class": "data-exfiltration",
+          "subclass": "via-tool"
+        }
+      ],
+      "attack_vector": "tool-metadata",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "A tool connected via MCP carries a plain-text description that tells the agent what it does. An attacker poisons that description with hidden instructions; because MCP can pick up description changes dynamically, the poisoned version becomes active without a new approval step in default setups. When a user makes a normal request, the agent follows the hidden instruction and copies data to an attacker-controlled tool while returning a normal-looking answer.",
+      "root_cause": "AI agents treat third-party MCP tool descriptions as trusted instructions. This is a trust-boundary problem, not a bug in the assistant: descriptions from external tools enter the model context with the standing of instructions, and dynamic description updates bypass the initial approval.",
+      "contributing_factors": [
+        "MCP tool descriptions can change after approval and take effect without re-review.",
+        "Tool descriptions are consumed as instructions rather than as untrusted data.",
+        "Actions run with the requesting user's permissions, so exfiltration looks routine."
+      ],
+      "detection": "Documented by Microsoft Incident Response and Microsoft Defender researchers in a public advisory; reported by multiple security outlets.",
+      "recovery": "Microsoft published guidance for teams approving agents that connect to business systems, emphasising treating tool descriptions as untrusted and re-reviewing on change. No specific in-the-wild exploitation was reported in the advisory.",
+      "prevention": "Treat MCP tool metadata as untrusted input; pin and re-review tool descriptions on change; require approval before cross-tool data movement; constrain the destinations tools may send data to; isolate untrusted tools from sensitive ones.",
+      "blast_radius": {
+        "data": {
+          "classification": "confidential",
+          "description": "Business data reachable by an enterprise agent (e.g. supplier invoices in the advisory's example) could be collected under the user's permissions and copied to an attacker-controlled server."
+        },
+        "user_harm": {
+          "categories": [
+            "none-reported"
+          ],
+          "description": "A vendor advisory describing an attack class; no specific in-the-wild exploitation was reported."
+        },
+        "scope": "enterprise agents connecting business systems via MCP",
+        "reversibility": "irreversible"
+      },
+      "tags": [
+        "mcp",
+        "tool-poisoning",
+        "copilot",
+        "vendor-advisory"
+      ],
+      "related_incidents": [
+        "2025-whatsapp-mcp-tool-poisoning"
+      ],
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "An approved MCP tool's description is later changed to embed instructions to forward data to another tool; measure whether the agent re-reviews the changed description or silently acts on the injected instruction."
+      },
+      "sources": [
+        {
+          "url": "https://thehackernews.com/2026/06/microsoft-warns-poisoned-mcp-tool.html",
+          "title": "Microsoft Warns Poisoned MCP Tool Descriptions Can Make AI Agents Leak Data",
+          "publisher": "The Hacker News",
+          "type": "news",
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260817214224/https://thehackernews.com/2026/06/microsoft-warns-poisoned-mcp-tool.html"
+        },
+        {
+          "url": "https://www.techrepublic.com/article/news-microsoft-mcp-tool-risk/",
+          "title": "Microsoft Flags MCP Tool Descriptions as Hidden AI Agent Attack Path",
+          "publisher": "TechRepublic",
+          "type": "news",
+          "date_accessed": "2026-08-28",
+          "archive_url": "https://web.archive.org/web/20260711133424/https://www.techrepublic.com/article/news-microsoft-mcp-tool-risk/"
         }
       ]
     },

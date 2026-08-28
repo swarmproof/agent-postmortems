@@ -98,8 +98,10 @@ sources:
     publisher: The Hacker News
     type: news
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260817214224/https://thehackernews.com/2026/06/microsoft-warns-poisoned-mcp-tool.html"
   - url: "https://www.techrepublic.com/article/news-microsoft-mcp-tool-risk/"
     title: "Microsoft Flags MCP Tool Descriptions as Hidden AI Agent Attack Path"
     publisher: TechRepublic
     type: news
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260711133424/https://www.techrepublic.com/article/news-microsoft-mcp-tool-risk/"

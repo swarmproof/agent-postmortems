@@ -94,13 +94,16 @@ sources:
     publisher: Imperva
     type: primary-research
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260822222353/https://www.imperva.com/blog/another-critical-rce-discovered-in-a-popular-mcp-server/"
   - url: "https://thehackernews.com/2025/10/severe-figma-mcp-vulnerability-lets.html"
     title: "Severe Framelink Figma MCP Vulnerability Lets Hackers Execute Code Remotely"
     publisher: The Hacker News
     type: news
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260611133421/https://thehackernews.com/2025/10/severe-figma-mcp-vulnerability-lets.html"
   - url: "https://www.darkreading.com/vulnerabilities-threats/figma-mcp-server-agentic-ai-compromise"
     title: "Figma MCP Server Opens Orgs to Agentic AI Compromise"
     publisher: Dark Reading
     type: news
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260704072439/https://www.darkreading.com/vulnerabilities-threats/figma-mcp-server-agentic-ai-compromise"

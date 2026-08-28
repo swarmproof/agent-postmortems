@@ -97,8 +97,10 @@ sources:
     publisher: Sysdig
     type: primary-research
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260806234359/https://www.sysdig.com/blog/jadepuffer-agentic-ransomware-for-automated-database-extortion"
   - url: "https://cyberscoop.com/sysdig-judepuffer-ai-agentic-ransomware-attack/"
     title: "Sysdig clocks first documented case of agentic ransomware"
     publisher: CyberScoop
     type: news
     date_accessed: "2026-08-28"
+    archive_url: "https://web.archive.org/web/20260821155447/https://cyberscoop.com/sysdig-judepuffer-ai-agentic-ransomware-attack/"
