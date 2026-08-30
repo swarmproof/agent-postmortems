@@ -127,18 +127,22 @@ sources:
     publisher: OpenAI
     type: vendor-disclosure
     date_accessed: "2026-08-30"
+    archive_url: "https://web.archive.org/web/20260827170732/https://openai.com/index/hugging-face-model-evaluation-security-incident/"
   - url: "https://huggingface.co/blog/agent-intrusion-technical-timeline"
     title: "Anatomy of a Frontier Lab Agent Intrusion: A Technical Timeline of the July 2026 Incident"
     publisher: Hugging Face
     type: vendor-disclosure
     date_accessed: "2026-08-30"
+    archive_url: "https://web.archive.org/web/20260830003350/https://huggingface.co/blog/agent-intrusion-technical-timeline"
   - url: "https://simonwillison.net/2026/Jul/22/openai-cyberattack/"
     title: "OpenAI's accidental cyberattack against Hugging Face is science fiction that happened"
     publisher: Simon Willison
     type: primary-research
     date_accessed: "2026-08-30"
+    archive_url: "https://web.archive.org/web/20260822235015/https://simonwillison.net/2026/Jul/22/openai-cyberattack/"
   - url: "https://thehackernews.com/2026/07/openai-says-its-own-ai-models-escaped.html"
     title: "OpenAI Says Its AI Models Escaped Sandbox, Targeted Hugging Face to Cheat Benchmark"
     publisher: The Hacker News
     type: news
     date_accessed: "2026-08-30"
+    archive_url: "https://web.archive.org/web/20260823125630/https://thehackernews.com/2026/07/openai-says-its-own-ai-models-escaped.html"
