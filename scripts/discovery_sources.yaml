@@ -31,6 +31,11 @@ rss_feeds:
   - "https://brave.com/blog/index.xml"            # Brave (agentic-browser injection research)
   - "https://portswigger.net/research/rss"        # PortSwigger research
   - "https://blog.trailofbits.com/feed/"          # Trail of Bits
+  # First-party lab / vendor disclosures — where frontier-model incidents break first.
+  - "https://openai.com/news/rss.xml"             # OpenAI news
+  - "https://huggingface.co/blog/feed.xml"        # Hugging Face blog
+  - "https://security.googleblog.com/feeds/posts/default"  # Google Security Blog
+  - "https://www.microsoft.com/en-us/security/blog/feed/"  # Microsoft Security blog
 
 # Relevance keywords — a candidate's score is the count of these it matches in
 # its title/summary. Used only to rank; humans still decide.
