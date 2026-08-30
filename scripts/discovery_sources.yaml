@@ -17,10 +17,20 @@ arxiv_queries:
   - 'all:"agent" AND all:"tool" AND cat:cs.CR'
   - 'all:"LLM agent" AND all:"security"'
 
-# Plain RSS/Atom feeds from primary-research sources worth watching.
-# (Only feeds that exist and are stable; failures are non-fatal.)
+# Plain RSS/Atom feeds. Primary security-research sources and structured incident
+# databases — higher signal than general news, and boosted in ranking (see
+# discover_incidents.py). Only verified-live feeds; failures are non-fatal.
+# Known gaps without a usable feed (revisit if they add one, or add a custom
+# fetcher): Invariant Labs (no RSS), OECD AI Incidents Monitor (no RSS).
 rss_feeds:
-  - "https://simonwillison.net/atom/everything/"
+  # Structured incident database — directly on-topic, real-world harms.
+  - "https://incidentdatabase.ai/rss.xml"
+  # Primary agent/LLM security research.
+  - "https://embracethered.com/blog/index.xml"   # Embrace The Red (Johann Rehberger)
+  - "https://simonwillison.net/atom/everything/"  # Simon Willison
+  - "https://brave.com/blog/index.xml"            # Brave (agentic-browser injection research)
+  - "https://portswigger.net/research/rss"        # PortSwigger research
+  - "https://blog.trailofbits.com/feed/"          # Trail of Bits
 
 # Relevance keywords — a candidate's score is the count of these it matches in
 # its title/summary. Used only to rank; humans still decide.
@@ -45,3 +55,12 @@ relevance_keywords:
   - "denial of wallet"
   - overspend
   - supply chain
+  - ransomware
+  - extortion
+  - credential
+  - database
+  - "code execution"
+  - rce
+  - sandbox
+  - backdoor
+  - "data exfiltration"
