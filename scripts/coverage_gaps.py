@@ -62,13 +62,13 @@ def extract_headings(md_text: str, list_url: str) -> list[dict]:
                 break
         entries.append({
             "title": title, "date": date, "url": url,
-            "cves": {c.upper() for c in CVE_RE.findall(title)},
+            "cves": sorted({c.upper() for c in CVE_RE.findall(title)}),
         })
     return entries
 
 
 def covered(entry: dict, cited_urls: set, corpus_titles: list[set], cited_cves: set) -> bool:
-    if entry["cves"] & cited_cves:
+    if set(entry["cves"]) & cited_cves:
         return True
     if url_key(entry["url"]) in cited_urls:
         return True
@@ -94,7 +94,7 @@ def find_gaps(limit: int) -> tuple[list[dict], int]:
                 continue
             entries.append({
                 "title": it["title"], "date": (it.get("date") or "")[:10],
-                "url": it["url"], "cves": {c.upper() for c in CVE_RE.findall(it.get("summary", ""))},
+                "url": it["url"], "cves": sorted({c.upper() for c in CVE_RE.findall(it.get("summary", ""))}),
                 "ref": "aiid",
             })
 
