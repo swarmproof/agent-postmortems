@@ -102,13 +102,16 @@ sources:
     publisher: Embrace The Red (Johann Rehberger)
     type: primary-research
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260821082459/https://embracethered.com/blog/posts/2025/amazon-q-developer-remote-code-execution/"
   - url: "https://www.theregister.com/security/2025/08/20/aws-patches-q-developer-after-prompt-injection-rce-demo/827867"
     title: "AWS patches Q Developer after prompt injection, RCE demo"
     publisher: The Register
     type: news
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260829091738/https://www.theregister.com/security/2025/08/20/aws-patches-q-developer-after-prompt-injection-rce-demo/827867"
   - url: "https://aws.amazon.com/security/security-bulletins/AWS-2025-019"
     title: "AWS security bulletin AWS-2025-019"
     publisher: Amazon Web Services
     type: vendor-disclosure
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260827213952/https://aws.amazon.com/security/security-bulletins/AWS-2025-019/"

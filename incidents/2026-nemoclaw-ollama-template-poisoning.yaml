@@ -109,6 +109,7 @@ sources:
     publisher: eSecurity Planet
     type: news
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260828033447/https://www.esecurityplanet.com/vulnerabilities/news-nvidia-nemoclaw-cve-2026-65105/"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-65105"
     title: "CVE-2026-65105 — NVIDIA NemoClaw local model-template poisoning"
     publisher: NVD

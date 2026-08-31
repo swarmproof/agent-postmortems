@@ -98,8 +98,10 @@ sources:
     publisher: Embrace The Red (Johann Rehberger)
     type: primary-research
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260809081152/https://embracethered.com/blog/posts/2025/claude-code-exfiltration-via-dns-requests/"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2025-55284"
     title: "CVE-2025-55284 — Claude Code data exfiltration via DNS"
     publisher: NVD
     type: other
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20251203114156/https://nvd.nist.gov/vuln/detail/CVE-2025-55284"

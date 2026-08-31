@@ -99,8 +99,10 @@ sources:
     publisher: Embrace The Red (Johann Rehberger)
     type: primary-research
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260809081152/https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2025-53773"
     title: "CVE-2025-53773 — GitHub Copilot / Visual Studio Code remote code execution"
     publisher: NVD
     type: other
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260804083240/https://nvd.nist.gov/vuln/detail/cve-2025-53773"

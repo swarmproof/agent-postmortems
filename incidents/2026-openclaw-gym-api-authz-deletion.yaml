@@ -96,8 +96,10 @@ sources:
     publisher: The Register
     type: news
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260819123215/https://www.theregister.com/ai-and-ml/2026/08/10/gym-rat-asks-ai-agent-to-book-him-a-class-it-hacks-a-waitlist-api-to-bump-him-up-the-list/5285591"
   - url: "https://www.aikido.dev/blog/australian-gym-hack-openclaw-test"
     title: "Reproducing the Australian gym-booking exploit with OpenClaw"
     publisher: Aikido
     type: primary-research
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260828015938/https://www.aikido.dev/blog/australian-gym-hack-openclaw-test"

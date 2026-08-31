@@ -106,6 +106,7 @@ sources:
     publisher: The Hacker News
     type: news
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260824125117/https://thehackernews.com/2026/08/malicious-mcp-servers-can-split.html"
   - url: "https://github.com/asset-group/ghostsplice"
     title: "ghostsplice — PoC for the Cross-Channel Trust Fragmentation Attack"
     publisher: ASSET Research Group
