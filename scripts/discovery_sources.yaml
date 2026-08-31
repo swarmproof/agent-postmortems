@@ -37,6 +37,22 @@ rss_feeds:
   - "https://security.googleblog.com/feeds/posts/default"  # Google Security Blog
   - "https://www.microsoft.com/en-us/security/blog/feed/"  # Microsoft Security blog
 
+# CVE keyword searches via the NVD API (keyless, free-text). Many agent incidents
+# are CVEs first. Queries are ANDed by NVD; keep them tight to agent/LLM/MCP scope.
+cve_queries:
+  - "MCP server"
+  - "prompt injection"
+  - "LLM agent"
+  - "AI coding agent"
+  - "AI agent remote code execution"
+
+# GitHub global Security Advisory database. No free-text filter, so we pull recent
+# advisories and keyword-filter locally — enable if you want GHSA coverage beyond
+# what NVD keyword search already returns (CVEs usually appear in both).
+github_advisories:
+  enabled: true
+  pages: 1
+
 # Relevance keywords — a candidate's score is the count of these it matches in
 # its title/summary. Used only to rank; humans still decide.
 relevance_keywords:

@@ -5,8 +5,9 @@
 # ///
 """Weekly incident discovery — the deterministic, LLM-free front of the curation pipeline.
 
-Harvests candidate agent-failure reports from public, keyless feeds (Google News RSS,
-the arXiv API, and plain RSS/Atom feeds configured in discovery_sources.yaml),
+Harvests candidate agent-failure reports from public, keyless sources — Google News
+RSS, the arXiv API, plain RSS/Atom feeds, the NVD CVE keyword API, and the GitHub
+global Security Advisory database (all configured in discovery_sources.yaml) —
 de-duplicates them against the existing corpus, ranks by relevance, and emits a
 candidate list. It never writes an incident — a human (or the auto-draft layer)
 turns a candidate into a schema-valid record, which still goes through PR review.
@@ -28,6 +29,7 @@ import html
 import json
 import re
 import sys
+import time
 import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -45,10 +47,11 @@ STOPWORDS = {"the", "a", "an", "ai", "and", "of", "to", "in", "on", "for", "afte
 
 
 # --------------------------------------------------------------------------- corpus
-def load_corpus() -> tuple[set[str], list[set[str]]]:
-    """Return (cited URL keys, list of tokenized existing titles) for dedup."""
+def load_corpus() -> tuple[set[str], list[set[str]], set[str]]:
+    """Return (cited URL keys, tokenized existing titles, cited CVE ids) for dedup."""
     urls: set[str] = set()
     titles: list[set[str]] = []
+    cves: set[str] = set()
     for path in INCIDENTS_DIR.glob("*.yaml"):
         if path.name.startswith("_"):
             continue
@@ -58,7 +61,9 @@ def load_corpus() -> tuple[set[str], list[set[str]]]:
             urls.add(url_key(url))
         for text in (rec.get("title", ""), rec.get("incident_id", "")):
             titles.append(tokenize(text))
-    return urls, titles
+        for cve in rec.get("cve", []) or []:
+            cves.add(cve.upper())
+    return urls, titles, cves
 
 
 def url_key(url: str) -> str:
@@ -133,6 +138,65 @@ def arxiv(query: str, limit: int = 15) -> list[dict]:
     return items
 
 
+def nvd(query: str, limit: int = 20) -> list[dict]:
+    """NVD CVE keyword search (keyless). Free-text, targets agent/LLM/MCP CVEs."""
+    q = urllib.parse.quote(query)
+    url = (f"https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch={q}"
+           f"&resultsPerPage={limit}")
+    body = fetch(url)
+    if not body:
+        return []
+    try:
+        data = json.loads(body)
+    except ValueError:
+        return []
+    items = []
+    for v in data.get("vulnerabilities", []):
+        cve = v.get("cve", {})
+        cid = cve.get("id", "")
+        descs = [d["value"] for d in cve.get("descriptions", []) if d.get("lang") == "en"]
+        desc = descs[0] if descs else ""
+        if not cid:
+            continue
+        items.append({
+            "title": f"{cid}: {desc[:140]}",
+            "url": f"https://nvd.nist.gov/vuln/detail/{cid}",
+            "date": cve.get("published", ""),
+            "summary": desc[:500],
+            "cve_id": cid.upper(),
+        })
+    return items
+
+
+def github_advisories(pages: int = 1, per_page: int = 100) -> list[dict]:
+    """GitHub global Security Advisory DB (unauth). No free-text filter, so we pull
+    recent advisories and keyword-filter locally in discover()."""
+    items = []
+    for page in range(1, pages + 1):
+        url = (f"https://api.github.com/advisories?per_page={per_page}"
+               f"&sort=published&page={page}")
+        body = fetch(url)
+        if not body:
+            break
+        try:
+            rows = json.loads(body)
+        except ValueError:
+            break
+        if not isinstance(rows, list) or not rows:
+            break
+        for a in rows:
+            summary = a.get("summary") or ""
+            ghsa = a.get("ghsa_id") or ""
+            items.append({
+                "title": summary or ghsa,
+                "url": a.get("html_url") or f"https://github.com/advisories/{ghsa}",
+                "date": a.get("published_at", ""),
+                "summary": ((a.get("description") or "")[:500]),
+                "cve_id": (a.get("cve_id") or "").upper(),
+            })
+    return items
+
+
 # --------------------------------------------------------------------------- pipeline
 def score(item: dict, keywords: list[str]) -> int:
     hay = f"{item['title']} {item.get('summary', '')}".lower()
@@ -141,7 +205,7 @@ def score(item: dict, keywords: list[str]) -> int:
 
 def discover(days: int, limit: int) -> list[dict]:
     cfg = yaml.safe_load(SOURCES_FILE.read_text())
-    cited_urls, corpus_titles = load_corpus()
+    cited_urls, corpus_titles, cited_cves = load_corpus()
     keywords = cfg.get("relevance_keywords", [])
 
     raw: list[dict] = []
@@ -153,15 +217,26 @@ def discover(days: int, limit: int) -> list[dict]:
         xml_text = fetch(feed)
         if xml_text:
             raw += [dict(it, source="rss") for it in parse_rss_items(xml_text)]
+    for i, q in enumerate(cfg.get("cve_queries", [])):
+        if i:
+            time.sleep(6)                          # NVD keyless rate limit: ~5 req / 30s
+        raw += [dict(it, source="cve") for it in nvd(q)]
+    if cfg.get("github_advisories", {}).get("enabled"):
+        pages = cfg["github_advisories"].get("pages", 1)
+        raw += [dict(it, source="ghsa") for it in github_advisories(pages)]
 
     seen_keys: set[str] = set()
+    seen_cves: set[str] = set()
     candidates: list[dict] = []
     for it in raw:
         key = url_key(it["url"])
-        if key in seen_keys:                       # dedup within this run
+        cid = it.get("cve_id", "")
+        if key in seen_keys or (cid and cid in seen_cves):   # dedup within this run
             continue
         seen_keys.add(key)
-        if key in cited_urls:                      # already in the corpus
+        if cid:
+            seen_cves.add(cid)
+        if key in cited_urls or (cid and cid in cited_cves):  # already in the corpus
             continue
         toks = tokenize(it["title"])
         likely_dupe = any(len(toks & t) >= 3 and len(toks & t) / max(len(toks), 1) > 0.6
@@ -169,9 +244,9 @@ def discover(days: int, limit: int) -> list[dict]:
         rel = score(it, keywords)
         if rel == 0:                               # not agent-relevant enough
             continue
-        # Curated primaries (research feeds, incident DBs, arXiv) outrank general
-        # news of equal keyword relevance — favours signal over news volume.
-        if it["source"] in ("arxiv", "rss"):
+        # Curated primaries (research feeds, incident DBs, arXiv, CVE/GHSA) outrank
+        # general news of equal keyword relevance — favours signal over news volume.
+        if it["source"] in ("arxiv", "rss", "cve", "ghsa"):
             rel += 2
         candidates.append({
             "title": it["title"], "url": it["url"], "date": it.get("date", ""),
