@@ -2,6 +2,8 @@
 
 A public, structured database of real AI-agent failures, plus a schema for reporting them.
 
+**Browse the corpus → https://swarmproof.github.io/agent-postmortems/**
+
 ## Why
 
 Agents fail in production in novel, repeating ways — runaway loops, tool misuse, prompt injection, double side-effects, cost blowups — but there's no shared, structured record of these failures. This repository provides a reporting schema and a corpus of incidents that conform to it, so the same failures are documented once and reusable across teams.
@@ -14,13 +16,23 @@ Failures are classified as an ordered causal **chain** against the versioned tax
 
 **The one rule:** every incident needs a public, linkable source. No rumors, no speculation, no editorializing. Report failures factually; name systems without attacking them. Credibility depends on this rigor — and CI enforces it (schema, taxonomy, id-uniqueness, link-liveness, and a neutrality lint).
 
+## Browse and cite
+
+The corpus is published as a static site at **[swarmproof.github.io/agent-postmortems](https://swarmproof.github.io/agent-postmortems/)** — a filterable index (by failure class, severity, incident/hazard, year), a permalink page per incident with a copyable **BibTeX** citation, and an [RSS feed](https://swarmproof.github.io/agent-postmortems/feed.xml). The site is generated from `incidents/*.yaml` by [`scripts/build_site.py`](./scripts/build_site.py) and redeployed on every merge.
+
 ## Contribute an incident
 
 Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml), fill it in, validate locally with `uv run scripts/validate.py`, and open a PR. The PR template carries the sourcing + neutrality checklist; CI runs every gate. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
-## Automated discovery
+## Automated curation pipeline
 
-A weekly workflow finds new and not-yet-documented agent incidents and files them for review — **it automates the toil (discovery, de-dup, drafting, validation) but never merges anything without a human**. Layer 1 opens a ranked "candidate incidents" issue with zero setup; Layer 2 (opt-in, set an `ANTHROPIC_API_KEY` secret) has Claude draft schema-valid records into review PRs. See [`docs/CURATION-PIPELINE.md`](./docs/CURATION-PIPELINE.md).
+Weekly workflows find new and not-yet-documented agent incidents and file them for review — **automating the toil (discovery, de-dup, drafting, validation) but never merging anything without a human**:
+
+- **Discovery** harvests candidates from keyless sources — security-research feeds, first-party lab/vendor disclosures, arXiv, Google News, and the **NVD CVE / GitHub advisory** databases — de-dupes against the corpus, and posts a ranked "candidate incidents" issue (zero setup).
+- **Completeness critic** diffs the corpus against curated external agent-incident lists each week and files a "coverage gaps" issue — the "what did we miss?" review, automated.
+- **Auto-draft** (opt-in, set an `ANTHROPIC_API_KEY` secret) has Claude research each candidate and open review-ready PRs.
+
+See [`docs/CURATION-PIPELINE.md`](./docs/CURATION-PIPELINE.md).
 
 ## How it feeds the toolkit
 

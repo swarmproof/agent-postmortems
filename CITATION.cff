@@ -6,9 +6,11 @@ authors:
   - family-names: Boudoukha
     given-names: Maroua
 repository-code: "https://github.com/swarmproof/agent-postmortems"
-url: "https://github.com/swarmproof/agent-postmortems"
-license: Apache-2.0
-type: software
+url: "https://swarmproof.github.io/agent-postmortems/"
+license:
+  - Apache-2.0
+  - CC-BY-4.0
+type: dataset
 keywords:
   - ai-agents
   - agent-reliability
