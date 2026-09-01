@@ -13,3 +13,6 @@ planning/
 
 # generated static site (built + deployed by pages.yml)
 site/
+
+# python bytecode
+__pycache__/
