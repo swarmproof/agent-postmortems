@@ -2274,14 +2274,16 @@
           "title": "Critical Flaws in Anthropic, Google, and OpenAI's Coding Agents",
           "publisher": "Novee Security",
           "type": "primary-research",
-          "date_accessed": "2026-08-31"
+          "date_accessed": "2026-08-31",
+          "archive_url": "https://web.archive.org/web/20260831180239/https://novee.security/blog/critical-flaws-in-anthropic-google-and-openais-coding-agents/"
         },
         {
           "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-54316",
           "title": "CVE-2026-54316 — Claude Code data exfiltration via pre-approved Hugging Face access",
           "publisher": "NVD",
           "type": "other",
-          "date_accessed": "2026-08-31"
+          "date_accessed": "2026-08-31",
+          "archive_url": "https://web.archive.org/web/20260901124610/https://nvd.nist.gov/vuln/detail/cve-2026-54316"
         }
       ]
     },
@@ -2385,7 +2387,8 @@
           "title": "ghostsplice — PoC for the Cross-Channel Trust Fragmentation Attack",
           "publisher": "ASSET Research Group",
           "type": "primary-research",
-          "date_accessed": "2026-08-31"
+          "date_accessed": "2026-08-31",
+          "archive_url": "https://web.archive.org/web/20260831180110/https://github.com/asset-group/ghostsplice"
         }
       ]
     },
@@ -2675,7 +2678,8 @@
           "title": "Oasis Security Researchers Reveal Security Flaw in NemoClaw AI Agent",
           "publisher": "Security Boulevard / Oasis Security",
           "type": "primary-research",
-          "date_accessed": "2026-08-31"
+          "date_accessed": "2026-08-31",
+          "archive_url": "https://web.archive.org/web/20260831180129/https://securityboulevard.com/2026/08/oasis-security-researchers-reveal-security-flaw-in-nemoclaw-ai-agent/"
         },
         {
           "url": "https://www.esecurityplanet.com/vulnerabilities/news-nvidia-nemoclaw-cve-2026-65105/",
@@ -2690,7 +2694,8 @@
           "title": "CVE-2026-65105 — NVIDIA NemoClaw local model-template poisoning",
           "publisher": "NVD",
           "type": "other",
-          "date_accessed": "2026-08-31"
+          "date_accessed": "2026-08-31",
+          "archive_url": "https://web.archive.org/web/20260831180105/https://nvd.nist.gov/vuln/detail/cve-2026-65105"
         }
       ]
     },

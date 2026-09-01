@@ -104,6 +104,7 @@ sources:
     publisher: Security Boulevard / Oasis Security
     type: primary-research
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260831180129/https://securityboulevard.com/2026/08/oasis-security-researchers-reveal-security-flaw-in-nemoclaw-ai-agent/"
   - url: "https://www.esecurityplanet.com/vulnerabilities/news-nvidia-nemoclaw-cve-2026-65105/"
     title: "NVIDIA Patches High-Severity NemoClaw Flaw After Model-Poisoning Demo"
     publisher: eSecurity Planet
@@ -115,3 +116,4 @@ sources:
     publisher: NVD
     type: other
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260831180105/https://nvd.nist.gov/vuln/detail/cve-2026-65105"
