@@ -30,3 +30,8 @@ jobs:
       # Committing them per-PR causes merge conflicts between branches.
       - name: Build and validate exports
         run: uv run scripts/build_exports.py
+
+      # G-SITE — the static site builds from every incident (smoke test; the
+      # pages.yml workflow does the real build + deploy on main).
+      - name: Build site (smoke)
+        run: uv run scripts/build_site.py

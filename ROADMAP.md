@@ -15,6 +15,8 @@
 - Periodic export refresh
 
 ## Planned
-- Generated static site with per-incident permalinks, filters by failure class / blast radius, "Cite this", and RSS (see `adr/0003-astro-for-site.md`)
 - Consume the `scenarios.json` / `seeds.json` export in downstream replay/fuzzing tooling
 - Cross-linking with external incident databases; full-text search
+
+## Shipped (site)
+- Static site (`scripts/build_site.py`) with per-incident permalinks, client-side filters (failure class / severity / type / year), "Cite this" (BibTeX), and an RSS feed; built and deployed to GitHub Pages by `.github/workflows/pages.yml` (see `adr/0003-astro-for-site.md`)
