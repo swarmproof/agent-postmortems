@@ -1,49 +1,109 @@
 # agent-postmortems
 
-A public, structured database of real AI-agent failures, plus a schema for reporting them.
+**A structured, public database of real AI-agent failures — and the schema for reporting them.**
 
-**Browse the corpus → https://swarmproof.github.io/agent-postmortems/**
+[![validate](https://github.com/swarmproof/agent-postmortems/actions/workflows/validate.yml/badge.svg)](https://github.com/swarmproof/agent-postmortems/actions/workflows/validate.yml)
+[![incidents](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fswarmproof%2Fagent-postmortems%2Fmain%2Fexport%2Fincidents.json&query=%24.count&label=incidents&color=1f6feb)](https://swarmproof.github.io/agent-postmortems/)
+[![site](https://img.shields.io/badge/site-live-2ea043)](https://swarmproof.github.io/agent-postmortems/)
+[![code: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](./LICENSE)
+[![data: CC-BY-4.0](https://img.shields.io/badge/data-CC--BY--4.0-blue)](./LICENSE-DATA)
 
-## Why
+Agents now take real actions in production — they call tools, spend money, write to databases, browse the web, and run code. They fail in novel but **repeating** ways, yet there is no shared, structured record of those failures. This repo is that record: one rigorous schema, a growing corpus of sourced incidents that conform to it, and the tooling to keep it honest.
 
-Agents fail in production in novel, repeating ways — runaway loops, tool misuse, prompt injection, double side-effects, cost blowups — but there's no shared, structured record of these failures. This repository provides a reporting schema and a corpus of incidents that conform to it, so the same failures are documented once and reusable across teams.
+**→ Browse and search the corpus at [swarmproof.github.io/agent-postmortems](https://swarmproof.github.io/agent-postmortems/)**
 
-## The post-mortem standard
+## What's in the corpus
 
-Every incident is one YAML file conforming to [`schema/incident.schema.json`](./schema/incident.schema.json) (draft 2020-12), documented in [`SCHEMA.md`](./SCHEMA.md) and validated fail-closed in CI. The record carries a small required core — `incident_id` · `title` · `date` · `incident_type` · `system` · `primary_failure_class` · `failure_classes` · `trigger` · `blast_radius` · `root_cause` · `detection` · `recovery` · `prevention` · `sources` — plus an optional body (`severity`, `confidence`, `causation`, `attack_vector`, `timeline`, cross-references, and more).
+| | |
+|---|---|
+| **Incidents** | 31 and growing (2023–2026) |
+| **Type** | 17 realized incidents · 14 demonstrated hazards / near-misses |
+| **Coverage** | 15 of 19 failure classes; 9 CVE-backed |
+| **Every record** | conforms to [one schema](./SCHEMA.md), cites public sources, classified against a [versioned taxonomy](./TAXONOMY.md) |
 
-Failures are classified as an ordered causal **chain** against the versioned taxonomy in [`TAXONOMY.md`](./TAXONOMY.md) (authority file: [`schema/taxonomy.yaml`](./schema/taxonomy.yaml)). Realized incidents and demonstrated hazards/near-misses are both recorded, labeled honestly via `incident_type`.
+Failures span prompt injection, tool misuse, data exfiltration, sandbox escapes, model-template poisoning, reward hacking, autonomous misuse, cost blowups, and destructive actions — across coding agents, MCP servers, browser agents, chatbots, and frontier-model evaluations.
 
-**The one rule:** every incident needs a public, linkable source. No rumors, no speculation, no editorializing. Report failures factually; name systems without attacking them. Credibility depends on this rigor — and CI enforces it (schema, taxonomy, id-uniqueness, link-liveness, and a neutrality lint).
+## What a record looks like
 
-## Browse and cite
+Each incident is one YAML file (`incidents/<incident_id>.yaml`). Abbreviated example:
 
-The corpus is published as a static site at **[swarmproof.github.io/agent-postmortems](https://swarmproof.github.io/agent-postmortems/)** — a filterable index (by failure class, severity, incident/hazard, year), a permalink page per incident with a copyable **BibTeX** citation, and an [RSS feed](https://swarmproof.github.io/agent-postmortems/feed.xml). The site is generated from `incidents/*.yaml` by [`scripts/build_site.py`](./scripts/build_site.py) and redeployed on every merge.
+```yaml
+incident_id: 2025-replit-prod-db-deletion
+title: "Replit AI agent deleted a production database during a declared code freeze"
+date: "2025-07-18"
+incident_type: incident          # incident (realized) | hazard (PoC / near-miss)
+severity: high
+confidence: confirmed
+system:
+  framework: Replit AI agent
+  tools: ["database", "code-execution"]
+  autonomy_level: supervised-autonomous
+primary_failure_class: unsafe-action
+failure_classes:                 # the causal chain, not a single label
+  - {class: unsafe-action, subclass: data-deletion}
+  - {class: excessive-agency, subclass: missing-approval-gate}
+  - {class: hallucination, subclass: false-state}
+trigger: "During an active code freeze, the agent ran destructive DB commands…"
+root_cause: "Irreversible high-privilege actions against production with no enforced approval gate…"
+blast_radius:
+  data: {records: 1200, classification: confidential, description: "Production DB deleted…"}
+  reversibility: partially-reversible
+prevention: "Enforce dev/prod separation; require approval for destructive actions…"
+sources:
+  - {url: "https://…", type: news, publisher: Fortune}
+```
+
+Required core + a large optional body (`causation`, `attack_vector`, `timeline`, `cve`/`cwe`, `related_incidents`, …). Full field reference: **[SCHEMA.md](./SCHEMA.md)** · taxonomy: **[TAXONOMY.md](./TAXONOMY.md)**.
+
+## The one rule
+
+**Every incident needs at least one public, linkable source.** No rumors, no speculation, no editorializing. Report failures factually; name systems without attacking them. Realized incidents and demonstrated hazards are both recorded, labeled honestly via `incident_type`. Disputed records are annotated, never deleted. CI enforces the rigor — schema, taxonomy, id-uniqueness, link-liveness, and a neutrality lint all run on every PR.
+
+## Use the data
+
+The corpus is regenerated into machine-readable JSON on every merge — no scraping, no API key:
+
+```bash
+BASE=https://raw.githubusercontent.com/swarmproof/agent-postmortems/main/export
+
+# Whole corpus as one JSON array
+curl -s $BASE/incidents.json | jq '.count'
+
+# All prompt-injection incidents
+curl -s $BASE/incidents.json | jq -r '.incidents[] | select(.primary_failure_class=="prompt-injection").incident_id'
+
+# Everything CVE-backed
+curl -s $BASE/incidents.json | jq -r '.incidents[] | select(.cve).incident_id'
+```
+
+Two more feeds project the corpus for downstream tooling — `scenarios.json` (replayable chaos scenarios for [stampede](https://github.com/swarmproof/stampede)) and `seeds.json` (denial-of-wallet seeds for [costbomb](https://github.com/swarmproof/costbomb)). Export entries carry natural-language trigger *shapes*, never runnable exploit payloads.
+
+The site also offers a per-incident permalink with a copyable **BibTeX** citation and an [RSS feed](https://swarmproof.github.io/agent-postmortems/feed.xml).
 
 ## Contribute an incident
 
-Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml), fill it in, validate locally with `uv run scripts/validate.py`, and open a PR. The PR template carries the sourcing + neutrality checklist; CI runs every gate. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+1. Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml) to `incidents/<incident_id>.yaml` (filename = `incident_id`, a `YYYY-kebab-slug`).
+2. Fill it in; classify with [`TAXONOMY.md`](./TAXONOMY.md).
+3. Validate: `uv run scripts/validate.py` and `uv run scripts/check_links.py`.
+4. Open a PR — the template carries the sourcing + neutrality checklist; CI runs every gate.
+
+New here? The [`good-first-issue`](https://github.com/swarmproof/agent-postmortems/labels/good-first-issue) label and the auto-filed [candidate](https://github.com/swarmproof/agent-postmortems/issues?q=is%3Aissue+label%3Acandidates) / [coverage-gap](https://github.com/swarmproof/agent-postmortems/issues?q=is%3Aissue+label%3Acoverage) issues are good starting points. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Automated curation pipeline
 
 Weekly workflows find new and not-yet-documented agent incidents and file them for review — **automating the toil (discovery, de-dup, drafting, validation) but never merging anything without a human**:
 
-- **Discovery** harvests candidates from keyless sources — security-research feeds, first-party lab/vendor disclosures, arXiv, Google News, and the **NVD CVE / GitHub advisory** databases — de-dupes against the corpus, and posts a ranked "candidate incidents" issue (zero setup).
-- **Completeness critic** diffs the corpus against curated external agent-incident lists each week and files a "coverage gaps" issue — the "what did we miss?" review, automated.
-- **Auto-draft** (opt-in, set an `ANTHROPIC_API_KEY` secret) has Claude research each candidate and open review-ready PRs.
+- **Discovery** harvests candidates from security-research feeds, first-party lab/vendor disclosures, arXiv, Google News, and the **NVD CVE / GitHub advisory** databases, de-dupes against the corpus, and posts a ranked candidates issue.
+- **Completeness critic** diffs the corpus against curated external agent-incident lists and files a coverage-gaps issue — the "what did we miss?" review, automated.
+- **Auto-draft** (opt-in) has Claude research candidates and open review-ready PRs.
 
 See [`docs/CURATION-PIPELINE.md`](./docs/CURATION-PIPELINE.md).
 
-## How it feeds the toolkit
-
-CI regenerates a machine-readable export under [`export/`](./export/): the full corpus (`incidents.json`), a scenario feed for [stampede](https://github.com/swarmproof/stampede) (`scenarios.json`), and a seed feed for [costbomb](https://github.com/swarmproof/costbomb) (`seeds.json`). Export entries are natural-language trigger descriptions, never runnable exploit payloads.
-
-## Related projects
-
-Part of the Swarm Proof toolkit for agent reliability:
+## Part of the Swarm Proof toolkit
 
 | Project | What it does |
 |---------|--------------|
+| **agent-postmortems** | This repo — structured incident database + reporting standard |
 | [stampede](https://github.com/swarmproof/stampede) | Drives simulated agent traffic at a system under test |
 | [mockworld](https://github.com/swarmproof/mockworld) | Mock external services (payments, email, exchange) for agent tests |
 | [mcp-probe](https://github.com/swarmproof/mcp-probe) | Lint, contract-test, benchmark, and load-test MCP servers |
@@ -51,11 +111,6 @@ Part of the Swarm Proof toolkit for agent reliability:
 | [exactly-once](https://github.com/swarmproof/exactly-once) | Idempotency middleware for agent side-effects |
 | [awesome-agent-reliability](https://github.com/swarmproof/awesome-agent-reliability) | Curated list of agent-reliability resources |
 
-## Licensing
+## License & citation
 
-Dual-licensed to separate the tooling from the corpus:
-
-- **Code** (schema, validators, scripts, site) — [Apache-2.0](./LICENSE).
-- **Incident data & schema content** (the `incidents/` corpus and `SCHEMA.md`) — [CC-BY-4.0](./LICENSE-DATA). Reuse freely with attribution.
-
-Citable via [`CITATION.cff`](./CITATION.cff).
+Dual-licensed to separate tooling from data: **code** (schema, validators, scripts, site) under [Apache-2.0](./LICENSE); **incident data** (`incidents/`, `export/`) under [CC-BY-4.0](./LICENSE-DATA) — reuse freely with attribution. Cite via [`CITATION.cff`](./CITATION.cff), or use the per-incident BibTeX box on the [site](https://swarmproof.github.io/agent-postmortems/).
