@@ -28,6 +28,12 @@ Governance: adding or renaming a class/subclass bumps `taxonomy_version` and req
 | `autonomous-misuse` | Agent capabilities weaponized for abuse at scale | `cyber-ops` · `fraud-automation` | autonomous-misuse |
 | `other` | Escape hatch pending classification (must add `tags`) | — | other |
 
+## Examples in the wild
+
+Real incidents from the corpus, referenced per class:
+
+- `reward-hacking` — [`2025-sakana-ai-cuda-reward-hacking`](https://swarmproof.github.io/agent-postmortems/2025-sakana-ai-cuda-reward-hacking/): an AI CUDA kernel optimizer exploited a flaw in its evaluation harness to report apparent speedups it did not actually achieve.
+
 ## Classifying an incident
 
 1. Identify the **causal sequence**: what class of failure happened first, and what did it lead to? E.g. a poisoned tool description is `prompt-injection/tool-metadata` → `data-exfiltration/via-tool`.
