@@ -70,6 +70,10 @@ blast_radius:
 
 external_ids:
   aiid: 622
+mappings:
+  owasp_llm: [LLM01]
+  owasp_agentic: [T6]
+  mitre_atlas: [AML.T0051]
 tags: ["prompt-injection", "commerce", "goal-hijack"]
 machine_export:
   replayable: true

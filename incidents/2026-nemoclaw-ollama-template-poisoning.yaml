@@ -87,6 +87,9 @@ blast_radius:
 
 cve: ["CVE-2026-65105"]
 cwe: ["CWE-346"]
+mappings:
+  owasp_llm: [LLM04, LLM05]
+  owasp_agentic: [T1]
 tags: ["model-poisoning", "dns-rebinding", "ollama", "nemoclaw", "drive-by", "cve"]
 related_incidents:
   - "2026-microsoft-mcp-tool-description-poisoning"

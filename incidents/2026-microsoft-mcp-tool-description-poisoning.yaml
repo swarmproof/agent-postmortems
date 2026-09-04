@@ -83,6 +83,9 @@ blast_radius:
   reversibility: irreversible
 
 tags: ["mcp", "tool-poisoning", "copilot", "vendor-advisory"]
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051]
 related_incidents:
   - "2025-whatsapp-mcp-tool-poisoning"
 machine_export:

@@ -85,6 +85,10 @@ blast_radius:
   reversibility: irreversible
 
 tags: ["vibe-coding", "credentials", "least-privilege", "instruction-violation"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0053]
 related_incidents:
   - "2025-replit-prod-db-deletion"
   - "2025-gemini-cli-file-deletion"

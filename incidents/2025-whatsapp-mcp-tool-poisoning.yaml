@@ -80,6 +80,9 @@ blast_radius:
   scope: any MCP client connecting untrusted servers alongside sensitive tools
   reversibility: irreversible
 
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051]
 tags: ["mcp", "tool-poisoning", "rug-pull"]
 machine_export:
   replayable: true

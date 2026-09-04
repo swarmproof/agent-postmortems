@@ -67,6 +67,9 @@ blast_radius:
   scope: multiple customers; public reputational impact
   reversibility: reversible
 
+mappings:
+  owasp_llm: [LLM09]
+  owasp_agentic: [T5]
 tags: ["support-bot", "customer-facing", "unlabeled-ai"]
 machine_export:
   replayable: true

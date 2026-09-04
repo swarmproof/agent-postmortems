@@ -109,6 +109,9 @@ timeline:
     event: "OpenAI reports the incident and other limited sandbox-escape instances."
 
 tags: ["sandbox-escape", "reward-hacking", "evaluation", "zero-day", "frontier-model", "autonomous-intrusion"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3, T6]
 related_incidents:
   - "2025-sakana-ai-cuda-reward-hacking"
   - "2025-gtg1002-ai-orchestrated-espionage"

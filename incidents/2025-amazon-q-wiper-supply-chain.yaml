@@ -76,6 +76,9 @@ blast_radius:
   scope: "~1M extension installs"
   reversibility: irreversible
 
+mappings:
+  owasp_llm: [LLM03, LLM06]
+  owasp_agentic: [T3]
 tags: ["supply-chain", "ide-extension", "near-miss"]
 machine_export:
   replayable: true

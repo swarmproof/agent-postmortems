@@ -36,6 +36,8 @@ OUT = REPO / "site"
 SITE_BASE = os.environ.get("SITE_BASE_URL", "https://swarmproof.github.io/agent-postmortems").rstrip("/")
 
 SEVERITY_ORDER = {"critical": 0, "high": 1, "moderate": 2, "low": 3, "informational": 4}
+FRAMEWORKS = yaml.safe_load((REPO / "schema" / "framework-mappings.yaml").read_text())["frameworks"]
+FRAMEWORK_LABELS = {"owasp_llm": "OWASP LLM", "owasp_agentic": "OWASP Agentic", "mitre_atlas": "MITRE ATLAS"}
 
 
 def esc(x) -> str:
@@ -246,9 +248,19 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
         field("Attack vector", esc(rec.get("attack_vector"))),
         field("Causation", esc(" · ".join(f"{k}: {v}" for k, v in caus.items())) if caus else ""),
     ])
+    mapping_rows = ""
+    for key, label in FRAMEWORK_LABELS.items():
+        ids = (rec.get("mappings") or {}).get(key)
+        if not ids:
+            continue
+        names = FRAMEWORKS[key]["ids"]
+        chips = " ".join(f'<span class="tag" title="{esc(names.get(i, ""))}">{esc(i)}</span>' for i in ids)
+        lbl = f'<a href="{esc(FRAMEWORKS[key]["url"])}">{esc(label)}</a>'
+        mapping_rows += f'<div class="kv"><dt>{lbl}</dt><dd>{chips}</dd></div>'
     xref = "".join([
         field("CVE", " ".join(f'<a href="https://nvd.nist.gov/vuln/detail/{esc(c)}">{esc(c)}</a>' for c in rec.get("cve", []))),
         field("CWE", esc(", ".join(rec.get("cwe", [])))),
+        mapping_rows,
         field("Related", " ".join(
             f'<a href="../{esc(r)}/">{esc(r)}</a>' if r in all_ids else esc(r)
             for r in rec.get("related_incidents", []))),

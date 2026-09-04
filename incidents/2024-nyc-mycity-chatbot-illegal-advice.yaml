@@ -71,6 +71,9 @@ blast_radius:
 
 external_ids:
   oecd_aim: "2024-03-29-3dce"
+mappings:
+  owasp_llm: [LLM09]
+  owasp_agentic: [T5]
 tags: ["government", "regulatory", "customer-facing"]
 machine_export:
   replayable: true

@@ -81,6 +81,9 @@ blast_radius:
   reversibility: irreversible
 
 tags: ["excessive-agency", "api-abuse", "authorization", "real-world", "openclaw"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
 related_incidents:
   - "2025-replit-prod-db-deletion"
 machine_export:

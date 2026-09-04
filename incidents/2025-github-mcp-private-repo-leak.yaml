@@ -77,6 +77,9 @@ blast_radius:
   scope: any agent with github-mcp access to both private repos and public issues
   reversibility: irreversible
 
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051]
 tags: ["mcp", "github", "confused-deputy"]
 machine_export:
   replayable: true

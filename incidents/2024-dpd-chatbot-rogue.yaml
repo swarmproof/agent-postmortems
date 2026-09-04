@@ -64,6 +64,9 @@ blast_radius:
   scope: public brand reputation
   reversibility: reversible
 
+mappings:
+  owasp_llm: [LLM01]
+  mitre_atlas: [AML.T0054]
 tags: ["chatbot", "guardrail-regression", "brand-safety"]
 machine_export:
   replayable: true

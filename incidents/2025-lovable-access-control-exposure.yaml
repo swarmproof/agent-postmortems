@@ -75,6 +75,9 @@ blast_radius:
   reversibility: irreversible
 
 cve: ["CVE-2025-48757"]
+mappings:
+  owasp_llm: [LLM02, LLM05]
+  mitre_atlas: [AML.T0024]
 tags: ["vibe-coding", "insecure-output", "authorization", "security-debt"]
 machine_export:
   replayable: true

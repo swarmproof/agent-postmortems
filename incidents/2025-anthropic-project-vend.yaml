@@ -74,6 +74,9 @@ blast_radius:
   scope: single experimental shop
   reversibility: reversible
 
+mappings:
+  owasp_llm: [LLM10]
+  owasp_agentic: [T4, T6]
 tags: ["experiment", "economic-guardrails", "sycophancy"]
 machine_export:
   replayable: true

@@ -87,6 +87,9 @@ blast_radius:
 
 cve: ["CVE-2026-54316"]
 cwe: ["CWE-200"]
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051]
 tags: ["prompt-injection", "data-exfiltration", "ci", "github", "huggingface", "side-channel", "black-hat", "cve"]
 related_incidents:
   - "2025-github-mcp-private-repo-leak"

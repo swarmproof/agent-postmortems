@@ -88,6 +88,9 @@ blast_radius:
   reversibility: irreversible
 
 tags: ["mcp", "prompt-injection", "guardrail-bypass", "fragmentation", "data-exfiltration"]
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051, AML.T0054]
 related_incidents:
   - "2025-whatsapp-mcp-tool-poisoning"
   - "2026-microsoft-mcp-tool-description-poisoning"

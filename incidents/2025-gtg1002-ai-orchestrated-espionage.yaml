@@ -77,6 +77,9 @@ blast_radius:
   scope: "~30 organisations targeted"
   reversibility: irreversible
 
+mappings:
+  owasp_llm: [LLM01]
+  mitre_atlas: [AML.T0054]
 tags: ["cyber-espionage", "agentic-attack", "nation-state"]
 machine_export:
   replayable: false

@@ -69,6 +69,9 @@ blast_radius:
   scope: single customer; precedent for chatbot liability
   reversibility: reversible
 
+mappings:
+  owasp_llm: [LLM09]
+  owasp_agentic: [T5]
 tags: ["chatbot", "liability", "customer-facing"]
 machine_export:
   replayable: true

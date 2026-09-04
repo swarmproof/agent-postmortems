@@ -82,6 +82,10 @@ blast_radius:
 
 cve: ["CVE-2025-53773"]
 cwe: ["CWE-94"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
 tags: ["prompt-injection", "rce", "copilot", "auto-approve", "self-modification", "cve"]
 related_incidents:
   - "2025-github-mcp-private-repo-leak"

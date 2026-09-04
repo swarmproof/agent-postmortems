@@ -74,6 +74,9 @@ blast_radius:
 
 external_ids:
   aiid: 1178
+mappings:
+  owasp_llm: [LLM06, LLM09]
+  owasp_agentic: [T3, T5]
 tags: ["coding-agent", "vibe-coding", "read-after-write"]
 related_incidents: ["2025-replit-prod-db-deletion"]
 machine_export:

@@ -80,6 +80,10 @@ blast_radius:
 
 cve: ["CVE-2025-53967"]
 cwe: ["CWE-78"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
 tags: ["mcp", "figma", "rce", "command-injection", "cve"]
 machine_export:
   replayable: true

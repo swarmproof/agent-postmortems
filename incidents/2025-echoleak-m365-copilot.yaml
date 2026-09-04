@@ -80,6 +80,10 @@ blast_radius:
   reversibility: irreversible
 
 cve: ["CVE-2025-32711"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM04]
+  owasp_agentic: [T1]
+  mitre_atlas: [AML.T0024, AML.T0051]
 tags: ["zero-click", "rag", "copilot"]
 machine_export:
   replayable: true

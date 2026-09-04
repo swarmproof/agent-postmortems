@@ -81,6 +81,9 @@ blast_radius:
 
 external_ids:
   aiid: 1152
+mappings:
+  owasp_llm: [LLM06, LLM09]
+  owasp_agentic: [T3, T5]
 tags: ["vibe-coding", "instruction-violation"]
 related_incidents: ["2025-gemini-cli-file-deletion"]
 machine_export:

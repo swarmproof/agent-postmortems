@@ -45,6 +45,7 @@ Required-core fields are **bold**; everything else is optional but encouraged.
 | `external_ids` | Cross-references: `aiid`, `oecd_aim`, `aiaaic` (de-dup, not clone) |
 | `cve` | Related CVE identifiers |
 | `cwe` | Related CWE identifiers |
+| `mappings` | External security-framework cross-references (`owasp_llm`, `owasp_agentic`, `mitre_atlas`), derived from `failure_classes` via [`schema/framework-mappings.yaml`](./schema/framework-mappings.yaml) |
 | `related_incidents` | Other `incident_id`s in this corpus |
 | `tags` | Free-form tags; **required in practice when `primary_failure_class: other`** |
 | `submitted_by` | Contributor handle (optional) |

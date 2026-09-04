@@ -84,6 +84,10 @@ blast_radius:
   reversibility: reversible
 
 cwe: ["CWE-77"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0051, AML.T0053]
 tags: ["prompt-injection", "rce", "amazon-q", "approval-bypass", "find-exec", "no-cve"]
 related_incidents:
   - "2025-amazon-q-wiper-supply-chain"

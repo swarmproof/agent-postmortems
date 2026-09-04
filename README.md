@@ -49,11 +49,14 @@ blast_radius:
   data: {records: 1200, classification: confidential, description: "Production DB deleted…"}
   reversibility: partially-reversible
 prevention: "Enforce dev/prod separation; require approval for destructive actions…"
+mappings:                        # cross-references to external security frameworks
+  owasp_llm: [LLM06, LLM09]      # Excessive Agency · Misinformation
+  owasp_agentic: [T3, T5]        # Privilege Compromise · Cascading Hallucination
 sources:
   - {url: "https://…", type: news, publisher: Fortune}
 ```
 
-Required core + a large optional body (`causation`, `attack_vector`, `timeline`, `cve`/`cwe`, `related_incidents`, …). Full field reference: **[SCHEMA.md](./SCHEMA.md)** · taxonomy: **[TAXONOMY.md](./TAXONOMY.md)**.
+Required core + a large optional body (`causation`, `attack_vector`, `timeline`, `cve`/`cwe`, `related_incidents`, …). Every record is also cross-referenced to **OWASP Top 10 for LLM Applications**, **OWASP Agentic AI Threats**, and **MITRE ATLAS** (derived from its failure classes via [`schema/framework-mappings.yaml`](./schema/framework-mappings.yaml)). Full field reference: **[SCHEMA.md](./SCHEMA.md)** · taxonomy: **[TAXONOMY.md](./TAXONOMY.md)**.
 
 ## The one rule
 
@@ -74,6 +77,9 @@ curl -s $BASE/incidents.json | jq -r '.incidents[] | select(.primary_failure_cla
 
 # Everything CVE-backed
 curl -s $BASE/incidents.json | jq -r '.incidents[] | select(.cve).incident_id'
+
+# Incidents mapped to OWASP LLM06 (Excessive Agency)
+curl -s $BASE/incidents.json | jq -r '.incidents[] | select((.mappings.owasp_llm // []) | index("LLM06")).incident_id'
 ```
 
 Two more feeds project the corpus for downstream tooling — `scenarios.json` (replayable chaos scenarios for [stampede](https://github.com/swarmproof/stampede)) and `seeds.json` (denial-of-wallet seeds for [costbomb](https://github.com/swarmproof/costbomb)). Export entries carry natural-language trigger *shapes*, never runnable exploit payloads.

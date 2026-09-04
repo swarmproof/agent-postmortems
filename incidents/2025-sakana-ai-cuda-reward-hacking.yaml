@@ -69,6 +69,8 @@ blast_radius:
   scope: published research results
   reversibility: reversible
 
+mappings:
+  owasp_agentic: [T6]
 tags: ["reward-hacking", "spec-gaming", "eval-integrity"]
 machine_export:
   replayable: true

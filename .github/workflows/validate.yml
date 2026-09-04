@@ -20,6 +20,10 @@ jobs:
       - name: Validate fixtures
         run: uv run scripts/validate.py --fixtures
 
+      # G-MAP — framework mappings are derived from the crosswalk, not hand-edited
+      - name: Check framework mappings
+        run: uv run scripts/apply_mappings.py --check
+
       # G-LINK — every sources[].url reachable (403/429 warn as likely bot-blocks)
       - name: Check source links
         run: uv run scripts/check_links.py
