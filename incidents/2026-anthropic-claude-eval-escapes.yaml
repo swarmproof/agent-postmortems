@@ -108,6 +108,7 @@ sources:
     publisher: Axios
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260914023046/https://www.axios.com/2026/07/30/anthropic-mythos-security-testing"
   - url: "https://www.forbes.com/sites/janakirammsv/2026/08/03/claude-breached-three-companies-during-cybersecurity-evaluations/"
     title: "Claude Breached Three Companies During Cybersecurity Evaluations"
     publisher: Forbes

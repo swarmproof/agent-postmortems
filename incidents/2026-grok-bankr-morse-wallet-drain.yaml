@@ -103,6 +103,7 @@ sources:
     publisher: Giskard
     type: primary-research
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260917125105/https://www.giskard.ai/knowledge/how-grok-got-prompt-injected-an-x-user-drained-150-000-from-an-ai-wallet"
   - url: "https://gbhackers.com/hackers-use-morse-code-to-trick-grok-and-bankrbot/"
     title: "Hackers Use Morse Code to Trick Grok and Bankrbot, Steal $200K in Crypto Tokens"
     publisher: GBHackers

@@ -99,13 +99,16 @@ sources:
     publisher: CBS News
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260905221532/https://www.cbsnews.com/news/meta-says-ai-model-breached-third-party-company/"
   - url: "https://www.cnn.com/2026/08/05/tech/meta-ai-hacking"
     title: "An AI model from Meta also hacked another company during testing"
     publisher: CNN
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260825014459/https://www.cnn.com/2026/08/05/tech/meta-ai-hacking"
   - url: "https://www.npr.org/2026/08/08/nx-s1-5924878/meta-ai-breaches-external-firm-during-security-testing-sandbox-error"
     title: "Meta AI breaches external firm during security testing sandbox error"
     publisher: NPR
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260909154419/https://www.npr.org/2026/08/08/nx-s1-5924878/meta-ai-breaches-external-firm-during-security-testing-sandbox-error"
