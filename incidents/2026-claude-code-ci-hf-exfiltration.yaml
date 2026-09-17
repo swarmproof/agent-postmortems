@@ -109,6 +109,7 @@ sources:
     publisher: Cloud Security Alliance
     type: primary-research
     date_accessed: "2026-08-31"
+    archive_url: "https://web.archive.org/web/20260917115721/https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-coding-agent-ci-prompt-injection-202608/"
   - url: "https://novee.security/blog/critical-flaws-in-anthropic-google-and-openais-coding-agents/"
     title: "Critical Flaws in Anthropic, Google, and OpenAI's Coding Agents"
     publisher: Novee Security

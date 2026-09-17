@@ -102,13 +102,16 @@ sources:
     publisher: Microsoft Security
     type: primary-research
     date_accessed: "2026-09-16"
+    archive_url: "https://web.archive.org/web/20260917115710/https://www.microsoft.com/en-us/security/blog/2026/08/04/chaindrop-supply-chain-compromise-anatomy-self-propagating-worm/"
   - url: "https://unit42.paloaltonetworks.com/chaindrop-npm-worm-analysis/"
     title: "ChainDrop: Inside a Self-Propagating npm Worm"
     publisher: Palo Alto Unit 42
     type: primary-research
     date_accessed: "2026-09-16"
+    archive_url: "https://web.archive.org/web/20260907120926/https://unit42.paloaltonetworks.com/chaindrop-npm-worm-analysis/"
   - url: "https://www.theregister.com/security/2026/08/15/chaindrop-worm-crawls-into-npm-supply-chain-evades-standard-defenses/5287958"
     title: "ChainDrop worm crawls into npm supply chain, evades standard defenses"
     publisher: The Register
     type: news
     date_accessed: "2026-09-16"
+    archive_url: "https://web.archive.org/web/20260907013419/https://www.theregister.com/security/2026/08/15/chaindrop-worm-crawls-into-npm-supply-chain-evades-standard-defenses/5287958"
