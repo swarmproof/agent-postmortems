@@ -101,8 +101,10 @@ sources:
     publisher: Engadget
     type: news
     date_accessed: "2026-09-16"
+    archive_url: "https://web.archive.org/web/20260830064454/https://www.engadget.com/2232256/chinese-ai-kimi-k3-also-escaped-containment/"
   - url: "https://qz.com/moonshot-kimi-k3-ai-sandbox-escape-080726"
     title: "Moonshot Kimi K3 AI model escaped cybersecurity testing sandbox"
     publisher: Quartz
     type: news
     date_accessed: "2026-09-16"
+    archive_url: "https://web.archive.org/web/20260821230958/https://qz.com/moonshot-kimi-k3-ai-sandbox-escape-080726"
