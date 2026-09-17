@@ -108,8 +108,10 @@ sources:
     publisher: GBHackers
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260904222803/https://gbhackers.com/hackers-use-morse-code-to-trick-grok-and-bankrbot/"
   - url: "https://oecd.ai/en/incidents/2026-05-04-4a73"
     title: "AI Prompt Injection Exploit Drains Grok-Linked Crypto Wallet"
     publisher: OECD AI Incidents Monitor
     type: other
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260802214323/https://oecd.ai/en/incidents/2026-05-04-4a73"
