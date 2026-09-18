@@ -102,13 +102,16 @@ sources:
     publisher: The San Francisco Standard
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260725233032/https://sfstandard.com/2026/02/25/openclaw-goes-rogue/"
   - url: "https://techcrunch.com/2026/03/18/meta-is-having-trouble-with-rogue-ai-agents"
     title: "Meta is having trouble with rogue AI agents"
     publisher: TechCrunch
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260917104924/https://techcrunch.com/2026/03/18/meta-is-having-trouble-with-rogue-ai-agents/"
   - url: "https://galileo.ai/blog/openclaw-sobering-lessons-from-an-agent-gone-rogue"
     title: "OpenClaw: Sobering Lessons from an Agent Gone Rogue"
     publisher: Galileo
     type: primary-research
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260816130651/https://galileo.ai/blog/openclaw-sobering-lessons-from-an-agent-gone-rogue"

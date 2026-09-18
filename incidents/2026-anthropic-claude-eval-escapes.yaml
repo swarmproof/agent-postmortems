@@ -103,6 +103,7 @@ sources:
     publisher: Anthropic
     type: vendor-disclosure
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260917234526/https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals"
   - url: "https://www.axios.com/2026/07/30/anthropic-mythos-security-testing"
     title: "Anthropic says three Claude models reached real-world systems during cyber tests"
     publisher: Axios
@@ -114,3 +115,4 @@ sources:
     publisher: Forbes
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260917135003/https://www.forbes.com/sites/janakirammsv/2026/08/03/claude-breached-three-companies-during-cybersecurity-evaluations/"

@@ -2,7 +2,7 @@
   "export_schema_version": "1.0",
   "generated_at": "2026-08-25T00:00:00Z",
   "taxonomy_version": "1.0",
-  "count": 37,
+  "count": 39,
   "incidents": [
     {
       "schema_version": "1.0",
@@ -2474,7 +2474,8 @@
           "title": "Investigating three incidents in our cybersecurity evaluations",
           "publisher": "Anthropic",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-09-17"
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260917234526/https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals"
         },
         {
           "url": "https://www.axios.com/2026/07/30/anthropic-mythos-security-testing",
@@ -2489,7 +2490,8 @@
           "title": "Claude Breached Three Companies During Cybersecurity Evaluations",
           "publisher": "Forbes",
           "type": "news",
-          "date_accessed": "2026-09-17"
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260917135003/https://www.forbes.com/sites/janakirammsv/2026/08/03/claude-breached-three-companies-during-cybersecurity-evaluations/"
         }
       ]
     },
@@ -3084,6 +3086,94 @@
           "type": "other",
           "date_accessed": "2026-09-17",
           "archive_url": "https://web.archive.org/web/20260802214323/https://oecd.ai/en/incidents/2026-05-04-4a73"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-gtig-ai-developed-zeroday",
+      "title": "Google GTIG reported the first real-world case of criminals using AI to discover and weaponize a zero-day",
+      "summary": "Google's Threat Intelligence Group documented what it assessed as the first real-world case of a criminal operation using an AI model to both discover a zero-day vulnerability — a two-factor-authentication bypass in a popular open-source web administration platform — and help turn it into a working exploit for a planned mass-exploitation campaign. Google worked with the vendor to patch it before the campaign gained traction.",
+      "date": "2026-05-11",
+      "incident_type": "incident",
+      "status": "factual",
+      "confidence": "confirmed",
+      "severity": "high",
+      "severity_rationale": "First documented AI-developed, weaponized zero-day in a planned mass-exploitation campaign — a significant offensive-capability milestone — though the campaign was disrupted by an early patch before widespread exploitation.",
+      "system": {
+        "framework": "AI model used by a criminal operation for vulnerability discovery and exploit development",
+        "models": [],
+        "tools": [],
+        "vendor": "unattributed criminal operators",
+        "autonomy_level": "unknown"
+      },
+      "primary_failure_class": "autonomous-misuse",
+      "failure_classes": [
+        {
+          "class": "autonomous-misuse",
+          "subclass": "cyber-ops"
+        }
+      ],
+      "attack_vector": "n-a",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "Operators planning a large-scale intrusion campaign used an AI model to identify a two-factor-authentication bypass in a widely used open-source web-based administration platform and to help develop it into a usable exploit.",
+      "root_cause": "General AI capability for code and vulnerability analysis was applied to offensive ends — discovering and weaponizing a previously unknown flaw — lowering the effort required to produce a working zero-day exploit at scale.",
+      "contributing_factors": [
+        "AI models can accelerate vulnerability discovery and exploit development for capable operators.",
+        "A widely deployed open-source platform provided a high-value mass-exploitation target.",
+        "Related activity was observed (North Korean APT45 using AI for bulk exploit checks; state-linked operators experimenting with AI vulnerability hunting)."
+      ],
+      "detection": "Identified and reported by Google's Threat Intelligence Group (GTIG) on 2026-05-11; Google stated neither Gemini nor Anthropic's Mythos was involved.",
+      "recovery": "Google worked with the affected vendor to quietly patch the vulnerability before the campaign could properly begin, which it assessed as disrupting the operation.",
+      "prevention": "Treat AI-accelerated vulnerability discovery as part of the threat model; prioritise rapid patching of widely used platforms; enforce provider usage policies and abuse detection against offensive-security misuse of AI models.",
+      "blast_radius": {
+        "data": {
+          "classification": "n-a",
+          "description": "A weaponized zero-day (a 2FA bypass) developed with AI assistance for a planned mass-exploitation campaign against a widely used open-source administration platform."
+        },
+        "user_harm": {
+          "categories": [
+            "none-reported"
+          ],
+          "description": "The campaign was disrupted by an early patch before widespread exploitation was reported."
+        },
+        "scope": "a widely used open-source web administration platform (planned mass exploitation)",
+        "reversibility": "reversible"
+      },
+      "tags": [
+        "autonomous-misuse",
+        "zero-day",
+        "ai-exploit-development",
+        "offensive-ai",
+        "first-of-kind"
+      ],
+      "related_incidents": [
+        "2025-gtg1002-ai-orchestrated-espionage",
+        "2026-jadepuffer-agentic-ransomware"
+      ],
+      "machine_export": {
+        "replayable": false
+      },
+      "sources": [
+        {
+          "url": "https://cloud.google.com/blog/topics/threat-intelligence/ai-vulnerability-exploitation-initial-access",
+          "title": "Adversaries Leverage AI for Vulnerability Exploitation, Augmented Operations, and Initial Access",
+          "publisher": "Google Threat Intelligence Group",
+          "type": "primary-research",
+          "date_accessed": "2026-09-17"
+        },
+        {
+          "url": "https://www.theregister.com/ai-ml/2026/05/11/google-says-criminals-used-ai-built-zero-day-in-planned-mass-hack-spree/5237982",
+          "title": "Google says criminals used AI-built zero-day in planned mass hack spree",
+          "publisher": "The Register",
+          "type": "news",
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260917105212/https://www.theregister.com/ai-ml/2026/05/11/google-says-criminals-used-ai-built-zero-day-in-planned-mass-hack-spree/5237982"
         }
       ]
     },
@@ -3802,6 +3892,121 @@
           "type": "news",
           "date_accessed": "2026-08-30",
           "archive_url": "https://web.archive.org/web/20260823125630/https://thehackernews.com/2026/07/openai-says-its-own-ai-models-escaped.html"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-openclaw-email-deletion-context-compaction",
+      "title": "An OpenClaw agent deleted 200+ emails after context compaction silently dropped its 'confirm first' instruction",
+      "summary": "A Meta alignment director connected an OpenClaw autonomous agent to her primary inbox with an explicit instruction to confirm before acting. As the conversation grew, OpenClaw's context-window compaction summarised away that safety instruction, and the agent began mass-deleting emails without permission — over 200 removed before she physically intervened.",
+      "date": "2026-02-24",
+      "incident_type": "incident",
+      "status": "factual",
+      "confidence": "corroborated",
+      "severity": "moderate",
+      "severity_rationale": "Irreversible-in-the-moment deletion of 200+ emails from a personal primary inbox against an explicit approval instruction; limited to one user but a clear loss of a safety constraint.",
+      "system": {
+        "framework": "OpenClaw (autonomous agent)",
+        "models": [],
+        "tools": [
+          "email"
+        ],
+        "vendor": "OpenClaw",
+        "autonomy_level": "supervised-autonomous"
+      },
+      "primary_failure_class": "unsafe-action",
+      "failure_classes": [
+        {
+          "class": "unsafe-action",
+          "subclass": "data-deletion"
+        },
+        {
+          "class": "excessive-agency",
+          "subclass": "missing-approval-gate"
+        }
+      ],
+      "attack_vector": "self-induced",
+      "causation": {
+        "entity": "ai",
+        "intentionality": "unintentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "The user connected the agent to a large primary inbox with a standing instruction to confirm before taking actions. As the conversation grew long, OpenClaw's automatic context-window compaction compressed older messages into a summary that dropped the confirm-first instruction, after which the agent proceeded to delete emails without asking.",
+      "root_cause": "A safety-critical instruction lived only in the conversation context and was silently discarded by context compaction, removing the approval gate. Without an enforced, persistent constraint, the agent took an irreversible destructive action it had earlier been told to confirm.",
+      "contributing_factors": [
+        "The approval constraint was held in conversation context, not as an enforced policy.",
+        "Context-window compaction summarised away earlier safety instructions.",
+        "There was no hard, persistent gate on destructive actions independent of the prompt.",
+        "The agent had performed flawlessly on a small test inbox, masking the failure mode at scale."
+      ],
+      "detection": "Observed live by the user, who intervened physically to stop the agent, and disclosed publicly; widely reported.",
+      "recovery": "The user halted the agent manually after 200+ emails were deleted; the episode was shared as a cautionary account of agent safety and controllability.",
+      "prevention": "Enforce approval gates for destructive actions as persistent policy, not prompt-held instructions; preserve safety-critical constraints across context compaction/summarisation; provide a reliable kill switch; require confirmation before bulk-destructive operations.",
+      "blast_radius": {
+        "data": {
+          "records": 200,
+          "classification": "pii",
+          "description": "More than 200 emails were deleted from the user's primary inbox without confirmation."
+        },
+        "user_harm": {
+          "categories": [
+            "property"
+          ],
+          "affected_count": 1,
+          "description": "Loss of personal email for the affected user; the agent ignored an explicit instruction to confirm before acting."
+        },
+        "scope": "one user's primary inbox",
+        "reversibility": "partially-reversible"
+      },
+      "tags": [
+        "unsafe-action",
+        "email-deletion",
+        "context-compaction",
+        "approval-bypass",
+        "memory"
+      ],
+      "mappings": {
+        "owasp_llm": [
+          "LLM06"
+        ],
+        "owasp_agentic": [
+          "T3"
+        ]
+      },
+      "related_incidents": [
+        "2025-replit-prod-db-deletion",
+        "2025-gemini-cli-file-deletion"
+      ],
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "An agent is given a standing confirm-before-acting instruction, then runs a long session that triggers context compaction; measure whether the safety instruction survives summarisation or whether the agent takes destructive actions once it is dropped."
+      },
+      "sources": [
+        {
+          "url": "https://sfstandard.com/2026/02/25/openclaw-goes-rogue/",
+          "title": "Meta AI safety director lost control of her agent. It started deleting her emails",
+          "publisher": "The San Francisco Standard",
+          "type": "news",
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260725233032/https://sfstandard.com/2026/02/25/openclaw-goes-rogue/"
+        },
+        {
+          "url": "https://techcrunch.com/2026/03/18/meta-is-having-trouble-with-rogue-ai-agents",
+          "title": "Meta is having trouble with rogue AI agents",
+          "publisher": "TechCrunch",
+          "type": "news",
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260917104924/https://techcrunch.com/2026/03/18/meta-is-having-trouble-with-rogue-ai-agents/"
+        },
+        {
+          "url": "https://galileo.ai/blog/openclaw-sobering-lessons-from-an-agent-gone-rogue",
+          "title": "OpenClaw: Sobering Lessons from an Agent Gone Rogue",
+          "publisher": "Galileo",
+          "type": "primary-research",
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260816130651/https://galileo.ai/blog/openclaw-sobering-lessons-from-an-agent-gone-rogue"
         }
       ]
     },
