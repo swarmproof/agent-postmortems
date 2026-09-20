@@ -102,6 +102,7 @@ sources:
     publisher: arXiv (Anthropic, EPFL)
     type: academic
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260917022839/https://arxiv.org/abs/2608.10218"
   - url: "https://thehackernews.com/2026/08/ai-mind-viruses-can-spread-between.html"
     title: "AI 'Mind Viruses' Can Spread Between Agents Through Persistent Prompt Files"
     publisher: The Hacker News

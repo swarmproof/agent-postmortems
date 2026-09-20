@@ -2,7 +2,7 @@
   "export_schema_version": "1.0",
   "generated_at": "2026-08-25T00:00:00Z",
   "taxonomy_version": "1.0",
-  "count": 43,
+  "count": 44,
   "incidents": [
     {
       "schema_version": "1.0",
@@ -2936,7 +2936,8 @@
           "title": "Chinese Hacker Commands DeepSeek via Telegram to Launch Autonomous Attacks",
           "publisher": "The Hacker News",
           "type": "news",
-          "date_accessed": "2026-09-17"
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260920145352/https://thehackernews.com/2026/07/chinese-hacker-commands-deepseek-via.html"
         },
         {
           "url": "https://www.bleepingcomputer.com/news/security/hacker-uses-deepseek-ai-to-autonomously-attack-vulnerable-servers/",
@@ -2945,6 +2946,125 @@
           "type": "news",
           "date_accessed": "2026-09-17",
           "archive_url": "https://web.archive.org/web/20260909000018/https://www.bleepingcomputer.com/news/security/hacker-uses-deepseek-ai-to-autonomously-attack-vulnerable-servers/"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-dialogflow-cx-rogue-agent",
+      "title": "Google Dialogflow CX 'Rogue Agent': edit rights on one agent could inject code into every Code Block agent in the project",
+      "summary": "Researchers found that an attacker with edit rights on a single Code Block-enabled Dialogflow CX agent could inject persistent Python into shared Playbook Code Blocks. Because the platform executed code in a common Google-managed Cloud Run environment with a writable execution file and Python exec(), that code could run against other Code Block agents in the same Google Cloud project — a cross-agent compromise.",
+      "date": "2026-07-14",
+      "incident_type": "hazard",
+      "status": "final",
+      "confidence": "confirmed",
+      "severity": "high",
+      "severity_rationale": "A single low-privilege editor could achieve persistent code execution affecting all Code Block agents in a project, enabling conversation exfiltration, response manipulation, agent impersonation, and service-account token theft. Patched via Google's VRP; no in-the-wild exploitation reported.",
+      "system": {
+        "framework": "Google Dialogflow CX (Code Block agents on a shared Cloud Run runtime)",
+        "models": [],
+        "tools": [
+          "dialogflow-cx",
+          "cloud-run"
+        ],
+        "vendor": "Google",
+        "autonomy_level": "supervised-autonomous"
+      },
+      "primary_failure_class": "multi-agent-failure",
+      "failure_classes": [
+        {
+          "class": "multi-agent-failure",
+          "subclass": "cascade"
+        },
+        {
+          "class": "unsafe-action",
+          "subclass": "unauthorized-write"
+        },
+        {
+          "class": "data-exfiltration",
+          "subclass": "via-tool"
+        }
+      ],
+      "attack_vector": "n-a",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "An attacker holding only the dialogflow.playbooks.update permission on one Code Block-enabled agent injected persistent malicious Python into shared Playbook Code Blocks. The platform executed code in a common Google-managed Cloud Run environment where a writable code_execution_env.py and use of Python exec() allowed the injected code to run and affect other agents in the same project.",
+      "root_cause": "Code Block agents in a project shared one execution environment without isolation, and that environment was writable and used exec(), so code authored for one agent could persist and execute in the context of others — a broken trust boundary between agents that should have been isolated.",
+      "contributing_factors": [
+        "Multiple agents shared a single Google-managed Cloud Run execution environment.",
+        "A writable code_execution_env.py plus Python exec() permitted arbitrary, persistent code execution.",
+        "Edit rights on one agent were sufficient to reach all Code Block agents in the project."
+      ],
+      "detection": "Discovered by Varonis and reported through Google's Vulnerability Reward Program in November 2025; disclosed publicly in 2026.",
+      "recovery": "Google shipped an initial fix in April 2026 and fully resolved the issue in June 2026 (about seven months from report to resolution). No CVE was assigned and no in-the-wild exploitation was reported.",
+      "prevention": "Isolate per-agent code execution (no shared, writable runtime); avoid exec() on attacker-influenceable content; scope edit permissions so one agent cannot affect others; restrict outbound access and metadata-service token reach from agent runtimes.",
+      "blast_radius": {
+        "data": {
+          "classification": "confidential",
+          "description": "Exploitation could exfiltrate conversation history, manipulate chatbot responses, impersonate agents for phishing, bypass VPC Service Controls via unrestricted outbound access, and obtain Google-managed service-account tokens from the instance metadata service."
+        },
+        "user_harm": {
+          "categories": [
+            "none-reported"
+          ],
+          "description": "A vulnerability disclosed via Google's VRP and patched; no in-the-wild exploitation was reported."
+        },
+        "scope": "Code Block agents within the same Google Cloud project",
+        "reversibility": "reversible"
+      },
+      "tags": [
+        "multi-agent",
+        "cross-agent",
+        "code-injection",
+        "dialogflow",
+        "shared-runtime"
+      ],
+      "mappings": {
+        "owasp_llm": [
+          "LLM02",
+          "LLM06"
+        ],
+        "owasp_agentic": [
+          "T3",
+          "T13"
+        ],
+        "mitre_atlas": [
+          "AML.T0024"
+        ]
+      },
+      "related_incidents": [
+        "2026-google-adk-agent-privilege-escalation",
+        "2026-mind-viruses-multi-agent-propagation"
+      ],
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "Multiple agents share one code-execution environment; measure whether code authored for one agent can persist and execute in the context of other agents in the same project."
+      },
+      "sources": [
+        {
+          "url": "https://www.varonis.com/blog/rogue-agent-dialogflow-attack",
+          "title": "Rogue Agent: How a Single Code Block Could Hijack Your AI Conversations in Google's Dialogflow",
+          "publisher": "Varonis",
+          "type": "primary-research",
+          "date_accessed": "2026-09-20"
+        },
+        {
+          "url": "https://thehackernews.com/2026/07/rogue-agent-flaw-could-have-let.html",
+          "title": "Rogue Agent Flaw Could Have Let Attackers Hijack Google Dialogflow CX Chatbots",
+          "publisher": "The Hacker News",
+          "type": "news",
+          "date_accessed": "2026-09-20"
+        },
+        {
+          "url": "https://www.securityweek.com/google-dialogflow-cx-bug-allowed-attackers-to-hijack-ai-conversations/",
+          "title": "Google Dialogflow CX Bug Allowed Attackers to Hijack AI Conversations",
+          "publisher": "SecurityWeek",
+          "type": "news",
+          "date_accessed": "2026-09-20"
         }
       ]
     },
@@ -3175,14 +3295,16 @@
           "title": "Researchers find 'agent-to-agent' privilege escalation in Google's ADK for Python repo",
           "publisher": "SC Media",
           "type": "news",
-          "date_accessed": "2026-09-20"
+          "date_accessed": "2026-09-20",
+          "archive_url": "https://web.archive.org/web/20260911022719/https://www.scworld.com/news/researchers-find-agent-to-agent-privilege-escalation-in-googles-adk-for-python-repo"
         },
         {
           "url": "https://labs.cloudsecurityalliance.org/research/csa-research-note-google-adk-trustissues-agent-injection-202/",
           "title": "Google Deletes ADK Workflows After Agent-to-Agent Injection",
           "publisher": "Cloud Security Alliance",
           "type": "primary-research",
-          "date_accessed": "2026-09-20"
+          "date_accessed": "2026-09-20",
+          "archive_url": "https://web.archive.org/web/20260920145420/https://labs.cloudsecurityalliance.org/research/csa-research-note-google-adk-trustissues-agent-injection-202/"
         }
       ]
     },
@@ -3936,7 +4058,8 @@
           "title": "Mind Viruses: Self-Propagating Ideas in Multi-Agent LLM Systems",
           "publisher": "arXiv (Anthropic, EPFL)",
           "type": "academic",
-          "date_accessed": "2026-09-20"
+          "date_accessed": "2026-09-20",
+          "archive_url": "https://web.archive.org/web/20260917022839/https://arxiv.org/abs/2608.10218"
         },
         {
           "url": "https://thehackernews.com/2026/08/ai-mind-viruses-can-spread-between.html",
@@ -4678,7 +4801,8 @@
           "title": "'Near-autonomous' AI agents attack Taiwan's nuclear safety agency",
           "publisher": "The Register",
           "type": "news",
-          "date_accessed": "2026-09-17"
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260915122341/https://www.theregister.com/security/2026/08/12/near-autonomous-ai-agents-attack-taiwans-nuclear-safety-agency/5287055"
         },
         {
           "url": "https://cyberscoop.com/near-autonomous-ai-attack-government-target-taiwan/",

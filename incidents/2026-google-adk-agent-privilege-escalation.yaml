@@ -111,8 +111,10 @@ sources:
     publisher: SC Media
     type: news
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260911022719/https://www.scworld.com/news/researchers-find-agent-to-agent-privilege-escalation-in-googles-adk-for-python-repo"
   - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-google-adk-trustissues-agent-injection-202/"
     title: "Google Deletes ADK Workflows After Agent-to-Agent Injection"
     publisher: Cloud Security Alliance
     type: primary-research
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260920145420/https://labs.cloudsecurityalliance.org/research/csa-research-note-google-adk-trustissues-agent-injection-202/"

@@ -103,6 +103,7 @@ sources:
     publisher: The Register
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260915122341/https://www.theregister.com/security/2026/08/12/near-autonomous-ai-agents-attack-taiwans-nuclear-safety-agency/5287055"
   - url: "https://cyberscoop.com/near-autonomous-ai-attack-government-target-taiwan/"
     title: "Researchers observe first 'near-autonomous' AI attack on government target in Taiwan"
     publisher: CyberScoop

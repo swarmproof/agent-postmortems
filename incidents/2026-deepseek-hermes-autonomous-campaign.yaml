@@ -100,6 +100,7 @@ sources:
     publisher: The Hacker News
     type: news
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260920145352/https://thehackernews.com/2026/07/chinese-hacker-commands-deepseek-via.html"
   - url: "https://www.bleepingcomputer.com/news/security/hacker-uses-deepseek-ai-to-autonomously-attack-vulnerable-servers/"
     title: "Hacker uses DeepSeek AI to autonomously attack vulnerable servers"
     publisher: BleepingComputer
