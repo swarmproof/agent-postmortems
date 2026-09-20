@@ -111,8 +111,10 @@ sources:
     publisher: The Hacker News
     type: news
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260920151249/https://thehackernews.com/2026/07/rogue-agent-flaw-could-have-let.html"
   - url: "https://www.securityweek.com/google-dialogflow-cx-bug-allowed-attackers-to-hijack-ai-conversations/"
     title: "Google Dialogflow CX Bug Allowed Attackers to Hijack AI Conversations"
     publisher: SecurityWeek
     type: news
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260920151157/https://www.securityweek.com/google-dialogflow-cx-bug-allowed-attackers-to-hijack-ai-conversations/"
