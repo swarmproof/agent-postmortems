@@ -16,8 +16,8 @@ Agents now take real actions in production — they call tools, spend money, wri
 
 | | |
 |---|---|
-| **Incidents** | 31 and growing (2023–2026) |
-| **Type** | 17 realized incidents · 14 demonstrated hazards / near-misses |
+| **Incidents** | 41 and growing (2023–2026) — see the live count badge above |
+| **Type** | 26 realized incidents · 15 demonstrated hazards / near-misses |
 | **Coverage** | 15 of 19 failure classes; 9 CVE-backed |
 | **Every record** | conforms to [one schema](./SCHEMA.md), cites public sources, classified against a [versioned taxonomy](./TAXONOMY.md) |
 
