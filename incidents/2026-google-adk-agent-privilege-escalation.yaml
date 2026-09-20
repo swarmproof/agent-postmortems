@@ -105,6 +105,7 @@ sources:
     publisher: The Hacker News
     type: news
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260809185427/https://thehackernews.com/2026/08/google-deletes-3-adk-ai-workflows-after.html"
   - url: "https://www.scworld.com/news/researchers-find-agent-to-agent-privilege-escalation-in-googles-adk-for-python-repo"
     title: "Researchers find 'agent-to-agent' privilege escalation in Google's ADK for Python repo"
     publisher: SC Media

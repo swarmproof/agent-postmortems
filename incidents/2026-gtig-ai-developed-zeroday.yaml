@@ -87,6 +87,7 @@ sources:
     publisher: Google Threat Intelligence Group
     type: primary-research
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260920120919/https://cloud.google.com/blog/topics/threat-intelligence/ai-vulnerability-exploitation-initial-access"
   - url: "https://www.theregister.com/ai-ml/2026/05/11/google-says-criminals-used-ai-built-zero-day-in-planned-mass-hack-spree/5237982"
     title: "Google says criminals used AI-built zero-day in planned mass hack spree"
     publisher: The Register

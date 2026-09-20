@@ -107,6 +107,7 @@ sources:
     publisher: The Hacker News
     type: news
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260917013914/https://thehackernews.com/2026/08/ai-mind-viruses-can-spread-between.html"
   - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-mind-viruses-agent-contagion-20260827-c/"
     title: "Mind Viruses: A New Contagion Vector for AI Agents"
     publisher: Cloud Security Alliance
