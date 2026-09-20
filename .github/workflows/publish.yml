@@ -11,39 +11,50 @@ on:
 permissions:
   contents: write
 
-# Serialize publish runs: merging several PRs in quick succession otherwise fires
-# concurrent runs that race to push export commits to main (non-fast-forward).
+# Newest run wins: exports are regenerated from the latest main, so an in-flight
+# run is safe to cancel — the superseding run rebuilds the full, current corpus.
 concurrency:
   group: publish-main
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v5
 
-      # G-ARCHIVE — backfill Wayback snapshots for sources lacking archive_url
-      - name: Backfill source archives
-        run: uv run scripts/check_links.py --backfill
-        continue-on-error: true # archive.org outages must not block publishing
-
-      # Rebuild the machine-readable exports (incidents / scenarios / seeds)
-      - name: Build exports
-        run: uv run scripts/build_exports.py
-
-      - name: Commit refreshed artifacts
+      # Regenerate archives + exports from the LATEST main and push. The export
+      # is a generated file, so we never rebase/merge it (that conflicts); instead
+      # each attempt resets to origin/main, rebuilds, and fast-forward pushes,
+      # retrying on a losing race.
+      - name: Refresh archives and exports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add incidents export
-          git diff --cached --quiet && { echo "no changes to publish"; exit 0; }
-          git commit -m "chore(export): refresh exports and source archives [skip ci]"
-          # Integrate any concurrent commits before pushing (belt-and-braces with the
-          # concurrency group), retrying rebase+push a few times on races.
-          for i in 1 2 3; do
-            git pull --rebase --autostash origin main && git push && exit 0
-            echo "push attempt $i failed; retrying"; sleep 3
+          publish() {
+            git fetch --quiet origin main
+            git reset --hard --quiet origin/main
+            uv run scripts/check_links.py --backfill || true   # archive.org outages must not block
+            uv run scripts/build_exports.py
+            git add incidents export
+            if git diff --cached --quiet; then echo "nothing to publish"; return 0; fi
+            git commit -m "chore(export): refresh exports and source archives [skip ci]"
+            git push origin HEAD:main
+          }
+          for i in 1 2 3 4 5; do
+            if publish; then ok=1; break; fi
+            echo "publish attempt $i lost a race; retrying"; sleep 5
           done
-          echo "publish push failed after retries"; exit 1
+          [ -n "$ok" ] || { echo "publish failed after retries"; exit 1; }
+
+      # Alarm if the corpus and its export ever diverge (e.g. a build-side drop).
+      - name: Verify export is in sync with the corpus
+        run: |
+          inc=$(ls incidents/2*.yaml | wc -l | tr -d ' ')
+          exp=$(python3 -c "import json;print(json.load(open('export/incidents.json'))['count'])")
+          echo "incident files: $inc  export count: $exp"
+          [ "$inc" = "$exp" ] || { echo "::error::export count ($exp) != incident files ($inc)"; exit 1; }
