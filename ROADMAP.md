@@ -4,7 +4,7 @@
 - **Post-mortem standard** — JSON Schema (`schema/incident.schema.json`) + human-readable `SCHEMA.md`
 - **Versioned two-level failure taxonomy** (`schema/taxonomy.yaml` + `TAXONOMY.md`)
 - **Fail-closed CI** — schema, taxonomy conformance, id-uniqueness, link-liveness, neutrality lint, drift check, export build, and site smoke build
-- **Corpus** — 30+ sourced, schema-valid public incidents (realized incidents and demonstrated hazards)
+- **Corpus** — 45+ sourced, schema-valid public incidents (realized incidents and demonstrated hazards)
 - **Machine-readable export** (`export/incidents.json`, `scenarios.json`, `seeds.json`) + export schemas, regenerated on merge
 - **Contribution flow** — template, PR template with sourcing/neutrality checklist, architecture decision records
 - **Curation pipeline** (`docs/CURATION-PIPELINE.md`):

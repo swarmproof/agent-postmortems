@@ -16,9 +16,9 @@ Agents now take real actions in production — they call tools, spend money, wri
 
 | | |
 |---|---|
-| **Incidents** | 41 and growing (2023–2026) — see the live count badge above |
-| **Type** | 26 realized incidents · 15 demonstrated hazards / near-misses |
-| **Coverage** | 15 of 19 failure classes; 9 CVE-backed |
+| **Incidents** | 45 and growing (2023–2026) — see the live count badge above |
+| **Type** | 26 realized incidents · 19 demonstrated hazards / near-misses |
+| **Coverage** | 16 of 19 failure classes; 9 CVE-backed |
 | **Every record** | conforms to [one schema](./SCHEMA.md), cites public sources, classified against a [versioned taxonomy](./TAXONOMY.md) |
 
 Failures span prompt injection, tool misuse, data exfiltration, sandbox escapes, model-template poisoning, reward hacking, autonomous misuse, cost blowups, and destructive actions — across coding agents, MCP servers, browser agents, chatbots, and frontier-model evaluations.
