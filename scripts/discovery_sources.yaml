@@ -62,6 +62,26 @@ github_advisories:
 coverage_sources:
   markdown_headings:
     - "https://raw.githubusercontent.com/webpro255/awesome-ai-agent-attacks/main/README.md"
+  # Incident-database RSS feeds, keyword-filtered to agent relevance — broadens the
+  # completeness check beyond a single curated list. Add more date-headed markdown
+  # lists or incident-DB feeds here as they become available.
+  rss:
+    - "https://incidentdatabase.ai/rss.xml"   # AI Incident Database (AIID)
+
+# Stricter agent-identity keywords applied only to broad incident-DB feeds under
+# coverage_sources.rss (e.g. AIID), which otherwise surface general "AI harms"
+# outside our agent-action scope. An RSS entry must match at least one of these.
+coverage_rss_keywords:
+  - "ai agent"
+  - "agentic"
+  - "ai chatbot"
+  - "chatbot"
+  - "copilot"
+  - "coding agent"
+  - "autonomous agent"
+  - "llm agent"
+  - "mcp server"
+  - "ai assistant"
 
 # Relevance keywords — a candidate's score is the count of these it matches in
 # its title/summary. Used only to rank; humans still decide.

@@ -43,8 +43,11 @@ HEADING_RE = re.compile(r"^#{2,4}\s+(\d{4}-\d{2}-\d{2})\s*[-–—]\s*(.+?)\s*$"
 LINK_RE = re.compile(r"\((https?://[^)]+)\)")
 
 
-def extract_headings(md_text: str, list_url: str) -> list[dict]:
-    """Parse `### YYYY-MM-DD - <incident>` entries; grab the first link under each."""
+def extract_headings(md_text: str) -> list[dict]:
+    """Parse `### YYYY-MM-DD - <incident>` entries; grab the first link under each.
+
+    `url` is the incident's own primary source; it stays empty when no independent
+    link is found (we never fall back to the aggregator list's own URL)."""
     lines = md_text.splitlines()
     entries = []
     for i, line in enumerate(lines):
@@ -52,7 +55,7 @@ def extract_headings(md_text: str, list_url: str) -> list[dict]:
         if not m:
             continue
         date, title = m.group(1), m.group(2)
-        url = list_url
+        url = ""
         for nxt in lines[i + 1:i + 12]:
             if HEADING_RE.match(nxt):
                 break
@@ -80,17 +83,20 @@ def find_gaps(limit: int) -> tuple[list[dict], int]:
     cfg = yaml.safe_load(SOURCES_FILE.read_text())
     cov = cfg.get("coverage_sources", {}) or {}
     keywords = cfg.get("relevance_keywords", [])
+    # Broad incident DBs (AIID) cover general "AI harms"; require a genuine agent
+    # signal so we stay agent-scoped and don't import out-of-scope entries.
+    rss_keywords = cfg.get("coverage_rss_keywords", keywords)
     cited_urls, corpus_titles, cited_cves = load_corpus()
 
     entries: list[dict] = []
     for list_url in cov.get("markdown_headings", []):
         md = fetch(list_url)
         if md:
-            entries += [dict(e, ref="awesome-list") for e in extract_headings(md, list_url)]
+            entries += [dict(e, ref="awesome-list") for e in extract_headings(md)]
     for feed in cov.get("rss", []):
         xml = fetch(feed)
         for it in (parse_rss_items(xml) if xml else []):
-            if score(it, keywords) == 0:            # AIID is broad; keep agent-relevant
+            if score(it, rss_keywords) == 0:        # must match an agent-identity term
                 continue
             entries.append({
                 "title": it["title"], "date": (it.get("date") or "")[:10],
@@ -114,15 +120,15 @@ def find_gaps(limit: int) -> tuple[list[dict], int]:
 
 def emit_markdown(gaps: list[dict], total: int) -> str:
     if not gaps:
-        return "_No coverage gaps found — our corpus covers the curated reference lists._\n"
-    lines = [f"Found **{total}** agent incident(s) in curated external sources not yet "
-             f"in our corpus (showing newest {len(gaps)}). Each is a candidate to draft "
-             "from `incidents/_TEMPLATE.yaml`; some may be surveys/reports rather than "
-             "incidents — triage as usual.\n"]
+        return "_No new candidate incidents to review this week._\n"
+    lines = [f"**{total}** candidate incident(s) to review for the corpus "
+             f"(showing newest {len(gaps)}). Each is a candidate to draft from "
+             "`incidents/_TEMPLATE.yaml`; some may be surveys or reports rather than "
+             "incidents — triage before drafting.\n"]
     for g in gaps:
         cves = (" · " + ", ".join(sorted(g["cves"]))) if g["cves"] else ""
-        lines.append(f"- [ ] **{g['date']}** — [{g['title']}]({g['url']}) "
-                     f"_({g['ref']})_{cves}")
+        title = f"[{g['title']}]({g['url']})" if g.get("url") else g["title"]
+        lines.append(f"- [ ] **{g['date']}** — {title}{cves}")
     return "\n".join(lines) + "\n"
 
 
