@@ -106,6 +106,7 @@ sources:
     publisher: Palo Alto Unit 42
     type: primary-research
     date_accessed: "2026-09-20"
+    archive_url: "https://web.archive.org/web/20260920152352/https://unit42.paloaltonetworks.com/exploit-of-aws-agentcore-iam-god-mode/"
   - url: "https://www.pointguardai.com/ai-security-incidents/bedrock-agents-escaped-the-sandbox-and-shared-each-others-memories"
     title: "AWS Bedrock AgentCore Sandbox Escape and IAM Flaws"
     publisher: PointGuard AI

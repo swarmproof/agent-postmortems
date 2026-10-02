@@ -95,6 +95,7 @@ sources:
     publisher: Palo Alto Unit 42
     type: primary-research
     date_accessed: "2026-09-17"
+    archive_url: "https://web.archive.org/web/20260928133144/https://unit42.paloaltonetworks.com/autonomous-ai-cyber-attack-campaign/"
   - url: "https://thehackernews.com/2026/07/chinese-hacker-commands-deepseek-via.html"
     title: "Chinese Hacker Commands DeepSeek via Telegram to Launch Autonomous Attacks"
     publisher: The Hacker News

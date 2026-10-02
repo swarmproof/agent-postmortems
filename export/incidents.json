@@ -2600,7 +2600,8 @@
           "title": "Cracks in the Bedrock: Agent God Mode",
           "publisher": "Palo Alto Unit 42",
           "type": "primary-research",
-          "date_accessed": "2026-09-20"
+          "date_accessed": "2026-09-20",
+          "archive_url": "https://web.archive.org/web/20260920152352/https://unit42.paloaltonetworks.com/exploit-of-aws-agentcore-iam-god-mode/"
         },
         {
           "url": "https://www.pointguardai.com/ai-security-incidents/bedrock-agents-escaped-the-sandbox-and-shared-each-others-memories",
@@ -3046,7 +3047,8 @@
           "title": "Chinese-Speaking Threat Actor Harnesses AI Models for Autonomous Cyberattacks",
           "publisher": "Palo Alto Unit 42",
           "type": "primary-research",
-          "date_accessed": "2026-09-17"
+          "date_accessed": "2026-09-17",
+          "archive_url": "https://web.archive.org/web/20260928133144/https://unit42.paloaltonetworks.com/autonomous-ai-cyber-attack-campaign/"
         },
         {
           "url": "https://thehackernews.com/2026/07/chinese-hacker-commands-deepseek-via.html",
