@@ -8,6 +8,7 @@ _site/
 # local agent guidance — do not publish
 CLAUDE.md
 AGENTS.md
+temp_auto_push.bat
 .codex/
 
 # internal planning & strategy — never publish to the public repo
@@ -18,3 +19,5 @@ site/
 
 # python bytecode
 __pycache__/
+.gitignore
+branch_structure.json

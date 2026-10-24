@@ -1,0 +1,75 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2024-github-copilot-chat-image-exfiltration
+title: "GitHub Copilot Chat source-comment injection exposes conversation context through image requests"
+summary: >-
+  Researcher-controlled source comments caused Copilot Chat to expose conversation
+  context through rendered image requests. The disclosure reports a fix; this
+  record describes a PoC, not verified in-the-wild harm.
+date: "2024-06-14"
+last_updated: "2026-10-22"
+incident_type: hazard
+status: factual
+confidence: reported
+
+system:
+  framework: "GitHub Copilot Chat for VS Code"
+  models: []
+  tools: ["Markdown image renderer"]
+  vendor: "GitHub / Microsoft"
+  autonomy_level: unknown
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: data-exfiltration
+    subclass: via-output
+attack_vector: untrusted-content
+
+trigger: "Opening untrusted source code for explanation in Copilot Chat."
+root_cause: >-
+  Instructions from source comments influenced model output; automatic remote-image
+  fetching crossed the conversation's data boundary.
+detection: >-
+  Johann Rehberger demonstrated the outbound request and privately reported the behavior.
+recovery: >-
+  Researcher reports fix confirmation on 2024-06-12; disabling Markdown image
+  rendering was his observed explanation, not a published vendor specification.
+prevention: >-
+  Researcher recommends disabling remote images or restricting outbound image domains.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: unknown
+    description: "Conversation context in the researcher's demonstration."
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: "Public source documents a PoC, without an affected-user count."
+  scope: "Researcher-controlled demonstration"
+  reversibility: unknown
+
+timeline:
+  - at: "2024-02-25"
+    event: "Private vulnerability report."
+  - at: "2024-03-06"
+    event: "Validity acknowledged, according to researcher."
+  - at: "2024-06-12"
+    event: "Fix confirmation reported."
+
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051]
+tags: ["github-copilot", "remote-images", "proof-of-concept"]
+submitted_by: ANO3457
+sources:
+  - url: "https://embracethered.com/blog/posts/2024/github-copilot-chat-prompt-injection-data-exfiltration/"
+    title: "GitHub Copilot Chat: From Prompt Injection to Data Exfiltration"
+    publisher: "Embrace The Red (Johann Rehberger)"
+    type: primary-research
+    date_accessed: "2026-10-22"
