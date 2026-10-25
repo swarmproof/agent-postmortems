@@ -7,6 +7,11 @@ on:
       - "incidents/**"
       - "schema/**"
       - "scripts/**"
+  schedule:
+    # Daily 07:00 UTC — refresh archive.org snapshots and exports even on days
+    # with no incident push (offset from the weekly jobs at 09:00/10:00 UTC).
+    - cron: "0 7 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
