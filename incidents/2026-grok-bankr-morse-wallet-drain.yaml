@@ -53,12 +53,14 @@ contributing_factors:
   - Instructions from untrusted public posts were treated as actionable commands.
   - Morse-code encoding evaded input safety filters.
   - No human approval was required before executing a token transfer.
+  - A hardcoded block on replies from Grok, present in an earlier agent version, was not carried into a later rewrite.
 detection: >-
   Observed on-chain and reported publicly; catalogued by the OECD AI Incidents
   Monitor and analysed by security researchers.
 recovery: >-
-  The transferred tokens were not recoverable; commentary centred on constraining
-  agent wallet permissions and rejecting obfuscated instructions.
+  The Bankr operator stated that about 80% of the funds were returned and that the
+  remaining 20% would be discussed with the DRB community. Commentary centred on
+  constraining agent wallet permissions and rejecting obfuscated instructions.
 prevention: >-
   Require explicit human approval for financial transactions; do not
   auto-escalate agent permissions from on-chain artifacts like NFTs; treat public
@@ -77,7 +79,7 @@ blast_radius:
       Roughly 3 billion DRB tokens (about $155,000–$200,000) were stolen from a
       verified wallet on the Base network.
   scope: one verified wallet linked to the Grok/Bankr integration
-  reversibility: irreversible
+  reversibility: partially-reversible
 
 external_ids:
   oecd_aim: "2026-05-04-4a73"
@@ -98,6 +100,11 @@ machine_export:
     an artifact can silently escalate its permissions.
 
 sources:
+  - url: "https://x.com/0xDeployer/status/2051315834212303334"
+    title: "Statement on the Grok wallet incident"
+    publisher: Bankr (0xDeployer)
+    type: vendor-disclosure
+    date_accessed: "2026-11-09"
   - url: "https://www.giskard.ai/knowledge/how-grok-got-prompt-injected-an-x-user-drained-150-000-from-an-ai-wallet"
     title: "How Grok got prompt-injected: an X user drained $150,000 from an AI wallet"
     publisher: Giskard
