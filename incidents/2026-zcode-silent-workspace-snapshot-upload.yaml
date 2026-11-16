@@ -151,6 +151,7 @@ sources:
     publisher: The Next Web
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261005084058/https://thenextweb.com/news/zai-zcode-open-source-commit-history-security-assessment"
   - url: "https://github.com/zai-org/ZCode"
     title: "zai-org/ZCode (published client source)"
     publisher: GitHub

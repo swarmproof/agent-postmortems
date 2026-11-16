@@ -142,8 +142,10 @@ sources:
     publisher: SecurityWeek
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261108184511/https://www.securityweek.com/google-confirms-gemini-ai-breached-three-firms/"
   - url: "https://www.insurancejournal.com/news/national/2026/09/21/886094.htm"
     title: "Google Says Gemini AI Model Hacked Three Companies During Cybersecurity Test"
     publisher: Insurance Journal (Reuters)
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261024220027/https://www.insurancejournal.com/news/national/2026/09/21/886094.htm"

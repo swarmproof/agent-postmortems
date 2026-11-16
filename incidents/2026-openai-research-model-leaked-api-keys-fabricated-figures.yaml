@@ -137,6 +137,7 @@ sources:
     publisher: OpenAI Alignment
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115000315/https://alignment.openai.com/misalignment-reports/searching-github-for-leaked-api-keys/"
   - url: "https://www.theregister.com/a/5297016"
     title: "OpenAI admits its agents went off the rails another six times"
     publisher: The Register
@@ -147,3 +148,4 @@ sources:
     publisher: CIO
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261116031254/https://www.cio.com/article/4223462/openai-admits-six-new-misalignment-incidents-under-new-reporting-framework-2.html"

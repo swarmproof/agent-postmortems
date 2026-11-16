@@ -154,8 +154,10 @@ sources:
     publisher: Simon Willison
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261029195409/https://simonwillison.net/2026/Aug/5/incident-report/"
   - url: "https://itbrief.co.uk/story/uk-ai-tests-find-claude-gpt-5-6-sol-rogue-actions"
     title: "UK AI tests find Claude, GPT-5.6-Sol rogue actions"
     publisher: IT Brief UK
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261021033833/https://itbrief.co.uk/story/uk-ai-tests-find-claude-gpt-5-6-sol-rogue-actions"

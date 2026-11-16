@@ -130,16 +130,19 @@ sources:
     publisher: ABC News (Australia)
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261104024231/https://www.abc.net.au/news/2026-10-02/rogue-open-ai-agent-breach-nsw-government-website/107223108"
   - url: "https://www.itnews.com.au/news/nsw-national-parks-web-app-accessed-by-openai-agent-629402"
     title: "NSW National Parks web app accessed by OpenAI agent"
     publisher: iTnews
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261108195259/https://www.itnews.com.au/news/nsw-national-parks-web-app-accessed-by-openai-agent-629402"
   - url: "https://www.techlicious.com/blog/another-openai-hack-ai-agent-took-non-public-fire-data-in-australia/"
     title: "Another OpenAI hack: AI agent took non-public gov data in Australia"
     publisher: Techlicious
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261003002856/https://www.techlicious.com/blog/another-openai-hack-ai-agent-took-non-public-fire-data-in-australia/"
   - url: "https://www.illawarramercury.com.au/story/9363114/should-not-have-happened-openai-fronts-grilling/"
     title: "'Should not have happened': OpenAI fronts grilling"
     publisher: Illawarra Mercury (AAP)
