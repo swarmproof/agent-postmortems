@@ -10,6 +10,11 @@ google_news_queries:
   - '"coding agent" (deleted files OR "production database" OR destructive)'
   - '"AI agent" (denial of wallet OR runaway OR "cost blowup" OR overspend)'
   - 'autonomous agent (misuse OR jailbreak OR "reward hacking")'
+  # Breach-shaped headlines: vendors and trade press report agent-driven intrusions
+  # as "breach"/"hack"/"intrusion", not with the agent-action verbs above.
+  - '"AI agent" (breach OR hack OR hacked OR intrusion OR escaped)'
+  - '(agentic OR "AI agents") (cyberattack OR "data breach" OR "unauthorized access")'
+  - '("Claude Code" OR ARTEX OR "Hermes agent" OR "coding agent") (breach OR hack OR attack)'
 
 # arXiv API category+keyword searches (for hazards / demonstrated PoCs).
 arxiv_queries:
@@ -36,6 +41,19 @@ rss_feeds:
   - "https://huggingface.co/blog/feed.xml"        # Hugging Face blog
   - "https://security.googleblog.com/feeds/posts/default"  # Google Security Blog
   - "https://www.microsoft.com/en-us/security/blog/feed/"  # Microsoft Security blog
+  - "https://metr.org/feed.xml"                   # METR (evaluation-escape reports)
+  # Vendor threat intelligence — where operator-run agent campaigns are first documented.
+  - "https://www.crowdstrike.com/en-us/blog/feed/"  # CrowdStrike
+  - "https://unit42.paloaltonetworks.com/feed/"     # Palo Alto Unit 42
+  - "https://www.wiz.io/blog/rss.xml"               # Wiz research
+  # Security trade press — breach disclosures surface here within hours.
+  # BleepingComputer and SecurityWeek block feed fetches (HTTP 403) and are omitted.
+  - "https://feeds.feedburner.com/TheHackersNews"   # The Hacker News
+  - "https://www.theregister.com/security/headlines.atom"  # The Register (security)
+  - "https://therecord.media/feed"                  # The Record
+  - "https://www.darkreading.com/rss.xml"           # Dark Reading
+  - "https://krebsonsecurity.com/feed/"             # Krebs on Security
+  - "https://databreaches.net/feed/"                # DataBreaches.net
 
 # CVE keyword searches via the NVD API (keyless, free-text). Many agent incidents
 # are CVEs first. Queries are ANDed by NVD; keep them tight to agent/LLM/MCP scope.
@@ -115,3 +133,18 @@ relevance_keywords:
   - sandbox
   - backdoor
   - "data exfiltration"
+  # Breach vocabulary — a headline such as "X traces breach to exposed key" matched
+  # none of the terms above and was dropped at score 0.
+  - breach
+  - intrusion
+  - hacked
+  - "unauthorized access"
+  - "api key"
+  - escaped
+  - wallet
+  - heist
+  - stolen
+  - trojan
+  - "claude code"
+  - codex
+  - "ai key"
