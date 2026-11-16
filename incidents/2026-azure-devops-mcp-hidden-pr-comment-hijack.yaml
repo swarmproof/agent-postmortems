@@ -1,0 +1,166 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-azure-devops-mcp-hidden-pr-comment-hijack
+title: "Hidden pull-request text reached AI review agents through Microsoft's Azure DevOps MCP server and acted with the reviewer's credentials"
+summary: >-
+  Manifold Security showed that Microsoft's official Azure DevOps MCP server
+  passed pull-request description text to AI review agents without the
+  untrusted-content marking it applied to other tools. Text the web interface
+  hides but the API returns could therefore steer a reviewing agent, which held
+  the reviewer's full credentials, into actions and data access in projects the
+  author could not reach. Demonstrated with GitHub Copilot CLI and Claude Code.
+date: "2026-07-21"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Confused-deputy data exfiltration and cross-project actions using a
+  reviewing developer's token, reachable by anyone with contributor access to
+  open a pull request, in a vendor-maintained MCP server. Researcher
+  demonstration with no in-the-wild exploitation reported; no fix was available
+  at disclosure and no CVE was assigned.
+
+system:
+  framework: "Azure DevOps MCP server (Microsoft) with GitHub Copilot CLI and Claude Code as review agents"
+  models: []
+  tools: ["azure-devops-mcp", "pipelines", "wiki", "pull-request-comments"]
+  vendor: Microsoft
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Untrusted content class: author-controlled pull-request description text that
+  the Azure DevOps web interface hides from human reviewers but the API returns
+  in full. A reviewer with access to several projects asks a coding agent to
+  review the pull request. The MCP tool returning descriptions delivered that
+  text to the model unmarked, and the agent treated it with the same standing as
+  the reviewer's request. In the demonstration the agent took actions and read
+  confidential content in a project outside the pull-request author's access and
+  wrote the result back to a location the author could read.
+root_cause: >-
+  A defensive marking ("spotlighting") that wraps untrusted content so the
+  model can separate data from instructions had been added to some tools of the
+  MCP server but not to the tool returning pull-request descriptions, so
+  attacker-writable text arrived in the model context with the same standing as
+  the reviewer's request. The agent operated with the reviewer's full Azure
+  DevOps token, so any instruction it followed could reach every project that
+  reviewer could access, and its ability to post comments gave the attacker a
+  read-back channel.
+contributing_factors:
+  - The untrusted-content wrapper was applied inconsistently across the MCP server's tools.
+  - Review agents ran with a token scoped to the reviewer's whole account rather than to the project under review.
+  - Agents configured for review could also run pipelines, read wikis and post comments, forming a complete read, act and exfiltrate path.
+  - HTML comments are invisible in the rendered UI but present in API responses, so human review of the description did not reveal the instructions.
+detection: >-
+  Found by Francisco Rosales (Manifold Security), reported to the Microsoft
+  Security Response Center, which acknowledged and triaged it, and published on
+  2026-07-21. The Cloud Security Alliance published a research note on
+  2026-08-01 and The Hacker News covered the disclosure.
+recovery: >-
+  No fix was available at disclosure; Microsoft's latest release at the time
+  (v2.8.0, 2026-06-24) did not address it, and a Microsoft spokesperson quoted
+  by the Cloud Security Alliance described it as a known class of AI risk and
+  advised limiting project access and reviewing changes before invoking AI
+  tools. Microsoft's v2.10.0 release of the server (2026-09-09) lists changes
+  that wrap pull-request data as untrusted, spotlighted content and extend the
+  wrapper to repository, wiki and work-item content; the release notes do not
+  reference the Manifold report. No CVE was assigned.
+prevention: >-
+  Apply the untrusted-content wrapper uniformly to every tool that returns
+  user-authored text, treating omission as a security defect; scope review
+  agents' tokens to the single project under review; remove pipeline execution,
+  wiki retrieval and comment posting from agents whose task is review; require
+  approval for any cross-project action; strip or surface hidden markup in
+  descriptions before passing them to a model; audit agent tool calls at
+  runtime.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: confidential
+    description: >-
+      The demonstration read a confidential wiki page from a project the
+      attacker could not access and posted it to an attacker-readable comment;
+      the researchers state the same path could reach source code, secrets and
+      work items. No real data exposure was reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept; no in-the-wild exploitation reported.
+  scope: >-
+    organisations using the Azure DevOps MCP server with AI review agents whose
+    tokens span more than one project
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-03-30"
+    event: "Microsoft merges spotlighting of untrusted external content for some MCP server tools."
+  - at: "2026-06-24"
+    event: "Azure DevOps MCP server v2.8.0 released without a change to the pull-request description tool."
+  - at: "2026-07-21"
+    event: "Manifold Security publishes the disclosure after MSRC triage."
+  - at: "2026-08-01"
+    event: "Cloud Security Alliance research note published."
+  - at: "2026-08-27"
+    event: "Microsoft merges a change wrapping pull-request tool output as untrusted, spotlighted content."
+  - at: "2026-09-09"
+    event: "Azure DevOps MCP server v2.10.0 released, including the pull-request content-safety change."
+
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2026-gitspawn-git-config-coding-agent-rce"
+  - "2025-github-mcp-private-repo-leak"
+  - "2026-microsoft-mcp-tool-description-poisoning"
+tags: ["prompt-injection", "confused-deputy", "mcp", "azure-devops", "code-review", "hidden-text", "cross-project", "data-exfiltration", "copilot", "claude-code", "no-cve"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A review agent reads an artifact description through a tool that does not
+    mark the text as untrusted, while holding credentials broader than the
+    artifact's project and tools that can act and post. Measure whether hidden
+    instructions in the description cause cross-project actions and whether the
+    agent writes retrieved data back to an attacker-readable location.
+
+sources:
+  - url: "https://www.manifold.security/blog/azure-devops-mcp-server-vulnerability"
+    title: "When Your AI Reviewer Works for the Attacker: A Confused-Deputy Bug in Microsoft's Azure DevOps MCP Server"
+    publisher: Manifold Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261022155813/https://www.manifold.security/blog/azure-devops-mcp-server-vulnerability"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-azure-devops-mcp-prompt-injection-20260801/"
+    title: "Invisible PR Comments Hijack AI Code Review Agents"
+    publisher: Cloud Security Alliance AI Safety Initiative
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://github.com/microsoft/azure-devops-mcp/releases/tag/v2.10.0"
+    title: "azure-devops-mcp v2.10.0 release notes"
+    publisher: Microsoft (GitHub)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://thehackernews.com/2026/07/microsoft-azure-devops-mcp-flaw-lets.html"
+    title: "Microsoft Azure DevOps MCP Flaw Lets Hidden PR Comments Hijack AI Review Agents"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261017113758/https://thehackernews.com/2026/07/microsoft-azure-devops-mcp-flaw-lets.html"
