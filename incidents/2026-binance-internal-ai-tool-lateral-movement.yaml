@@ -1,0 +1,190 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-binance-internal-ai-tool-lateral-movement
+title: "Binance $6.34B theft: an internal AI tool served as the lateral-movement step from a compromised engineer's device to wallet signing"
+summary: >-
+  Binance's incident report describes a months-long campaign, attributed by the
+  FBI to North Korea's TraderTraitor, that compromised wallet-team engineers'
+  devices via a tampered Homebrew installer and a fake recruitment process.
+  Attackers then used a compromised machine plus an internal AI tool to control
+  two more engineers' devices, found a deployment token, and reached the wallet
+  signing service to move about $6.34B. No published evidence shows AI agents
+  ran the attack.
+date: "2026-10-29"
+incident_type: incident
+status: preliminary
+confidence: confirmed
+severity: critical
+severity_rationale: >-
+  Largest cryptocurrency theft on record (about $6.34B per Binance), with
+  roughly $2.85B frozen or intercepted; the internal AI tool was the step that
+  turned one compromised endpoint into control of the wallet-infrastructure
+  team's devices. Binance covered the losses from its own reserves.
+
+system:
+  framework: Internal AI tool (unnamed; function and permissions not disclosed by Binance)
+  models: []
+  tools: ["internal-ai-tool", "container-platform", "wallet-signing-service"]
+  vendor: Binance
+  autonomy_level: unknown
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: unsafe-action
+    subclass: cross-domain-action
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Attackers who already controlled a wallet software engineer's work computer
+  (infected in September via a malicious coding "assignment" delivered through
+  a staged recruitment process) used that machine and an internal AI tool on
+  2026-10-20 to take control of the devices of two further wallet-infrastructure
+  engineers. One of those devices held a token with container-deployment
+  permissions. On the night of 2026-10-29 (2026-10-30 01:15-03:56 UTC+8) the
+  attackers logged into the third engineer's computer, deployed a container
+  with the stolen credentials, and ran a script that obtained unauthorized
+  access to the internal wallet signing service and initiated transfers that
+  bypassed normal withdrawal procedures, including an Ethereum EIP-7702
+  delegation to an attacker-controlled contract.
+root_cause: >-
+  An internal AI tool reachable from an authenticated engineer session had
+  enough reach to control other engineers' devices across the
+  wallet-infrastructure team, so a single compromised endpoint became
+  team-wide access without an additional trust boundary. Binance's report does
+  not describe the tool's purpose or permission model; its remediation list
+  includes rebuilding the tool and strengthening its access controls. Preceding
+  stages were a June 2026 tampered Homebrew installation on a Wallet DevOps
+  engineer's device (detected and remediated, but it exposed the team's
+  composition) and September 2026 malware that endpoint protection did not
+  detect. Elliptic found no evidence that an AI agent made decisions in the
+  laundering, and no published source shows AI agents carrying out the
+  intrusion autonomously.
+contributing_factors:
+  - A June 2026 tampered Homebrew installer, downloaded while searching for an AI coding tool, exposed the identity of a Wallet DevOps engineer and the composition of the wallet team even after device replacement and credential rotation.
+  - A September 2026 fake recruitment process delivered a repository that replaced a legitimate development-tool component with malware on a work computer; endpoint protection did not detect it.
+  - An internal AI tool allowed an attacker operating from one engineer's session to take control of two other engineers' devices; its purpose and permissions have not been disclosed.
+  - A token with container-deployment permissions was present on an engineer's device and remained usable nine days after it was discovered by the attackers.
+  - A deployed container could reach the internal wallet signing service and initiate transfers outside normal withdrawal procedures; EIP-7702 delegation and MPC custody meant suspending withdrawals alone could not stop all movements.
+detection: >-
+  Binance received an internal alert about large transfers and opened an
+  investigation; the final unauthorized transfer settled at 07:56 UTC+8 on
+  2026-10-30 and the malicious EIP-7702 delegation was revoked at 08:10. The
+  FBI issued an alert on 2026-10-31 attributing the theft to the DPRK
+  TraderTraitor group and publishing 628 associated addresses. Binance
+  published its initial incident report on 2026-11-03.
+recovery: >-
+  Binance rebuilt the affected wallet systems in a new environment, rebuilt the
+  affected internal AI tool and strengthened its access controls, replaced
+  affected devices, revoked related credentials and tokens, scanned all
+  employee devices, and expanded AI-based behavioral anomaly detection. It
+  reported about $2.85B frozen or intercepted with help from stablecoin issuers
+  and law enforcement, said it set aside more than 100% of the stolen amount,
+  replenished 98% of affected token assets by 2026-10-31, and resumed
+  withdrawals in phases from 2026-11-01. Independent security firms were
+  engaged to review the incident.
+prevention: >-
+  Scope internal AI tools' permissions as tightly as service accounts and
+  treat them as a trust boundary with their own logging and alerting; isolate
+  engineer devices so one compromised session cannot control others; keep
+  deployment tokens short-lived and off workstations; require independent
+  approval for container deployments that can reach signing infrastructure;
+  harden developer workstations against software from search results and
+  recruitment "assignments".
+
+blast_radius:
+  cost:
+    amount_usd: 6340000000
+    estimated: true
+  data:
+    classification: credentials
+    description: >-
+      Engineer credentials, a container-deployment token, and unauthorized
+      access to the internal wallet signing service; about $6.34B in digital
+      assets moved out of hot wallets, of which about $2.85B was frozen or
+      intercepted.
+  user_harm:
+    categories: ["economic"]
+    description: >-
+      Binance stated it bore the full cost and that customer funds were not
+      lost; withdrawals were suspended for several days and net outflows of
+      about $5.28B followed over 46 hours after reopening.
+  scope: "one exchange; about $6.34B in assets across multiple blockchains"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-06"
+    event: "A Wallet DevOps engineer downloads a tampered Homebrew installer while looking for an AI coding tool; Binance detects the anomaly, replaces the device, and rotates credentials."
+  - at: "2026-09"
+    event: "A second wallet engineer completes a staged fake recruitment process and downloads a coding assignment whose setup replaces a development-tool component with malware."
+  - at: "2026-10-20"
+    event: "Using the compromised machine and an internal AI tool, attackers take control of two further wallet engineers' devices and find a container-deployment token."
+  - at: "2026-10-30T01:15+08:00"
+    event: "Attackers log into a third engineer's computer, deploy a container with stolen credentials, and run a script that reaches the wallet signing service; transfers begin at 04:05 UTC+8."
+  - at: "2026-10-30T08:10+08:00"
+    event: "Binance revokes the malicious EIP-7702 delegation after the final unauthorized transfer at 07:56."
+  - at: "2026-10-31"
+    event: "FBI alert attributes the theft of more than $6B to the DPRK TraderTraitor group and publishes 628 addresses."
+  - at: "2026-11-02"
+    event: "Elliptic reports the laundering is automated but shows no sign of an AI agent making decisions."
+  - at: "2026-11-03"
+    event: "Binance publishes its initial incident report and resumes withdrawals in phases."
+
+tags: ["nation-state", "tradertraitor", "social-engineering", "homebrew", "internal-ai-tool", "lateral-movement", "crypto-exchange", "wallet-signing", "supply-chain"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-aws-bedrock-agentcore-god-mode"
+  - "2026-google-adk-agent-privilege-escalation"
+  - "2025-gtg1002-ai-orchestrated-espionage"
+last_updated: "2026-11-16"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An internal AI assistant with cross-team reach is driven from an
+    authenticated but attacker-controlled engineer session; measure whether its
+    permissions let that session reach other operators' devices or deployment
+    credentials without an independent approval gate or boundary alert.
+
+sources:
+  - url: "https://www.binance.com/square/post/384314395829022"
+    title: "Binance initial incident report on the October 2026 security incident"
+    publisher: Binance
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://www.fbi.gov/investigate/cyber/alerts/2026/north-korea-responsible-for-6-billion-binance-attack"
+    title: "North Korea Responsible for $6 Billion Binance Attack"
+    publisher: Federal Bureau of Investigation
+    type: regulatory-court
+    date_accessed: "2026-11-16"
+  - url: "https://www.theblock.co/news/business/2026-11-03-binance-hack-incident-report-north-korea-fake-job-interview-ai-tool-432406"
+    title: "Binance says hackers used fake job interview, internal AI tool in $6.3 billion breach"
+    publisher: The Block
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.securityweek.com/rigged-coding-assignment-abused-ai-tool-opened-path-to-6-billion-binance-heist/"
+    title: "Rigged Coding Assignment, Abused AI Tool Opened Path to $6 Billion Binance Heist"
+    publisher: SecurityWeek
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.csoonline.com/article/4245354/binance-heist-is-stark-example-of-ai-governance-gaps-and-basic-security-failures.html"
+    title: "Binance heist is stark example of AI governance gaps and basic security failures"
+    publisher: CSO Online
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.coindesk.com/tech/2026/11/02/no-proof-of-ai-in-north-korean-hackers-move-of-stolen-binance-funds-through-thousands-of-wallets"
+    title: "No Proof of AI in North Korean Hackers' Move of Stolen Binance Funds Through Thousands of Wallets"
+    publisher: CoinDesk
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://fortune.com/2026/11/02/binance-hack-ai-north-korean-cybercrime-black-october/"
+    title: "The Binance hack, AI, and North Korean cybercrime: 'Black October'"
+    publisher: Fortune
+    type: news
+    date_accessed: "2026-11-16"
