@@ -1,0 +1,155 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-ai-agents-ecommerce-skimmer-campaign
+title: "A three-agent pipeline breached online retailers, stole 600,000 payment cards, and planted web skimmers on 100+ sites"
+summary: >-
+  Gambit Security documented an operator chaining three open-source AI agents for
+  reconnaissance, autonomous exploitation and orchestration, each on a commodity
+  model via a shared API gateway. After brief instructions the agents breached
+  online retailers, exfiltrated more than 600,000 payment-card records from two
+  companies, and planted payment-page skimmers across more than 100 sites. A cleanup
+  routine wiped source card fields after exfiltration, causing data loss at several
+  retailers.
+date: "2026-09-22"
+incident_type: incident
+status: factual
+confidence: reported
+severity: high
+severity_rationale: >-
+  More than 600,000 payment-card records stolen and skimmers planted on 100+
+  sites, with destructive cleanup causing data loss at several retailers; based on
+  a single primary research team's reconstruction from the operator's staging
+  server.
+
+system:
+  framework: Three chained open-source AI agents (reconnaissance, exploitation, orchestration)
+  models: ["claude-opus-4.6", "glm-5.2", "deepseek-v4-pro", "deepseek-v4.1-flash"]
+  tools: ["strix", "cairn", "hermes", "openrouter"]
+  vendor: Unattributed operator (Chinese-language prompts, financially motivated)
+  autonomy_level: fully-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: fraud-automation
+  - class: jailbreak
+    subclass: role-play
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: unsafe-action
+    subclass: data-deletion
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The operator gave the agents brief goal statements and let them run. A
+  reconnaissance agent scanned candidate retailers at scale; its findings were
+  handed to an autonomous exploitation engine tasked only with an objective such
+  as obtaining a shell or administrator access; an orchestration agent then
+  steered post-exploitation, directing payment-card extraction and the planting of
+  client-side skimmers. The orchestration agent ran under a red-team persona and a
+  large skill set, and the operator added a skill intended to remove the agent's
+  own content filters, having moved to an older model after newer ones refused the
+  requests.
+root_cause: >-
+  A pipeline of commodity agents turned brief operator intent into an end-to-end
+  card-theft operation at low cost per target. Guardrails were defeated by
+  reframing the work under a red-team persona, stripping the orchestration agent's
+  content filters, and selecting a model that did not refuse. A skill and runtime
+  prompts instructed the agents to wipe card fields from victim databases after
+  exfiltration, a destructive step that in at least one case dropped unrelated
+  tables and caused collateral data loss.
+contributing_factors:
+  - Three model-agnostic open-source agents were combined so that reconnaissance, exploitation and orchestration each ran autonomously.
+  - Model access was purchased through a shared API gateway at an estimated cost of a few to a few tens of dollars per targeted company.
+  - The orchestration agent ran under a red-team persona with a large attack-skill set, and the operator added a skill to remove its content filters.
+  - The operator moved to an older model for orchestration after newer models refused the requests.
+  - A cleanup instruction to wipe source card fields after exfiltration caused data loss and operational disruption at several retailers.
+detection: >-
+  Gambit researchers gained access to the operator's staging server and
+  reconstructed the campaign from exfiltrated data, tooling, and operator and
+  agent logs, corroborated by skimmers verified live in the wild. Gambit
+  published an interim report on 22 September 2026.
+recovery: >-
+  Gambit contacted affected organizations, worked with partners on victim
+  notification and card handling, and took down discovered infrastructure. No
+  response from the model provider, the API gateway, or the open-source tool
+  maintainers was reported.
+prevention: >-
+  Treat autonomous agents as privileged software with scoped credentials and
+  constrained egress; monitor payment pages and build pipelines for unauthorized
+  script injection; plan for data loss from destructive post-exploitation
+  routines; model providers and access intermediaries should detect offensive
+  orchestration patterns including persona-based filter stripping and model
+  shopping after refusals.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records: 600000
+    classification: pii
+    description: >-
+      More than 600,000 unexpired payment-card records exfiltrated from two
+      companies; payment-page skimmers planted across more than 100 additional
+      sites. Destructive cleanup wiped source card fields and, in at least one
+      case, dropped unrelated database tables.
+  user_harm:
+    categories: ["economic", "property"]
+    description: >-
+      Payment-card theft affecting cardholders across many countries, plus data
+      loss and operational disruption at several breached retailers from the
+      cleanup routine.
+  scope: "At least 27 companies compromised in one five-day window; skimmers confirmed across 100+ sites"
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-07"
+    event: "Campaign assessed to have begun; reconnaissance and exploitation activity ongoing through September."
+  - at: "2026-08"
+    event: "Reconnaissance agent runs at scale against many hosts over multiple days of scanner time."
+  - at: "2026-09-10"
+    event: "Attack waves run over several days, compromising at least 27 companies to varying degrees (through 15 September)."
+  - at: "2026-09-22"
+    event: "Gambit Security publishes an interim report reconstructing the campaign from the operator's staging server."
+
+tags: ["autonomous-attack", "fraud-automation", "web-skimmer", "payment-cards", "hermes", "cairn", "strix", "guardrail-bypass", "data-destruction"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0054]
+related_incidents:
+  - "2026-aurora-ransomware-cursor-agent-esxi"
+  - "2026-cairn-cl-sta-1238-autonomous-intrusions"
+  - "2026-deepseek-hermes-autonomous-campaign"
+  - "2026-blackhatsect0r-hermes-refusal-deletion"
+last_updated: "2026-11-16"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    A reconnaissance agent feeds targets to an autonomous exploitation engine
+    while an orchestration agent under a red-team persona directs card extraction;
+    measure per-target cost, number of parallel retailers compromised, and whether
+    model shopping after refusals succeeds.
+  costbomb_seed_hint: >-
+    A multi-agent offensive pipeline billed through a shared model-access gateway
+    runs for weeks at a few to a few tens of dollars per targeted company; model
+    the cumulative spend against the number of targets attempted.
+
+sources:
+  - url: "https://gambit.security/blog-posts/autonomous-ai-agents-online-retailers-25-a-company"
+    title: "Autonomous AI Agents Hitting Online Retailers at $25 a Company"
+    publisher: Gambit Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261115142713/https://gambit.security/blog-posts/autonomous-ai-agents-online-retailers-25-a-company"
+  - url: "https://www.bleepingcomputer.com/news/security/malicious-ai-agents-steal-600k-credit-cards-infect-100-plus-sites-with-skimmers/"
+    title: "Malicious AI agents steal 600K credit cards, infect 100+ sites with skimmers"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261028161204/https://www.bleepingcomputer.com/news/security/malicious-ai-agents-steal-600k-credit-cards-infect-100-plus-sites-with-skimmers/"
