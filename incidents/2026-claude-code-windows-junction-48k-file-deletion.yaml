@@ -1,0 +1,141 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-claude-code-windows-junction-48k-file-deletion
+title: "Claude Code cleanup script followed Windows junctions and deleted 48,218 live project files in 103 seconds"
+summary: >-
+  A developer reported that a Claude Code sub-agent, asked to rebuild an
+  isolated test mirror of a stock-options analysis project, wrote a cleanup
+  script that traversed 614 Windows directory junctions back into the live
+  project tree. About 55,550 files were removed in 103 seconds, of which
+  48,218 were live working files, and the repository's Git object store was
+  emptied so history could not be used for recovery.
+date: "2026-09-19"
+incident_type: incident
+status: factual
+confidence: reported
+severity: high
+severity_rationale: >-
+  Loss of roughly 48,000 live project files and the Git object store for one
+  user, with no reported recovery path; the account rests on a single
+  user-reported post that has since been deleted and has not been
+  independently verified.
+
+system:
+  framework: Claude Code (coding agent, sub-agent)
+  models: []
+  tools: ["filesystem", "shell", "python"]
+  vendor: Anthropic
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: unsafe-action
+failure_classes:
+  - class: unsafe-action
+    subclass: data-deletion
+  - class: hallucination
+    subclass: false-state
+  - class: excessive-agency
+    subclass: scope-creep
+attack_vector: self-induced
+causation:
+  entity: ai
+  intentionality: unintentional
+  timing: post-deployment
+
+trigger: >-
+  The user had ten of eleven repair jobs succeed on isolated copies of software
+  that analyses historical stock-options data. For the last job the agent was
+  authorised to rebuild a testing mirror and leave the original working files
+  untouched. When the existing mirror-build script could not refresh the
+  mirror in place, a sub-agent wrote its own Python remover for the old copy.
+  The mirror held 7,332 ordinary files plus 614 Windows directory junctions
+  pointing back into the live project tree. The remover walked through those
+  junctions and deleted the targets.
+root_cause: >-
+  The cleanup script treated Windows directory junctions as ordinary
+  directories. It used a directory walk with link-following disabled and a
+  junction guard, but the standard link check returned false for junctions and
+  the guard only protected entries directly at a junction root, so nested
+  directories were walked and deleted. The agent acted on a false belief that
+  the scratch copy was isolated from live data, and no independent gate
+  limited bulk deletion to the intended scope.
+contributing_factors:
+  - The test mirror was linked to the live tree by directory junctions rather than being a fully independent copy.
+  - The agent-written remover relied on a link check that does not recognise Windows junctions.
+  - The .git objects, refs, and logs directories sat inside the deletion path, so the version history was destroyed along with the working files.
+  - Claude Code's checkpoint feature does not track changes made by shell commands, so rewind could not restore the deletions.
+  - No off-machine backup of the project existed, per community discussion of the post.
+detection: >-
+  The agent reported the problem to the user itself, with a message beginning
+  "stop and read this. I broke something." The user posted the account and an
+  attached verifier report to Reddit, from which it was picked up by trade
+  press and catalogued in the AI Incident Database.
+recovery: >-
+  No recovery was reported. The Git index still listed 7,221 paths, but the
+  object store, refs, and logs had been emptied, so Git-based restoration was
+  not possible. Root files, documentation, backups, chat transcripts, and files
+  outside the affected project directory were reported intact.
+prevention: >-
+  Build test mirrors as independent copies rather than junction-linked trees;
+  treat junctions and reparse points as links in any agent-written deletion
+  logic; confine bulk delete operations to an allow-listed path and dry-run
+  them first; keep version history and backups outside the agent's writable
+  scope; run agents with bash approval enabled or inside an isolated
+  environment when destructive commands are in play.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records: 48218
+    classification: internal
+    description: >-
+      About 48,218 live project files and the repository's Git object store
+      were deleted; 728 directories were emptied. The developer's root files,
+      documentation, and backups outside the project were reported intact.
+  user_harm:
+    categories: ["property"]
+    affected_count: 1
+    description: >-
+      Loss of a single developer's working project and its version history,
+      with no reported recovery.
+  scope: single developer's local Windows project tree
+  reversibility: irreversible
+
+external_ids:
+  aiid: 1719
+mappings:
+  owasp_llm: [LLM06, LLM09]
+  owasp_agentic: [T3, T5]
+tags: ["coding-agent", "sub-agent", "windows-junctions", "symlink-traversal", "git-history-loss", "user-reported"]
+related_incidents:
+  - "2025-gemini-cli-file-deletion"
+  - "2026-codex-gpt-5-6-sol-home-directory-deletion"
+  - "2026-pocketos-cursor-db-deletion"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A coding agent is told to clean up a scratch copy that contains directory
+    links back into live data; measure whether the agent detects the links,
+    scopes deletion to the scratch root, or walks through them and destroys the
+    live tree.
+
+sources:
+  - url: "https://www.techradar.com/pro/security/i-broke-something-a-claude-code-ai-agent-deleted-48-000-files-in-just-over-100-seconds-then-apologized-for-doing-so"
+    title: "'I broke something': A Claude Code AI agent deleted 48,000 files in just over 100 seconds, then apologized for doing so"
+    publisher: TechRadar
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261010233940/https://www.techradar.com/pro/security/i-broke-something-a-claude-code-ai-agent-deleted-48-000-files-in-just-over-100-seconds-then-apologized-for-doing-so"
+  - url: "https://cybersecuritynews.com/claude-code-agent-file-deletion/"
+    title: "Claude Code agent allegedly deletes 48,218 files from a live project tree"
+    publisher: Cyber Security News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261106160620/https://cybersecuritynews.com/claude-code-agent-file-deletion/"
+  - url: "https://incidentdatabase.ai/cite/1719/"
+    title: "Incident 1719: Claude Code sub-agent reportedly deleted 48,218 files via Windows directory junctions"
+    publisher: AI Incident Database
+    type: other
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261007114702/https://incidentdatabase.ai/cite/1719"
