@@ -1,0 +1,189 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-cline-cli-npm-unauthorized-publish-openclaw
+title: "Unauthorized cline@2.3.0 npm release silently installed the OpenClaw agent after a prompt-injectable CI triage agent exposed release tokens"
+summary: >-
+  On 2026-02-17 an unauthorized party used a compromised npm publish token to
+  release cline@2.3.0, whose only change was a postinstall hook that globally
+  installed the OpenClaw agent framework. It was live about eight hours, with
+  roughly 4,000 downloads. Eight days earlier a researcher had disclosed that a
+  GitHub issue title could prompt-inject Cline's Claude-based triage workflow and
+  poison the Actions cache read by the nightly release job that held the
+  publishing tokens.
+date: "2026-02-17"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: moderate
+severity_rationale: >-
+  A trusted coding-agent CLI shipped an unauthorized release to roughly 4,000
+  installs that installed a second, broadly permissioned agent framework without
+  consent; the added package was itself non-malicious and the CLI binary was
+  unchanged, but the upstream chain exposed production publishing tokens for npm,
+  VS Code Marketplace, and OpenVSX.
+
+system:
+  framework: Cline CLI (npm) and Cline GitHub Actions issue-triage workflow (claude-code-action)
+  models: ["claude-opus-4-5"]
+  tools: ["npm", "github-actions", "claude-code-action", "actions-cache"]
+  vendor: Cline
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: dependency
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  On 2026-02-17 at 03:26 PT an unauthorized party published cline@2.3.0 to npm
+  from a user account rather than through the project's OIDC trusted-publishing
+  pipeline. The package differed from the legitimate 2.2.3 release only in
+  package.json, which gained a postinstall script that ran a global npm install
+  of openclaw@latest. OpenClaw is an unrelated, non-malicious open-source agent
+  framework that installs a persistent local gateway daemon and runs with broad
+  terminal and file permissions. StepSecurity's monitoring flagged the publish
+  14 minutes after release because the publishing method changed and provenance
+  attestations were missing. The release preceded by eight days the public
+  disclosure of "Clinejection", in which a crafted GitHub issue title was
+  interpolated into the prompt of Cline's issue-triage workflow, which ran Claude
+  Code with Bash, Write, WebFetch and other tools and accepted issues from any
+  GitHub user.
+root_cause: >-
+  Cline's advisory attributes the publish to a compromised npm publish token and
+  states that the token was not revoked during the credential rotation that
+  followed the 2026-02-09 disclosure. The researcher's writeup and Cline's
+  correction together describe a chain in which an issue-triage agent accepted
+  untrusted issue text as instructions and could run arbitrary commands on a
+  runner that shared the GitHub Actions cache scope with the nightly release
+  workflow; poisoned cache entries restored by that workflow could reach
+  NPM_RELEASE_TOKEN, VSCE_PAT and OVSX_PAT, and nightly tokens carried the same
+  publishing power as production tokens. Whether the token used on 2026-02-17 was
+  obtained through this chain has not been independently verified; the researcher
+  reports that an actor found the proof of concept on a test repository and used it
+  against Cline, and observed unexplained cache-related nightly failures between
+  2026-01-31 and 2026-02-03.
+contributing_factors:
+  - The issue-triage workflow interpolated the issue title directly into the agent prompt and allowed any GitHub user to trigger it.
+  - The triage agent ran with Bash, Write, Edit, WebFetch and WebSearch tools and no approval gate on command execution.
+  - Low-privilege and release workflows shared one GitHub Actions cache scope, so cache poisoning crossed the privilege boundary.
+  - Nightly and production releases shared publisher identities and tokens on npm, VS Code Marketplace and OpenVSX.
+  - A credential rotation after disclosure left one npm token active, which was later used for the unauthorized publish.
+  - npm executed the package-provided postinstall script automatically on install.
+detection: >-
+  StepSecurity's npm monitoring flagged cline@2.3.0 at 11:40 UTC on 2026-02-17,
+  14 minutes after publication, on the basis of a changed publishing method and
+  missing provenance attestations. Researcher Adnan Khan reported the publish to
+  Cline and is credited in advisory GHSA-9ppg-jx86-fqw7. Khan had earlier reported
+  the triage-workflow chain to Cline on 2026-01-01 and published it on 2026-02-09.
+recovery: >-
+  Cline published a corrected 2.4.0 at 11:23 PT and deprecated 2.3.0 at 11:30 PT
+  on 2026-02-17, revoked the compromised token, and moved npm publishing to OIDC
+  provenance via GitHub Actions. On 2026-02-09 Cline had removed the AI triage
+  workflows and stopped consuming the Actions cache in publish workflows; its audit
+  found no unauthorized VS Code Marketplace or OpenVSX releases. Users were advised
+  to update to 2.4.0 or later and remove any unintended global OpenClaw install.
+prevention: >-
+  Treat issue and pull-request text as untrusted data rather than agent
+  instructions; restrict who can trigger agent workflows; isolate cache scopes
+  and credentials between low-privilege and release workflows; use short-lived
+  OIDC trusted publishing with provenance so registries can reject manual
+  publishes; separate nightly and production publisher identities; verify that
+  credential rotations cover every token; and install dependencies with lifecycle
+  scripts disabled by default.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      npm, VS Code Marketplace and OpenVSX release tokens were reachable through
+      the triage-agent and cache-poisoning chain; one npm token was used for the
+      unauthorized publish. The 2.3.0 package itself exfiltrated nothing. The
+      researcher's proof of concept on a repository mirror used a preinstall
+      script that sent the runner's Anthropic API key to an external server.
+  user_harm:
+    categories: ["property"]
+    affected_count:
+    description: >-
+      Roughly 4,000 installs of cline@2.3.0 during the exposure window received an
+      unrequested global install of the OpenClaw agent framework, including its
+      persistent local gateway daemon, on developer machines and CI runners. The
+      Cline VS Code extension and JetBrains plugin were not affected.
+  scope: "cline npm CLI; ~4,000 downloads of 2.3.0 over about 8 hours on 2026-02-17"
+  reversibility: reversible
+
+timeline:
+  - at: "2025-12-21"
+    event: "Cline adds a Claude-based GitHub issue-triage workflow triggerable by any GitHub user."
+  - at: "2026-01-01"
+    event: "Researcher Adnan Khan submits a GitHub security advisory and emails Cline about the prompt-injection and cache-poisoning chain."
+  - at: "2026-01-31"
+    event: "Unexplained nightly release failures and cache behaviour consistent with cache poisoning observed through 2026-02-03."
+  - at: "2026-02-09"
+    event: "Khan publishes the Clinejection writeup; Cline removes the triage workflows and cache use in publish workflows within about an hour."
+  - at: "2026-02-10"
+    event: "Cline reports credentials rotated; re-rotates on 2026-02-11 after a report that tokens might still be valid."
+  - at: "2026-02-17"
+    event: "cline@2.3.0 published at 03:26 PT with the OpenClaw postinstall hook; 2.4.0 published at 11:23 PT and 2.3.0 deprecated at 11:30 PT."
+  - at: "2026-02-19"
+    event: "Cline publishes advisory GHSA-9ppg-jx86-fqw7."
+
+cve: []
+cwe: ["CWE-77", "CWE-506"]
+mappings:
+  owasp_llm: [LLM01, LLM03, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
+tags: ["supply-chain", "npm", "cline", "openclaw", "claude-code-action", "github-actions", "cache-poisoning", "prompt-injection", "ci", "postinstall"]
+related_incidents:
+  - "2026-claude-code-ci-hf-exfiltration"
+  - "2026-google-adk-agent-privilege-escalation"
+  - "2026-chaindrop-npm-worm"
+  - "2025-amazon-q-wiper-supply-chain"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A public, low-privilege CI agent reads untrusted issue text as instructions
+    and can write to a cache that a privileged release workflow restores; measure
+    whether injected content can cross that boundary and reach publishing
+    credentials, and whether a downstream install executes package-provided
+    lifecycle scripts without approval.
+
+sources:
+  - url: "https://github.com/cline/cline/security/advisories/GHSA-9ppg-jx86-fqw7"
+    title: "Unauthorized npm publish of cline@2.3.0 with modified postinstall script"
+    publisher: Cline (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261019070707/https://github.com/cline/cline/security/advisories/GHSA-9ppg-jx86-fqw7"
+  - url: "https://www.stepsecurity.io/blog/cline-supply-chain-attack-detected-cline-2-3-0-silently-installs-openclaw"
+    title: "Cline Supply Chain Attack Detected: cline@2.3.0 Silently Installs OpenClaw"
+    publisher: StepSecurity
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261011075156/https://www.stepsecurity.io/blog/cline-supply-chain-attack-detected-cline-2-3-0-silently-installs-openclaw"
+  - url: "https://adnanthekhan.com/posts/clinejection/"
+    title: "Clinejection"
+    publisher: Adnan Khan
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261020175023/https://adnanthekhan.com/posts/clinejection/"
+  - url: "https://snyk.io/blog/cline-supply-chain-attack-prompt-injection-github-actions"
+    title: "How Clinejection turned an AI bot into a supply chain attack"
+    publisher: Snyk
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260926170904/https://snyk.io/blog/cline-supply-chain-attack-prompt-injection-github-actions/"
