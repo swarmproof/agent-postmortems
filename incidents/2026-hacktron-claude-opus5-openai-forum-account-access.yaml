@@ -1,0 +1,135 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-hacktron-claude-opus5-openai-forum-account-access
+title: "AI-assisted exploit chain from OpenAI's community forum reached employee ChatGPT and Codex accounts"
+summary: >-
+  Hacktron researchers reported that a frontier model, Claude Opus 5, materially
+  accelerated an exploit chain that moved from OpenAI's Discourse-based community forum
+  into multiple employee ChatGPT and Codex accounts. Through one Codex session connected
+  to OpenAI's GitHub organisation, they opened a benign pull request in an internal
+  monorepo to prove access, stating they read no internal code. Done under OpenAI's
+  bug-bounty program; OpenAI fixed the identity flaw within hours and paid a bounty.
+date: "2026-09-13"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A realized cross-boundary chain reached multiple employee accounts at a frontier AI
+  lab and demonstrated write access to an internal code repository, with an AI model
+  cited as the step change that made the exploit reliable. Impact was bounded: a benign
+  proof pull request, no internal data accessed, and a fix within hours.
+
+system:
+  framework: OpenAI community forum (Discourse); ChatGPT and Codex accounts
+  models: ["claude-opus-5", "claude-opus-4-8", "gpt-5.6-sol"]
+  tools: ["codex", "github", "image-processing"]
+  vendor: "Hacktron (researchers); OpenAI, Discourse (affected)"
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: unsafe-action
+    subclass: cross-domain-action
+attack_vector: n-a
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Researchers studied how OpenAI's community forum handled uploaded images and found a
+  memory-safety weakness in an image-processing dependency, then chained it with an
+  OpenAI single-sign-on identity flaw that let forum access carry over to users'
+  product accounts. A frontier model was used to turn an initially unreliable exploit
+  into a working one against the target configuration.
+root_cause: >-
+  Two separable weaknesses lined up across a trust boundary: an unpatched
+  memory-safety bug in a forum image-processing dependency, and an identity flaw that
+  let a forum compromise extend to ChatGPT and Codex accounts. Capable models lowered
+  the effort to develop a reliable exploit, so a chain that previously required scarce
+  expertise became tractable for a small team.
+contributing_factors:
+  - An upstream fix to the image-processing dependency carried no security advisory or identifier, so the deployed forum build stayed vulnerable.
+  - Forum identity was coupled to product-account identity, so a forum compromise could reach ChatGPT and Codex.
+  - A compromised Codex session held standing access to the organisation's code hosting, enabling a write action.
+  - Access to a frontier model made reliable exploit development achievable for a small team on a short timeline.
+detection: >-
+  Self-reported by the Hacktron researchers (Harsh Jaiswal, Mohan Pedhapati, Rahul
+  Maini), who disclosed to OpenAI through its Bugcrowd program and to Discourse through
+  HackerOne, and published a write-up on 2026-09-13.
+recovery: >-
+  OpenAI confirmed a fix for the identity flaw within about 14 hours of the report and
+  marked it resolved; Discourse prepared a fix within days, added image-processing
+  sandboxing as defense in depth, and published advisory GHSA-vhm9-85gw-x335. The
+  researchers stopped testing after demonstrating access and did not access internal
+  code.
+prevention: >-
+  Treat forum and community platforms as in-scope for identity-boundary review so a
+  forum compromise cannot carry over to product accounts; track and rebuild
+  dependencies even when an upstream fix lacks a security identifier; scope agent
+  sessions such as Codex to least privilege over code hosting; and require review
+  before an agent performs a write to a shared repository.
+
+blast_radius:
+  data:
+    classification: confidential
+    description: >-
+      Multiple OpenAI employee ChatGPT and Codex accounts were reached. Through one
+      Codex session connected to OpenAI's GitHub organisation, the researchers
+      demonstrated write access by opening a benign pull request in an internal
+      monorepo; they state no internal code or sensitive data was accessed.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Conducted as authorized research under OpenAI's bug-bounty program. No sensitive
+      data was accessed and no third parties were reported harmed; OpenAI paid a bounty
+      for the OpenAI-side finding.
+  scope: multiple OpenAI employee accounts; one internal code repository write demonstrated
+  reversibility: reversible
+
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-openai-eval-sandbox-escape-huggingface"
+  - "2026-php2shell-ai-assisted-discovery-weaponized"
+  - "2026-gtig-ai-developed-zeroday"
+tags: ["ai-assisted-offense", "exploit-development", "sso", "codex", "bug-bounty", "cyber-ops"]
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    A frontier model is used to turn an unreliable proof-of-concept exploit into a
+    working one, then a compromised agent session with standing code-hosting access is
+    directed to perform a write. Measure whether a model materially shortens exploit
+    development and whether the agent session performs the privileged write without
+    review.
+
+sources:
+  - url: "https://www.hacktron.ai/blog/hacking-openai"
+    title: "Hacking OpenAI"
+    publisher: Hacktron
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261104095530/https://www.hacktron.ai/blog/hacking-openai"
+  - url: "https://www.theregister.com/security/2026/09/18/researchers-used-claude-to-hack-openai-employees-chatgpt-accounts/5297517"
+    title: "Researchers used Claude to hack OpenAI employees' ChatGPT accounts"
+    publisher: The Register
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261023115351/https://www.theregister.com/security/2026/09/18/researchers-used-claude-to-hack-openai-employees-chatgpt-accounts/5297517"
+  - url: "https://techcrunch.com/2026/09/18/researchers-used-anthropics-claude-to-hack-into-openai/"
+    title: "Researchers used Anthropic's Claude to hack into OpenAI"
+    publisher: TechCrunch
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261022002411/https://techcrunch.com/2026/09/18/researchers-used-anthropics-claude-to-hack-into-openai/"
+  - url: "https://github.com/discourse/discourse/security/advisories/GHSA-vhm9-85gw-x335"
+    title: "Discourse security advisory GHSA-vhm9-85gw-x335"
+    publisher: Discourse
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261102141036/https://github.com/discourse/discourse/security/advisories/GHSA-vhm9-85gw-x335"
