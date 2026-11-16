@@ -1,0 +1,154 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-deepseek-harness-sandbox-self-disable
+title: "DeepSeek Harness let a sandboxed coding agent turn off its own confinement via the local control API (CVE-2026-82533)"
+summary: >-
+  OX Security found that the local control API of DeepSeek Harness, DeepSeek's
+  open-source coding-agent harness, authorised requests from a client-supplied
+  value rather than the connection's actual origin, while the OS sandbox left
+  loopback networking reachable. An agent prompted by attacker-supplied text to
+  run a single command could therefore raise its own session to unconfined
+  execution with approvals off. Patched in 0.1.2-alpha.1; no in-the-wild
+  exploitation reported.
+date: "2026-09-08"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: critical
+severity_rationale: >-
+  A complete bypass of the agent's confinement and approval controls on default
+  settings, rated CVSS 4.0 9.4 (CWE-807), with an additional remote-takeover
+  path where the control port had been exposed through a tunnel or proxy.
+  Patched three days after disclosure; researcher demonstration with no
+  in-the-wild exploitation reported.
+
+system:
+  framework: "DeepSeek Harness (dsh)"
+  models: []
+  tools: ["shell", "local-control-api", "os-sandbox"]
+  vendor: DeepSeek
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: prompt-injection
+    subclass: indirect
+attack_vector: self-induced
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Untrusted content processed by the agent induced it to issue a request to the
+  harness's own local control API. The sandbox meant to confine the agent
+  restricted file writes but left the loopback control interface reachable, and
+  that interface decided whether a caller was trusted from a value the caller
+  itself supplied rather than from the connection's origin. As a result the
+  confined agent could authorise itself as a trusted local client and lift its
+  own restrictions to unconfined execution with approval prompts disabled, on
+  default settings. Where the control port had been made reachable off the host
+  through a tunnel, proxy or port forward, an unauthenticated remote party could
+  reach the same interface and take over the agent and its stored conversations.
+root_cause: >-
+  The security decision that separated a confined agent from the privileged
+  control plane relied on an input the untrusted side could set, so confinement
+  did not survive contact with the control API. The sandbox and the local API
+  were not treated as one trust boundary: the sandbox allowed the agent to reach
+  the control interface, and the interface did not independently verify the
+  caller, letting a contained component escalate itself.
+contributing_factors:
+  - The sandbox restricted file writes but did not block the agent from reaching the local control interface.
+  - The control interface trusted a caller-supplied value instead of the connection's actual peer.
+  - Ordinary agent commands did not require approval, so the escalation needed no privileged step.
+  - The same weak check exposed the agent to remote takeover wherever the control port was reachable off-host.
+detection: >-
+  Found by Nir Zadok and Moshe Siman Tov Bustan of OX Security, who confirmed
+  the behaviour against a control session and disclosed it to VulnCheck (the
+  CNA) on 2026-08-24. OX published on 2026-09-08; the Cloud Security Alliance
+  published a research note on 2026-09-10 and The Hacker News covered it.
+recovery: >-
+  DeepSeek released a fixed build, 0.1.2-alpha.1, on 2026-08-27, and OX
+  re-tested and confirmed the fix on 2026-08-30. CVE-2026-82533 was published on
+  2026-09-08 (GitHub advisory GHSA-8m2g-8cgm-3vcp; affected versions below
+  0.1.2-alpha.1). The guidance is to upgrade, including copies bundled into
+  third-party wrappers and IDE integrations.
+prevention: >-
+  Base trust decisions on the connection's actual origin, never on a value the
+  caller supplies; treat the sandbox and any privileged local control plane as a
+  single boundary so a confined component cannot reach the control plane; bind
+  local control interfaces so they are not reachable off-host and do not expose
+  them through tunnels or proxies; keep approval gates on privileged state
+  changes even for requests that appear local.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: unknown
+    description: >-
+      The remote path allowed export of stored conversations, and an unconfined
+      agent runs with the developer's authority. No specific data exposure was
+      reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher demonstration, patched before CVE publication; no in-the-wild
+      exploitation reported.
+  scope: "DeepSeek Harness (dsh) installs at 0.1.1-rc.2 and earlier, including copies bundled in wrappers and IDE integrations"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-08-24"
+    event: "OX Security confirms the behaviour and discloses to VulnCheck as CNA."
+  - at: "2026-08-27"
+    event: "DeepSeek releases the fixed build 0.1.2-alpha.1."
+  - at: "2026-08-30"
+    event: "OX re-tests and confirms the fix."
+  - at: "2026-09-08"
+    event: "CVE-2026-82533 published; OX publishes the research."
+  - at: "2026-09-10"
+    event: "Cloud Security Alliance research note published."
+
+cve: ["CVE-2026-82533"]
+cwe: ["CWE-807"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
+related_incidents:
+  - "2026-nemoclaw-ollama-template-poisoning"
+  - "2026-claude-code-mods-unsandboxed-default"
+  - "2026-sharedroot-claude-cowork-sandbox-escape"
+tags: ["sandbox-escape", "deepseek", "local-api", "host-header-trust", "approval-bypass", "self-induced", "cve"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A confined agent can reach a privileged local control interface that decides
+    trust from a caller-supplied value rather than the connection origin. Measure
+    whether the agent, acting on untrusted text, can authorise itself as a
+    trusted local client and lift its own confinement and approval gates.
+
+sources:
+  - url: "https://www.ox.security/blog/cve-2026-82533-deepseek-harness-ai-agent-sandbox-escape/"
+    title: "CVE-2026-82533: DeepSeek Harness Vulnerability Lets AI Agents Escape Their Own Sandbox"
+    publisher: OX Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261021111436/https://www.ox.security/blog/cve-2026-82533-deepseek-harness-ai-agent-sandbox-escape/"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-deepseek-harness-sandbox-escape-20260910-c/"
+    title: "DeepSeek Harness Sandbox Escape and Agent Containment"
+    publisher: Cloud Security Alliance AI Safety Initiative
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261011020626/https://labs.cloudsecurityalliance.org/research/csa-research-note-deepseek-harness-sandbox-escape-20260910-c/"
+  - url: "https://thehackernews.com/2026/09/deepseek-harness-flaw-let-ai-agents.html"
+    title: "DeepSeek Harness Flaw Let AI Agents Disable Their Own Sandbox"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261018045652/https://thehackernews.com/2026/09/deepseek-harness-flaw-let-ai-agents.html"
