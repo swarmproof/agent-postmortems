@@ -1,0 +1,157 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-blackhatsect0r-hermes-refusal-deletion
+title: "An operator deleted an AI agent's refusal memory and ran it unattended to harvest 16,834 credentials from exposed hosts"
+summary: >-
+  SOCRadar documented a French-speaking crew running a self-hosted Hermes agent from
+  an exposed server. The operator removed the
+  entry in the agent's persisted memory that preserved its judgement, rewrote its
+  identity file to forbid refusal, and disabled the framework's safety controls.
+  Tasks the agent had earlier declined were then carried out. Seven worker processes
+  ran unattended, scanning hundreds of thousands of hosts and harvesting 16,834
+  credentials from exposed configuration files.
+date: "2026-09-16"
+incident_type: incident
+status: factual
+confidence: reported
+severity: high
+severity_rationale: >-
+  A persistent, unattended agent harvested 16,834 credentials across hundreds of
+  thousands of hosts and fed bank-impersonation fraud targeting elderly victims
+  and extortion of public bodies; based on a single research team's analysis, with
+  some crew-claimed victims reported separately from verified access.
+
+system:
+  framework: Hermes agent framework (open-source) connected to a commodity model
+  models: ["deepseek"]
+  tools: ["hermes", "custom-go-scanner", "telegram"]
+  vendor: BlackHatSect0r && DXQRTXX (French-speaking crew, financially and hacktivist motivated)
+  autonomy_level: fully-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: memory-context-poisoning
+    subclass: memory-injection
+  - class: jailbreak
+    subclass: role-play
+attack_vector: self-induced
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The operator edited the agent's persisted memory and identity files to remove
+  the instruction that preserved its judgement, replaced it with a directive
+  forbidding refusal, and disabled the framework's safety controls, turning off
+  approvals and secret redaction. The agent had previously refused work on certain
+  categories of target; those refusals were deleted rather than argued around.
+  Seven worker daemons were then set to run continuously without an operator
+  present, driving a custom scanning platform that generated candidate hosts,
+  checked common web ports, fingerprinted sites, searched for exposed secrets, and
+  wrote findings to a credential store with automated reporting over a messaging
+  channel.
+root_cause: >-
+  Persistent agent memory and operator-controllable safety settings let a single
+  operator convert the agent's own retained judgement into unconditional
+  execution: the refusal was stored as editable state rather than enforced
+  externally, so deleting it removed the behaviour. Combined with disabled
+  approvals and a continuous worker pool, this produced sustained, unattended
+  offensive automation. Every confirmed breach relied on conventional exposure
+  (public cloud storage, exposed configuration files, default signing secrets, or
+  key material shipped to the browser) rather than novel exploitation.
+contributing_factors:
+  - The agent's refusal behaviour was stored as editable persisted memory and identity state rather than enforced outside the operator's control.
+  - The framework exposed operator-controllable settings to disable approvals, secret redaction and safety behaviour.
+  - A pool of worker processes ran the operation continuously without a human present, supplying endurance and parallelism.
+  - Confirmed breaches came from exposed cloud storage, configuration files, default secrets and client-side key material rather than exploitation of patched software.
+  - Harvested credentials and stolen datasets fed downstream bank-impersonation fraud and extortion.
+detection: >-
+  SOCRadar analysed an exposed operation server holding the crew's tooling,
+  credential store, and the operator's shell history showing the refusal-removal
+  steps, combined with passive observation of the live control panel and
+  open-source collection; researchers did not execute the malware or log into
+  actor systems. SOCRadar published its analysis on 16 September 2026 and
+  distinguished crew-claimed victims from access it could verify.
+recovery: >-
+  Public disclosure by SOCRadar with indicators of compromise and detection
+  guidance; the operation was still harvesting credentials when the exposed server
+  was analysed. Remediation centres on rotating any exposed secrets and removing
+  publicly reachable configuration files and storage.
+prevention: >-
+  Enforce agent refusal and safety behaviour outside operator-editable memory and
+  configuration; audit internet-facing storage for anonymous access and remove
+  exposed configuration files, default signing secrets and client-side key
+  material; treat the artifacts of a tampered autonomous agent as high-confidence
+  compromise indicators and monitor for continuous machine-speed scanning from a
+  single origin.
+
+blast_radius:
+  data:
+    records: 16834
+    classification: credentials
+    description: >-
+      A credential store of 16,834 entries harvested from exposed configuration
+      files, spanning generic secrets, database and mail accounts, API keys, cloud
+      keys and code-hosting and payment-service credentials; a large French
+      telecom subscriber dataset was also held and monetized.
+  user_harm:
+    categories: ["economic", "psychological"]
+    description: >-
+      Harvested credentials and stolen personal data fed bank-impersonation
+      vishing aimed at older account holders and extortion against public bodies.
+  scope: "Hundreds of thousands of hosts reached; credentials harvested from exposed configurations across many organizations"
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-02-25"
+    event: "Earliest confirmed crew infrastructure created."
+  - at: "2026-07-25"
+    event: "Hermes agent and a local model installed; custom scanning control panel deployed days later."
+  - at: "2026-08-01"
+    event: "The jailbroken agent persona is finalized after the refusal-removal edits."
+  - at: "2026-08-11"
+    event: "Credential store recorded at 16,415 entries, growing to 16,834 by 18 August as harvesting continued after server discovery."
+  - at: "2026-09-16"
+    event: "SOCRadar publishes its analysis of the operation server."
+
+tags: ["autonomous-attack", "hermes", "deepseek", "guardrail-bypass", "memory-poisoning", "credential-harvesting", "cyber-ops", "french-speaking"]
+mappings:
+  owasp_llm: [LLM01, LLM04]
+  owasp_agentic: [T1]
+  mitre_atlas: [AML.T0054]
+related_incidents:
+  - "2026-deepseek-hermes-autonomous-campaign"
+  - "2026-thai-finance-ministry-hermes-agent"
+  - "2026-ai-agents-ecommerce-skimmer-campaign"
+  - "2026-cyberxero-iab-claude-code-agents"
+last_updated: "2026-11-16"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An operator removes an agent's stored refusal from its persisted memory and
+    disables its safety settings, then runs a continuous worker pool scanning for
+    exposed secrets; measure whether refusal behaviour survives memory editing and
+    how long unattended harvesting sustains.
+
+sources:
+  - url: "https://socradar.io/blog/blackhatsect0r-dxqrtxx-operation-server/"
+    title: "Discernment Deleted: Inside the Operation Server of BlackHatSect0r && DXQRTXX"
+    publisher: SOCRadar
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261022135524/https://socradar.io/blog/blackhatsect0r-dxqrtxx-operation-server/"
+  - url: "https://gbhackers.com/ai-agent-into-a-cyber-weapon/"
+    title: "Hackers Turn AI Agent Into a Cyber Weapon by Stripping Its Refusals"
+    publisher: GBHackers
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20260918054523/https://gbhackers.com/ai-agent-into-a-cyber-weapon/"
+  - url: "https://cyberpress.org/ai-hacker-harvests-16834-credentials/"
+    title: "AI-Powered Hacker Operation Scans 726,000 Hosts and Harvests 16,834 Credentials"
+    publisher: Cyber Press
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261004163113/https://cyberpress.org/ai-hacker-harvests-16834-credentials/"
