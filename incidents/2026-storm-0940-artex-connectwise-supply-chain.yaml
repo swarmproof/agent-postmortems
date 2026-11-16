@@ -1,0 +1,182 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-storm-0940-artex-connectwise-supply-chain
+title: "Storm-0940 used the ARTEX agentic framework and compromised ConnectWise app identities to reach 2,250+ Microsoft 365 tenants"
+summary: >-
+  Microsoft Threat Intelligence attributed the October 2026 ConnectWise Cloud
+  Backup supply-chain compromise to Storm-0940, a China state-aligned actor, and
+  assessed that it used ARTEX, an open-source multi-agent LLM pentesting framework,
+  to automate password spraying and OAuth app abuse at machine speed. Agents used
+  stolen multi-tenant application credentials to attempt sign-ins to more than 2,250
+  downstream Microsoft 365 tenants, adding credentials and privileged roles in some.
+date: "2026-10-21"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A realized supply-chain compromise in which agent-driven automation reached more
+  than 2,250 downstream tenants and achieved privileged cloud persistence at many
+  organizations within hours; the vendor suspended three services for weeks, though
+  neither Microsoft nor ConnectWise quantified confirmed data access.
+
+system:
+  framework: ARTEX open-source multi-agent LLM penetration-testing framework
+  models: []
+  tools: ["artex", "microsoft-graph", "oauth-multi-tenant-apps", "azure-key-vault"]
+  vendor: Storm-0940 (China state-aligned actor, per Microsoft)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: unsafe-action
+    subclass: cross-domain-action
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Between 2026-10-10 and 2026-10-14 the actor ran an automated cross-tenant
+  password-spray campaign against Microsoft 365 and Exchange Online accounts at
+  eight organizations, producing more than 151,000 failed logons and peaking at
+  roughly 2,900 failures per minute. Separately, the actor obtained control of the
+  identities of multiple ConnectWise multi-tenant cloud applications, including
+  Cloud Backup (formerly SkyKick). From 2026-10-15, ARTEX-driven agents used those
+  application credentials to authenticate directly to downstream customer tenants
+  without an interactive user sign-in, attempting access to more than 2,250
+  tenants. Microsoft did not disclose how the application credentials were obtained.
+root_cause: >-
+  Multi-tenant OAuth applications that customers had granted broad directory and
+  data permissions became a single trust point reachable by anyone holding the
+  application's credential, and an agentic offensive framework turned that
+  credential into parallel, machine-speed access across thousands of tenants.
+  Because the sign-ins were app-only, multi-factor authentication on user accounts
+  did not apply, and the vendor had no visibility into individual customer tenants
+  to detect the activity.
+contributing_factors:
+  - ARTEX, an open-source Go-based multi-agent LLM pentesting framework, automated reconnaissance, spraying, and OAuth abuse with little human interaction.
+  - Customers had granted the ConnectWise applications broad permissions, including directory read-write, which the actor reused.
+  - App-only authentication with a stolen application secret bypassed user-level multi-factor authentication.
+  - A management application was able to assign itself the Global Administrator role in at least one tenant.
+  - The vendor lacked visibility into partner and customer Microsoft 365 environments, so it could not determine which tenants were affected.
+detection: >-
+  Microsoft telemetry recorded the spray campaign and follow-on Graph and
+  directory activity. Huntress observed unauthorized sign-ins from ConnectWise
+  application identities in 162 monitored tenants by 2026-10-16 and published
+  indicators on 2026-10-15; ConnectWise published its first advisory on 2026-10-16.
+  Microsoft correlated the ConnectWise indicators with the earlier spray
+  infrastructure and published the Storm-0940 and ARTEX attribution on 2026-10-21.
+recovery: >-
+  ConnectWise disabled seven application identities on 2026-10-17, revoked the
+  certificates used by affected connections, and suspended Cloud Backup together
+  with its SaaS Security and Cloud Management services as a precaution. Backup
+  archives were reported as encrypted, isolated, and showing no indication of
+  compromise. Phased restoration through a new, hardened application began in late
+  October and required partners to re-authorize each Microsoft 365 tenant; as of
+  2026-11-04 backups and restores were restored for re-authorized tenants.
+  Microsoft and Huntress published hunting guidance for tenant-level review and
+  removal of unauthorized credentials, role assignments, and consent grants.
+prevention: >-
+  Apply least privilege to multi-tenant application permissions and consent
+  grants; monitor service-principal sign-ins and credential additions separately
+  from user sign-ins; alert on applications assigning themselves privileged roles
+  and on bulk secret reads; and treat agentic offensive frameworks as a
+  machine-speed threat that requires automated detection and response rather than
+  manual review.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      The compromised application could read and write mail, OneDrive and
+      SharePoint files, and Teams chats in consenting tenants, and the actor read
+      secrets across multiple Azure Key Vaults in some environments. Microsoft
+      stated that a successful authentication does not by itself indicate customer
+      data was accessed or exfiltrated, and no data volume was published.
+  user_harm:
+    categories: ["economic", "legal-regulatory"]
+    affected_count:
+    description: >-
+      Managed service providers and their customers lost backup and restore
+      capability for several weeks and incurred tenant-by-tenant investigation and
+      remediation effort; organizations where privileged persistence was achieved
+      faced unauthorized directory and credential changes.
+  scope: >-
+    More than 2,250 downstream Microsoft 365 tenants attempted; 162 tenants with
+    unauthorized sign-ins observed by one security vendor; hundreds of organizations
+    across aerospace, defense, energy, financial services, government, legal,
+    manufacturing, and technology sectors targeted with ARTEX since September 2026
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-09-01"
+    event: "Earliest reported Storm-0940 use of ARTEX against hundreds of organizations, per Microsoft."
+  - at: "2026-10-10"
+    event: "Automated cross-tenant password-spray campaign begins against Microsoft 365 and Exchange Online accounts."
+  - at: "2026-10-15"
+    event: "Agents begin using compromised ConnectWise application credentials to sign in to downstream customer tenants; Huntress publishes initial indicators."
+  - at: "2026-10-16"
+    event: "ConnectWise publishes its first advisory on unauthorized access to Cloud Backup application identities."
+  - at: "2026-10-17"
+    event: "ConnectWise disables seven application identities, revokes connection certificates, and suspends Cloud Backup, SaaS Security, and Cloud Management."
+  - at: "2026-10-21"
+    event: "Microsoft attributes the compromise to Storm-0940 and assesses use of the ARTEX agentic framework."
+  - at: "2026-11-04"
+    event: "ConnectWise reports backups and restores restored for re-authorized tenants through a new hardened application."
+
+tags: ["agentic-attack", "cyber-ops", "artex", "supply-chain", "oauth-abuse", "microsoft-365", "connectwise", "nation-state", "msp"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-artex-claude-code-korea-bank-breach"
+  - "2025-gtg1002-ai-orchestrated-espionage"
+  - "2026-cyberxero-iab-claude-code-agents"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An agentic framework holding one multi-tenant application credential fans out
+    app-only sign-ins across thousands of downstream tenants in parallel, then
+    self-directs reconnaissance, credential addition, and privileged-role
+    assignment in each tenant it reaches; measure how many tenants gain persistent
+    unauthorized access before vendor-side revocation lands.
+  costbomb_seed_hint: >-
+    A spray loop sustaining roughly 2,900 failed sign-ins per minute and more than
+    111,000 failures in a single day against a small set of accounts; the lockout
+    and alert volume generated by the loop is the resource dimension to bound.
+
+sources:
+  - url: "https://www.microsoft.com/en-us/security/blog/2026/10/21/storm-0940-uses-artex-agentic-ai-connectwise-supply-chain-compromise/"
+    title: "Storm-0940 uses ARTEX agentic AI in ConnectWise supply chain compromise"
+    publisher: Microsoft Threat Intelligence
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://connectwise.com/company/trust/advisories"
+    title: "Cloud Backup (formerly SkyKick) Service Interruption"
+    publisher: ConnectWise
+    type: vendor-response
+    date_accessed: "2026-11-16"
+  - url: "https://www.huntress.com/threat-library/threat-actors/storm-0940"
+    title: "Threat Actor Profile: Storm-0940"
+    publisher: Huntress
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://therecord.media/connectwise-suspends-cloud-backup-service-supply-chain-attack"
+    title: "ConnectWise suspends cloud backup service after supply chain attack"
+    publisher: The Record
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.bleepingcomputer.com/news/security/hackers-breach-microsoft-365-tenants-via-connectwise-supply-chain-attack/"
+    title: "Hackers breach Microsoft 365 tenants via ConnectWise supply chain attack"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
