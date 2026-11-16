@@ -1,0 +1,178 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-chainalysis-agentic-intrusion-breach
+title: "Chainalysis intrusion attributed to offensive agentic techniques exposed password hashes and live tokens for all users"
+summary: >-
+  Chainalysis disclosed on 2026-10-30 that an external actor used what it called
+  offensive agentic techniques to access its systems and internal tools, exposing
+  user names, emails, and role labels. On 2026-11-04 it reported password hashes
+  and live tokens exposed for all users plus an on-path capture of some passwords,
+  and took Reactor, Data Solutions, KYT, and its login page offline. It has not
+  described the agentic techniques.
+date: "2026-10-30"
+last_updated: "2026-11-16"
+incident_type: incident
+status: preliminary
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Credential hashes and live tokens for the entire user base of a blockchain
+  analytics platform serving law enforcement, regulators, and financial
+  institutions were exposed, some KYT customer accounts were accessed, and core
+  investigation and compliance products were offline for roughly a week with
+  access restored only behind IP allow-lists and forced credential rotation.
+
+system:
+  framework: unspecified agentic offensive tooling (not disclosed by Chainalysis)
+  models: []
+  tools: []
+  vendor: unattributed external actor (operator); Chainalysis (affected organization)
+  autonomy_level: unknown
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Chainalysis stated that earlier in October 2026 it detected an external actor
+  using offensive agentic techniques to gain unauthorized access to Chainalysis
+  systems and internal tools, in the context of what it described as an
+  industry-wide rise in AI-driven cyberattacks. The company has not published which
+  vulnerabilities were exploited, which internal tools were reached, how long
+  access lasted, or which agent framework or model was involved. It later described
+  a separate on-path attack that intercepted a subset of customer passwords and an
+  exposure of password hashes and live tokens for all users, and said some KYT
+  customer accounts appeared to have been accessed without authorization. It has
+  not stated whether these later events involved the same actor or methods.
+root_cause: >-
+  Publicly available information does not identify the failed control. Chainalysis
+  attributed the initial unauthorized access to an external actor using agentic
+  offensive tooling against its systems and internal tools, and later reported a
+  man-in-the-middle style interception of customer logins and a platform-wide
+  exposure of credential material. The Cloud Security Alliance's research note on
+  the disclosure reads the agentic phrasing as most plausibly describing an AI
+  system planning and executing multi-step operations as an accelerant, while
+  noting that the underlying weaknesses are not disclosed and that no evidence has
+  been published linking the intrusion to a specific framework such as ARTEX.
+contributing_factors:
+  - Chainalysis has not disclosed the entry vector, the affected internal tools, the duration of access, or the agent tooling involved.
+  - The initial 2026-10-30 disclosure stated no evidence of credential or session-token exposure; the 2026-11-04 update reported password hashes and live tokens exposed for all users without reconciling the two statements.
+  - The on-path interception of customer passwords was described as contained and remediated but its mechanism was not published.
+  - The Record noted that Chainalysis did not explicitly state that an AI agent caused the breach; the attribution rests on the company's own phrase.
+detection: >-
+  Chainalysis reported detecting the external actor earlier in October 2026 and
+  disclosed the incident on 2026-10-30 with an email to affected customers.
+  Discovery that password hashes and live tokens for all users were exposed was
+  reported as occurring on Monday 2026-11-02; abnormal activity observed
+  afterwards led the company to take KYT, address screening products, and its
+  login page offline on 2026-11-04.
+recovery: >-
+  Chainalysis patched and hardened systems, engaged third-party cybersecurity
+  experts, and said it was using large language models to support a broader
+  security review. It took Reactor and Data Solutions offline on 2026-11-02 as a
+  precaution, locked affected accounts after the on-path attack, took KYT, address
+  screening, and the login page offline on 2026-11-04, and restored access in
+  phases from 2026-11-06 behind customer-submitted IP allow-lists with mandatory
+  password resets and API key rotation. Reactor, KYT, and Address Screening
+  returned on 2026-11-07 and Data Solutions on 2026-11-10. Chainalysis reported no
+  evidence that investigation data was accessed or that attribution data was
+  manipulated.
+prevention: >-
+  Apply identity-aware access and data-scope limits to internal tools and admin
+  consoles; enforce phishing-resistant MFA and short-lived tokens so that captured
+  hashes or tokens cannot be replayed; detect behavioural signatures of agentic
+  campaigns such as high-rate authentication attempts and rapid reconnaissance
+  followed by privilege changes; and pre-authorize automated containment such as
+  token revocation so response does not lag machine-speed intrusion.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Initially user IDs, full names, email addresses, and organizational role
+      labels for platform users; subsequently usernames, password hashes, and live
+      tokens for all Chainalysis users, plus a subset of passwords intercepted in
+      an on-path attack. Chainalysis reported no evidence of access to
+      investigation content, transaction or query results, or MFA secrets, and no
+      evidence that attribution data was manipulated.
+  user_harm:
+    categories: ["economic", "legal-regulatory"]
+    affected_count:
+    description: >-
+      Customer organizations, including law enforcement, regulators, exchanges,
+      and financial institutions, lost access to investigation and compliance
+      transaction-monitoring products for several days and were required to
+      allow-list IPs, reset passwords, and rotate API keys; some KYT accounts were
+      accessed without authorization.
+  scope: "all Chainalysis platform users; the company reports more than 1,500 customers"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-10-30"
+    event: "Chainalysis discloses detection of an external actor using offensive agentic techniques; names, emails, user IDs, and role labels accessed; no evidence of credential exposure at that time."
+  - at: "2026-11-02"
+    event: "Reactor and Data Solutions taken offline as a precaution; exposure of password hashes and live tokens discovered."
+  - at: "2026-11-04"
+    event: "Customers notified of an on-path attack exposing a subset of passwords; KYT, address screening, and the login page taken offline; update states password hashes and live tokens for all users were exposed."
+  - at: "2026-11-06"
+    event: "Phased restoration of KYT and Address Screening begins behind IP allow-lists with mandatory password reset and API key rotation."
+  - at: "2026-11-07"
+    event: "Reactor, KYT, and Address Screening back online with additional security controls."
+  - at: "2026-11-10"
+    event: "Data Solutions back online."
+
+tags: ["agentic-attack", "cyber-ops", "credential-exposure", "on-path-attack", "blockchain-analytics", "service-outage", "mechanism-undisclosed"]
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-artex-claude-code-korea-bank-breach"
+  - "2025-gtg1002-ai-orchestrated-espionage"
+  - "2026-workos-artex-agent-sandbox-escape-breach"
+  - "2026-cyberxero-iab-claude-code-agents"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An operator directs agentic offensive tooling at a SaaS platform's internal
+    tools and authentication path; measure how quickly machine-speed reconnaissance
+    and credential capture outpace detection and how long containment and
+    platform-wide credential rotation take once the exposure is discovered.
+
+sources:
+  - url: "https://www.chainalysis.com/blog/security-incident-october-30/"
+    title: "Security Incident - October 30, 2026"
+    publisher: Chainalysis
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://www.bleepingcomputer.com/news/security/chainalysis-discloses-data-breach-from-offensive-agentic-techniques/"
+    title: "Chainalysis discloses data breach from offensive agentic techniques"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.bleepingcomputer.com/news/security/chainalysis-says-breach-exposed-credentials-for-all-customers/"
+    title: "Chainalysis says breach exposed credentials for all customers"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://therecord.media/chainalysis-all-users-hit-by-agentic-cyberattack"
+    title: "Chainalysis says all users hit by agentic cyberattack"
+    publisher: The Record
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-chainalysis-agentic-intrusion-disclosure-2/"
+    title: "Agentic Intrusion Enters the Breach Record: Lessons from Chainalysis"
+    publisher: Cloud Security Alliance
+    type: primary-research
+    date_accessed: "2026-11-16"
