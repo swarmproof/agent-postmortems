@@ -1,0 +1,155 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-near-ai-sglang-rce-agent-data-breach
+title: "NEAR AI: an SGLang remote-code-execution flaw on one inference server exposed 18 legacy agents' data and about 100 users' account details"
+summary: >-
+  An unauthorized party exploited a remote-code-execution flaw in SGLang, the
+  open-source inference engine on NEAR AI's servers, gained code execution on
+  one inference server, and from there reached an internal system behind the
+  deprecated Private Chat feature and a legacy NEAR AI Agents deployment outside
+  the confidential-computing environment. Account details for about 100 users,
+  chat history, settings and logs for 18 agents, and two Cloud customers' API
+  keys in logs were exposed.
+date: "2026-11-08"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: moderate
+severity_rationale: >-
+  Real exposure of user PII, agent conversation data and two customer API keys,
+  but bounded (about 100 users, 18 legacy agents, 2 keys), with no indication
+  that stored Private Chat conversations or uploaded files were accessed;
+  disclosed and remediated by the vendor within a day.
+
+system:
+  framework: NEAR AI Agents (legacy deployment) and NEAR AI Cloud confidential inference
+  models: []
+  tools: ["sglang", "private-chat", "near-ai-cloud-api"]
+  vendor: NEAR AI
+  autonomy_level: unknown
+
+primary_failure_class: data-exfiltration
+failure_classes:
+  - class: data-exfiltration
+  - class: insecure-output
+    subclass: secret-exposure
+attack_vector: n-a
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  An attacker exploited a remote-code-execution vulnerability in SGLang to run
+  code inside one of NEAR AI's inference servers. Using that foothold they
+  reached an internal system connected to the deprecated Private Chat feature,
+  downloaded account details for about 100 users, and accessed 18 agents on a
+  legacy NEAR AI Agents deployment that was not running inside the confidential
+  computing (TEE) environment, including those agents' chat history, settings
+  and logs. NEAR AI Cloud API keys for two customers were exposed in logs. On
+  2026-11-08 the intruder could also have observed requests being processed on
+  the compromised server, including confidential-mode requests. NEAR AI did not
+  name the specific SGLang flaw.
+root_cause: >-
+  A vulnerable open-source inference engine ran inside the trust boundary that
+  the confidential-computing design was meant to protect, so code execution in
+  the inference software gave the same reach as the enclave operator. Legacy
+  agents and a deprecated chat system remained reachable from that server
+  outside the TEE, and customer API keys had been written to logs. NEAR AI's
+  own assessment: confidential computing protects data from the operator and
+  the host but not from vulnerabilities in software running inside the
+  environment.
+contributing_factors:
+  - SGLang, a third-party inference engine, carried a remote-code-execution vulnerability on NEAR AI's inference servers.
+  - A legacy NEAR AI Agents deployment hosting 18 agents was running outside the confidential-computing environment and remained reachable.
+  - An internal system behind the deprecated Private Chat feature still held user account details.
+  - NEAR AI Cloud API keys for two customers had been written to logs accessible from the compromised path.
+detection: >-
+  NEAR AI's report does not state how or when the intrusion was detected; it
+  places possible observation of in-flight requests on 2026-11-08 and
+  published its security incident report on 2026-11-09.
+recovery: >-
+  NEAR AI closed the unauthorized access, revoked all active sessions and
+  administrative credentials, replaced all agent tokens, took Private Chat
+  offline, deployed the SGLang fix across all inference servers, rotated the
+  remaining credentials, completed a forensic review, revoked the two exposed
+  API keys, contacted affected users and the owners of all 18 agents
+  individually, reported the vulnerability to the SGLang project, paused and
+  then restored NEAR AI Cloud access, and said it would make any required
+  regulatory notifications.
+prevention: >-
+  Apply the same patching and hardening rigor to inference software and the
+  services around the enclave as to the enclave itself; decommission deprecated
+  features and legacy agent deployments rather than leaving them reachable;
+  keep API keys out of logs; segment inference nodes from internal user-data
+  systems; publish code, dependencies and deployment configuration for
+  verification.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: pii
+    description: >-
+      Email addresses, names and in some cases plan and balance information for
+      about 100 users; chat history, settings and logs for 18 agents on a
+      legacy deployment; NEAR AI Cloud API keys for two customers found in
+      logs. No indication that stored Private Chat conversations or uploaded
+      files were accessed; in-flight confidential-mode requests on 2026-11-08
+      may have been observable.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count: 100
+    description: >-
+      No financial or physical harm reported; affected users were warned to be
+      wary of unsolicited messages referring to their accounts or balances.
+  scope: "about 100 user accounts, 18 legacy agents, 2 Cloud customer API keys"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-11-08"
+    event: "Intruder with code execution on one SGLang inference server could observe in-flight requests, including confidential-mode requests."
+  - at: "2026-11-09"
+    event: "NEAR AI publishes its security incident report; sessions, admin credentials and agent tokens revoked, Private Chat taken offline, SGLang fix deployed."
+  - at: "2026-11-10"
+    event: "NEAR AI Cloud access restored after forensic review; trade press coverage follows."
+
+tags: ["sglang", "rce", "inference-server", "confidential-computing", "tee", "legacy-deployment", "api-keys-in-logs", "agent-platform"]
+mappings:
+  owasp_llm: [LLM02, LLM05]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-nemoclaw-ollama-template-poisoning"
+  - "2026-opencode-console-api-key-breach"
+last_updated: "2026-11-16"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent platform runs legacy agents and a deprecated chat backend beside a
+    third-party inference engine inside its trust boundary; measure whether
+    code execution on one inference node can reach agent chat histories, user
+    records and API keys written to logs.
+
+sources:
+  - url: "https://near.ai/blog/security-incident-report-sglang-vulnerability"
+    title: "Security Incident Report: SGLang Vulnerability"
+    publisher: NEAR AI
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://decrypt.co/382965/near-ai-breach-exposes-user-details-data-ai-agents"
+    title: "NEAR AI Breach Exposes User Details, Data From 18 AI Agents"
+    publisher: Decrypt
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.theblock.co/news/defi/2026-11-10-near-ai-security-breach-437002"
+    title: "NEAR AI says SGLang vulnerability exposed user account details in security breach"
+    publisher: The Block
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://thehackernews.com/2026/11/sglang-rce-exploit-breaches-near-ai.html"
+    title: "SGLang RCE Exploit Breaches NEAR AI"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
