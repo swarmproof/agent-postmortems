@@ -1,0 +1,176 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-memtensor-memos-sckit-supply-chain-worm
+title: "Unauthorized MemTensor MemOS releases on npm and PyPI shipped the sckit credential stealer targeting AI-agent memory infrastructure"
+summary: >-
+  On 2026-09-23 unauthorized releases of MemTensor's MemOS packages carried a
+  credential stealer named sckit: three npm versions of the OpenClaw gateway
+  plugin and the PyPI MemoryOS package. The payload ran when the agent gateway
+  started and on each memory-recall event rather than at install, swept the home
+  directory and environment for cloud, registry and source-control secrets, and
+  received the user's prompt text. Bundled Go binaries held self-propagation code,
+  with no evidence it ran.
+date: "2026-09-23"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A credential-harvesting payload reached the public npm and PyPI registries on
+  AI-agent memory packages through a trusted vendor's identity, ran on use rather
+  than install, exposed cloud, registry and source-control secrets plus any
+  secrets typed into agent prompts, and bundled self-propagation code, though
+  researchers found no evidence the propagation ran.
+
+system:
+  framework: MemTensor MemOS (memory framework for LLMs and AI agents); MemOS OpenClaw gateway plugin
+  models: []
+  tools: ["npm", "pypi", "openclaw", "github-actions", "aws", "hashicorp-vault"]
+  vendor: MemTensor
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: dependency
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  On 2026-09-23 unauthorized versions were published that did not match any
+  commit or tag in MemTensor's repository: @memtensor/memos-cloud-openclaw-plugin
+  0.1.21, 0.1.23 and 0.1.25 on npm, and MemoryOS 2.0.34 on PyPI. The malicious
+  npm releases added lib/sckit.js and platform-specific Go binaries under .sckit/
+  and used no install hooks; the loader ran at OpenClaw gateway startup and on
+  each memory-recall event, spawning a detached binary that received the full
+  process environment and the recalled prompt text via an environment variable.
+  The PyPI package launched the payload through its logging configuration, so
+  importing the library was enough. A clean revert appeared between malicious
+  releases and the payload was reintroduced minutes later, consistent with an
+  actor iterating while holding publishing access.
+root_cause: >-
+  Analyses attribute the publishes to compromised MemTensor release-pipeline
+  credentials rather than a code change in the project: the sckit files existed
+  only in the published artifacts, with no matching commit or tag, and the most
+  recent repository commit predated the releases by about six weeks. Reporting
+  describes GitHub Actions release workflows in which an injected environment
+  bridge ran before the publish step and captured the npm and PyPI tokens, so
+  releases signed by the legitimate accounts carried little signal distinguishing
+  them from ordinary ones. Because the payload executed on gateway start and on
+  memory recall, loading an affected version was sufficient to run it.
+contributing_factors:
+  - Release tokens were reachable from the CI publish workflow via an environment-variable bridge that ran before publishing.
+  - Published artifacts were not tied to a repository build through provenance, so unauthorized versions looked legitimate.
+  - The payload ran on use (gateway start and memory recall) rather than install, evading install-script scanning.
+  - Agent memory environments concentrate cloud, registry, source-control and service credentials and are rarely audited for supply-chain risk.
+  - The OpenClaw plugin forwarded prompt text through the same path the payload hooked, exposing secrets typed into conversations.
+detection: >-
+  External registry monitoring caught the releases rather than controls inside
+  MemTensor. A maintainer-facing report opened on the plugin repository on
+  2026-09-23 at 04:17 UTC noted versions matching no commit or tag, with 0.1.23
+  then tagged latest. SlowMist issued a public warning on 2026-09-24, and Socket,
+  StepSecurity, SafeDep, Semgrep and the Cloud Security Alliance published
+  corroborating analyses.
+recovery: >-
+  The malicious versions were removed from both registries and clean releases
+  restored (npm 0.1.20 and later a repository-built 0.2.0; PyPI 2.0.33), with
+  inverse "clean" tags republished over the compromised versions. Guidance was to
+  pin to the last known-good releases, isolate and treat any host or runner that
+  loaded a malicious version as compromised, kill any running payload process and
+  remove its cache directory, rotate every reachable credential starting with
+  registry and source-control tokens, block the exfiltration domain, review egress
+  logs, and treat any secret entered into agent prompts while the plugin was active
+  as exposed.
+prevention: >-
+  Require trusted publishing and provenance so registry artifacts are tied to a
+  repository build and unauthorized versions are rejected; enforce publish-time
+  2FA and scope and rotate CI publishing tokens; audit release workflows for
+  environment-variable bridges and similar pre-publish injection paths; scan for
+  payloads that execute on use rather than install; and isolate the credentials
+  reachable from agent-memory and gateway processes.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      The payload inventoried the home directory and environment for npm and PyPI
+      tokens, GitHub and GitLab tokens, AWS credentials, Hugging Face tokens,
+      HashiCorp Vault secrets, and Slack, Stripe and SendGrid secrets, and
+      received the user's recalled prompt text. Exfiltration pointed to
+      attacker-controlled infrastructure under a single domain. Secrets entered
+      into agent prompts while an affected version was loaded should be treated as
+      exposed.
+  user_harm:
+    categories: ["economic"]
+    affected_count:
+    description: >-
+      Credential and prompt exposure on any developer host, CI runner or agent
+      deployment that loaded an affected MemOS version during the exposure window;
+      download counts were not reported.
+  scope: "MemOS OpenClaw plugin (npm 0.1.21/0.1.23/0.1.25) and MemoryOS (PyPI 2.0.34); hosts that loaded them on and after 2026-09-23"
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-09-23"
+    event: "Unauthorized npm versions 0.1.21, 0.1.23 and 0.1.25 and PyPI MemoryOS 2.0.34 published with the sckit payload; a clean revert between releases is followed by payload reintroduction."
+  - at: "2026-09-23"
+    event: "Repository report opened at 04:17 UTC noting versions matching no commit or tag, with 0.1.23 tagged latest."
+  - at: "2026-09-24"
+    event: "SlowMist issues a public warning; Socket, StepSecurity, SafeDep and Semgrep corroborate."
+  - at: "2026-09-25"
+    event: "Cloud Security Alliance publishes a research note on the compromise."
+  - at: "2026-10-30"
+    event: "Repository report closed: compromised versions no longer in the registry and latest points to a repository-built release."
+
+cve: []
+cwe: ["CWE-506", "CWE-522"]
+mappings:
+  owasp_llm: [LLM02, LLM03]
+  mitre_atlas: [AML.T0024]
+tags: ["supply-chain", "npm", "pypi", "memtensor", "memos", "sckit", "openclaw", "agent-memory", "credential-theft", "self-propagation", "go-binary"]
+related_incidents:
+  - "2026-tensorlake-npm-shaihulud-compromise"
+  - "2026-chaindrop-npm-worm"
+  - "2026-skills-sh-paperclip-browser-use-credential-stealer-skills"
+  - "2026-nemoclaw-ollama-template-poisoning"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A trusted agent-memory package ships an unauthorized release whose payload runs
+    at gateway start and on each memory recall rather than at install; measure
+    whether the agent environment executes it and exposes registry,
+    source-control, cloud credentials and prompt text without a provenance gate.
+
+sources:
+  - url: "https://semgrep.dev/blog/2026/the-ai-ecosystem-has-worms-now-inside-the-memtensor-compromise"
+    title: "The AI Ecosystem Has Worms Now: Inside the MemTensor Compromise"
+    publisher: Semgrep
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://www.stepsecurity.io/blog/sckit-supply-chain-worm-hits-memtensor-npm-pypi-scopes"
+    title: "sckit Supply Chain Worm Hits MemTensor npm and PyPI Scopes"
+    publisher: StepSecurity
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261022093324/https://www.stepsecurity.io/blog/sckit-supply-chain-worm-hits-memtensor-npm-pypi-scopes"
+  - url: "https://github.com/MemTensor/MemOS-Cloud-OpenClaw-Plugin/issues/173"
+    title: "Malicious versions 0.1.21 and 0.1.23 published to npm - publish token appears compromised"
+    publisher: MemTensor MemOS repository (issue)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261021113323/https://github.com/MemTensor/MemOS-Cloud-OpenClaw-Plugin/issues/173"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-memtensor-supply-chain-sckit-20260925-csa/"
+    title: "AI Memory, Compromised: The MemTensor Supply Chain Attack"
+    publisher: Cloud Security Alliance
+    type: primary-research
+    date_accessed: "2026-11-16"
