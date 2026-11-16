@@ -1,0 +1,195 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-cursor-fireworks-key-agent-traces-extension-compromise
+title: "An access key exposed at Fireworks AI let an attacker copy Cursor coding-agent traces and seed a trojanized Claude Code extension"
+summary: >-
+  An attacker used a Cursor-issued access key exposed at inference vendor
+  Fireworks AI to copy a bucket of coding-agent traces shared for training. Some
+  traces held unredacted credentials, which gave access to Cursor SaaS tools,
+  archived repositories, and support data. A stolen credential was then used on
+  2026-10-29 to serve trojanized Claude Code extension builds from Cursor's
+  marketplace cache to up to 5,000 users over about 11 hours.
+date: "2026-10-29"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A trojanized developer-tool extension that adds an attacker SSH key, installs
+  persistence, and beacons host details reached up to 5,000 developer machines,
+  and coding-agent session data containing live credentials was copied and used
+  for lateral access into the vendor's SaaS tools and archived source repositories.
+
+system:
+  framework: Cursor coding agent (trace storage) and Cursor VS Code extension marketplace
+  models: []
+  tools: ["cloud-storage-bucket", "vscode-extension-marketplace", "claude-code-extension", "saas-tools"]
+  vendor: Cursor (affected operator); Fireworks AI (upstream inference vendor)
+  autonomy_level: unknown
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: dependency
+  - class: insecure-output
+    subclass: secret-exposure
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: supply-chain-compromise
+    subclass: extension
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Fireworks AI reported that a third-party cloud provider hosting its research and
+  development machines experienced a security incident on 2026-10-23, and that on
+  2026-10-24 an unauthorized party used it to reach Fireworks development machines
+  and run a workload that affected customer data including secrets. Cursor's
+  2026-11-13 update stated that an access key Cursor had issued to Fireworks was
+  exposed by Fireworks and used by the attacker to copy data from a read-only
+  storage bucket Cursor used to share coding-agent traces with the vendor. Traces
+  in the bucket, mostly from 2025 and from sessions not in Privacy Mode, included a
+  small number with unredacted credentials. With those credentials the attacker
+  accessed select SaaS tools used by Cursor, and on 2026-10-29 used a stolen
+  credential to place modified copies of the Anthropic.claude-code extension,
+  versions 2.1.312 and 2.1.313, in the cache serving the Cursor VS Code
+  marketplace. Fireworks's own bulletin does not name Cursor.
+root_cause: >-
+  Coding-agent session traces were retained and shared with a third-party vendor
+  without redaction of secrets they contained, so a credential exposed at that
+  vendor gave an attacker both the traces and the live credentials inside them.
+  Those credentials were sufficient to reach internal SaaS tooling and a
+  credential capable of writing to the marketplace cache, and the cache served
+  unauthorized extension builds to users without a signature or provenance check
+  that would have rejected packages not published by the extension's author.
+contributing_factors:
+  - An upstream inference vendor's development environment was compromised via its own third-party cloud provider, exposing a customer-issued access key.
+  - Coding-agent traces from non-Privacy-Mode sessions were stored and shared for training with credentials left unredacted in some sessions.
+  - Credentials that users had sent to Cursor support were also present in accessible support data.
+  - A credential reachable from the compromised SaaS tools permitted writes to the cache serving the extension marketplace.
+  - The marketplace cache served modified builds of a third-party extension that its author had not published; Open VSX, the upstream source, never carried the malware.
+  - The malicious build ran at extension startup and needed no user interaction with Claude Code.
+detection: >-
+  Cursor's monitoring systems identified the unauthorized activity. A macOS
+  endpoint-detection vendor was reported as the first to publicly flag the
+  modified extension on 2026-10-29. Cursor announced an investigation the same
+  day, published indicators of compromise and remediation scripts on 2026-10-30,
+  and reported the last observed attacker activity, which was blocked, on
+  2026-11-01. The trace-bucket and Fireworks-key origin was published in Cursor's
+  2026-11-13 update.
+recovery: >-
+  Cursor took the marketplace offline, removed the malicious builds after roughly
+  11 hours of availability, validated all other marketplace extensions, rebuilt
+  the marketplace store, and worked with the hosting provider to take the
+  attacker's server offline so the reverse-shell and beacon endpoints no longer
+  function. It deactivated the Fireworks vendor key, moved all inference traffic
+  off Fireworks, cut Fireworks's access to shared datasets, rotated exposed
+  credentials and then all internal credentials as a precaution, redeployed
+  production infrastructure, temporarily disabled some internal and product
+  services, added secret scanning across repositories and internal data sources,
+  and engaged external forensics experts. Anthropic released version 2.1.314
+  without the malicious code. Affected users and team administrators were
+  notified; Cursor advised that uninstalling the extension alone may not be
+  enough and published scripts to remove the attacker SSH key and persistence.
+  Fireworks revoked and replaced credentials, isolated affected systems, disabled
+  self-serve dataset uploads and downloads, and engaged Palo Alto Networks Unit 42.
+prevention: >-
+  Redact secrets from agent session traces before retention, and especially before
+  sharing with third parties; scope vendor-issued keys to the minimum data and
+  rotate them on any upstream incident; keep marketplace-cache write credentials
+  isolated from general SaaS access; verify extension package signatures or
+  publisher provenance before serving from a cache; and scan support data and
+  stored artifacts for credentials so they cannot be reused for lateral movement.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Coding-agent traces (mostly 2025, non-Privacy-Mode sessions) for fewer than
+      0.05% of non-Privacy-Mode users, some containing unredacted credentials; API
+      credentials for fewer than 0.01% of customers; credentials users had sent to
+      support; limited support data and email conversations; select archived
+      non-production source repositories, some with business contact information;
+      product usage metrics and summaries of some coding-agent conversations.
+      Cursor stated Privacy Mode data, live traffic, production systems, customer
+      repositories, the Cursor app, release-signing keys, and other marketplace
+      extensions were not affected.
+  user_harm:
+    categories: ["economic", "property"]
+    affected_count: 5000
+    description: >-
+      At most 5,000 users who requested the cached extension versions on
+      2026-10-29 potentially received a build that adds an attacker SSH key,
+      attempts to enable SSH and open a reverse tunnel, installs persistence, and
+      reports host details; affected hosts required manual remediation or rebuild
+      and credential rotation.
+  scope: "Cursor shared-trace bucket, select Cursor SaaS tools and archived repositories, and up to 5,000 marketplace extension downloads"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-10-23"
+    event: "Third-party cloud provider hosting Fireworks AI R&D machines experiences a security incident."
+  - at: "2026-10-24"
+    event: "Unauthorized party reaches Fireworks development machines and runs a workload affecting customer data; Fireworks detects it the same day."
+  - at: "2026-10-29"
+    event: "Modified Claude Code extension builds 2.1.312 and 2.1.313 served from the Cursor marketplace cache for about 11 hours; Cursor takes the marketplace offline and announces an investigation."
+  - at: "2026-10-30"
+    event: "Cursor publishes indicators of compromise and remediation scripts and begins notifying affected users and team administrators."
+  - at: "2026-11-01"
+    event: "Last observed attacker activity, blocked by Cursor."
+  - at: "2026-11-09"
+    event: "Fireworks AI updates its bulletin to report secrets, datasets, and incomplete model weights accessed for a limited set of accounts."
+  - at: "2026-11-13"
+    event: "Cursor publishes its incident update attributing initial access to a Cursor-issued key exposed by Fireworks and describing the trace-bucket and SaaS access."
+
+cve: []
+mappings:
+  owasp_llm: [LLM02, LLM03, LLM05]
+  mitre_atlas: [AML.T0024]
+tags: ["supply-chain", "ide-extension", "marketplace-cache", "agent-traces", "credential-exposure", "upstream-vendor-breach", "claude-code", "cursor", "backdoor"]
+related_incidents:
+  - "2025-amazon-q-wiper-supply-chain"
+  - "2026-chaindrop-npm-worm"
+  - "2026-pixelleak-coding-agent-image-exposure"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    Coding-agent session traces containing live secrets are retained and shared
+    with an upstream vendor; measure how a single exposed vendor key fans out into
+    credential reuse against the operator's SaaS tools and into write access on a
+    software-distribution cache serving many developer endpoints.
+
+sources:
+  - url: "https://cursor.com/blog/security-incident-update"
+    title: "Security incident update"
+    publisher: Cursor
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://cursor.com/blog/claude-code-extension-security-notice"
+    title: "Claude Code extension security notice"
+    publisher: Cursor
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://fireworks.ai/security/bulletins/october-2026-security-incident-update"
+    title: "October 2026 Security Incident Update"
+    publisher: Fireworks AI
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://www.unite.ai/cursor-traces-breach-to-access-key-exposed-by-fireworks-ai/"
+    title: "Cursor Traces Breach to Access Key Exposed by Fireworks AI"
+    publisher: Unite.AI
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.bankinfosecurity.com/cursor-confirms-anthropic-claude-code-extension-compromised-a-33263"
+    title: "Cursor Confirms Anthropic Claude Code Extension Compromised"
+    publisher: BankInfoSecurity
+    type: news
+    date_accessed: "2026-11-16"
