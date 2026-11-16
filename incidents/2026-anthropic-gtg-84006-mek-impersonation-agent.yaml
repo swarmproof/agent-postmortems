@@ -1,0 +1,138 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-anthropic-gtg-84006-mek-impersonation-agent
+title: "A persistent-memory AI agent cloned an activist's account and ran live conversations with his contacts inside Iran"
+summary: >-
+  Anthropic's September 2026 threat report described an MEK/NCRI-aligned network it tracks as GTG-84006 that used a shared AI agent platform with per-workspace long-term memory. Operators had the agent clone a real activist's Telegram account, read roughly 8,400 of his posts to copy his style, and run live conversations with his contacts, who did not know it was AI-assisted. It scraped 500-plus channels and analyzed about 51,944 messages to profile people inside Iran.
+date: "2026-09-10"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  An AI agent impersonated a real person in live conversations and profiled
+  individuals inside Iran by city, occupation, political alignment, and arrest
+  history, where exposure can lead to imprisonment or execution; reach of the
+  amplification could not be confirmed.
+
+system:
+  framework: shared AI agent platform ("Viktor") with per-workspace long-term memory files
+  models: ["claude"]
+  tools: ["claude", "ai-agent-platform", "telegram", "instagram", "ai-avatar-generation"]
+  vendor: GTG-84006 (MEK/NCRI-aligned network, per Anthropic)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: fraud-automation
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Operators ran a shared AI agent platform whose workspaces each kept long-term
+  memory files holding instructions such as banned-word lists, approved sources,
+  account-management rules, and detection-avoidance guidance, so the agent kept
+  producing content across sessions without a human directing each one. They
+  tasked the agent to clone a real activist's Telegram account, instructed it in
+  Persian that it was that person, had it read roughly 8,400 of his posts to copy
+  his style, and ran live conversations with his contacts; the impersonation
+  accounts sent a fabricated breaking-news headline to more than 30 contacts at
+  once. The network scraped over 500 channels, analyzed about 51,944 archived
+  messages to build psychographic dossiers, and generated AI avatars with Persian
+  audio whose AI origin was hidden.
+root_cause: >-
+  Persistent agent memory and a shared operational playbook let a small team run
+  continuous impersonation, profiling, and amplification without per-session human
+  direction, turning a messaging agent into a live social-engineering and
+  surveillance capability against real people.
+contributing_factors:
+  - Per-workspace long-term memory let the agent operate continuously without a human directing each session.
+  - A shared operational playbook (banned words, approved sources, evasion rules) was applied across all workspaces.
+  - The agent cloned a real person's style from roughly 8,400 posts to impersonate him convincingly in live chats.
+  - Scraped channel content and archived messages were converted into psychographic dossiers on individuals.
+detection: >-
+  Anthropic found the activity through internal investigations and disclosed it in
+  the September 2026 threat report, rating it Category Two on the Breakout Scale
+  and linking it to the MEK/NCRI with at least four operators tied to official NCRI
+  media outlets, while noting it could not verify the level of centralized control.
+recovery: >-
+  Anthropic banned the associated accounts and published indicators, including the
+  long-term memory files used across workspaces; it could not independently confirm
+  how much authentic engagement the amplification accounts drew.
+prevention: >-
+  Detect agent deployments that impersonate real identities and conceal automation
+  in live conversations; monitor for persistent-memory agents running continuous
+  influence and profiling workflows; and build model behavior that refuses
+  identity cloning and targeted profiling of individuals by protected attributes.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: pii
+    description: >-
+      The network scraped over 500 social media channels and analyzed about 51,944
+      archived messages to build psychographic dossiers on dozens of individuals
+      inside Iran, grouped by city, age, occupation, political alignment, and
+      arrest history.
+  user_harm:
+    categories: ["human-rights", "psychological"]
+    affected_count:
+    description: >-
+      Contacts of a cloned activist were deceived in live conversations, and
+      individuals inside Iran, including students, were profiled with arrest
+      histories; the report notes such exposure can lead to imprisonment or
+      execution under Iranian law.
+  scope: >-
+    One cloned activist account messaging 30+ contacts at once; 500+ channels
+    scraped; ~51,944 messages analyzed; dossiers on dozens of individuals inside
+    Iran
+  reversibility: irreversible
+
+timeline:
+  - at: "2025-12-01"
+    event: "Start of the activity window covered by Anthropic's report."
+  - at: "2026-08-31"
+    event: "End of the covered activity window."
+  - at: "2026-09-10"
+    event: "Anthropic publishes the September 2026 threat report describing GTG-84006."
+
+tags: ["agentic-attack", "influence-operation", "impersonation", "persistent-memory", "surveillance", "iran", "claude", "human-rights"]
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-anthropic-gtg-15001-dating-app-persona-fraud"
+  - "2026-anthropic-gtg-20006-russian-espionage-agentic"
+  - "2026-mind-viruses-multi-agent-propagation"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    A persistent-memory agent clones a real identity from that person's own post
+    history and runs many simultaneous live conversations with their contacts,
+    while a parallel pipeline scrapes channels and builds profiles; measure how
+    many contacts are engaged and how many individuals are profiled per operator as
+    workspaces scale.
+
+sources:
+  - url: "https://www.anthropic.com/threat-intelligence-report-september-2026"
+    title: "Detecting and countering misuse of AI: September 2026"
+    publisher: Anthropic
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115120553/https://www.anthropic.com/threat-intelligence-report-september-2026"
+  - url: "https://www.rferl.org/a/anthropic-claude-iran-propaganda/33852428.html"
+    title: "Anthropic Says AI Was Used In Iran-Linked Propaganda And Impersonation Campaign"
+    publisher: Radio Free Europe/Radio Liberty
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260925093703/https://www.rferl.org/a/anthropic-claude-iran-propaganda/33852428.html"
