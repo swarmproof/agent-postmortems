@@ -1,0 +1,153 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-php2shell-ai-assisted-discovery-weaponized
+title: "AI-assisted research found critical PHP RCE flaws (PHP2Shell) that were weaponized in the wild within days"
+summary: >-
+  Two security teams used frontier AI models to find a pair of critical
+  pre-authentication RCE flaws in PHP's core engine, disclosed on 2026-10-21 as
+  PHP2Shell (CVE-2026-109618 and CVE-2026-109619) and affecting most PHP versions.
+  Wiz credited Gemini 4 Argon and GPT-5.6 Sol; Calif used GPT-5.6 Sol under OpenAI's
+  Patch the Planet program. Exploitation began within days, CISA cataloged both on
+  2026-10-26, and attackers used the flaws against Check Point gateways with a
+  destructive follow-on.
+date: "2026-10-21"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Critical pre-authentication RCE affecting the large majority of PHP deployments,
+  found with substantial AI assistance and weaponized in the wild within days of
+  disclosure, including a destructive wiper stage against Check Point gateways.
+  Realized damage was limited in victim count, and the AI-assisted discovery gave
+  defenders a patch before attackers, which bounds the severity below critical.
+
+system:
+  framework: AI-assisted vulnerability research (Wiz Research; Calif) and in-the-wild exploitation by separate operators
+  models: ["gemini-4-argon", "gpt-5.6-sol"]
+  tools: ["wiz-atlas"]
+  vendor: Wiz, Calif, OpenAI (AI-assisted discovery); unattributed operators (exploitation); PHP Foundation (affected software); Check Point (targeted appliances)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+attack_vector: n-a
+causation:
+  entity: both
+  intentionality: mixed
+  timing: post-deployment
+
+trigger: >-
+  Security researchers applied frontier AI models to long-standing memory-safety
+  behavior in PHP's core engine and surfaced two previously unknown pre-auth RCE
+  flaws affecting most PHP versions. After coordinated disclosure and patch release
+  on 2026-10-21, separate operators turned the flaws into working exploits and used
+  them against internet-facing PHP services, including Check Point Security Gateways
+  with exposed Mobile Access portals.
+root_cause: >-
+  Frontier AI materially lowered the effort to find and adapt exploits for a class
+  of deeply embedded, long-lived vulnerabilities in a component that underpins a
+  large share of the web. The same capability that let defenders find the flaws
+  ahead of attackers also compresses the window between disclosure and mass
+  exploitation; the in-the-wild weaponization had no confirmed AI involvement and
+  targeted systems that were not yet patched.
+contributing_factors:
+  - Frontier AI models substantially reduced the effort to find and adapt exploits for long-lived PHP flaws.
+  - The flaws sit in PHP's core engine, affecting most versions and a large majority of websites.
+  - Embargo details and proof-of-concept tooling leaked before patches were released.
+  - A privilege-escalation flaw (CVE-2026-123039) let attackers chain the PHP RCE to root on Check Point gateways.
+  - Many internet-facing systems remained unpatched when exploitation began.
+detection: >-
+  Wiz and Calif reported the flaws to the PHP security team in August 2026; PHP
+  released patches on 2026-10-21. Multiple vendors, including Amazon Threat
+  Intelligence and watchTowr, observed exploitation around and shortly after
+  disclosure, and CISA added both CVEs to its Known Exploited Vulnerabilities
+  catalog on 2026-10-26. Check Point Research documented the gateway campaign and
+  destructive follow-on in November 2026.
+recovery: >-
+  The PHP Foundation shipped fixed releases (PHP 8.5.12, 8.4.27, 8.3.36, 8.2.35);
+  CISA and national cyber agencies urged immediate patching or taking unpatchable
+  systems offline. Check Point issued a hotfix and guidance for affected gateways.
+prevention: >-
+  Treat AI-accelerated vulnerability discovery as part of the threat model and
+  expect a compressed disclosure-to-exploitation window; patch widely deployed
+  components rapidly and prioritize internet-facing systems; control embargo and
+  proof-of-concept leakage; segment and monitor appliances whose compromise enables
+  destructive lateral movement.
+
+blast_radius:
+  cost:
+    amount_usd: null
+    estimated: false
+  data:
+    records: null
+    classification: n-a
+    description: >-
+      Two critical pre-authentication RCE flaws in PHP's core engine, affecting most
+      PHP versions and a large majority of websites, used as an entry point in
+      in-the-wild attacks including a destructive wiper stage against Check Point
+      gateways.
+  user_harm:
+    categories: ["property"]
+    description: >-
+      In-the-wild exploitation chained the PHP flaws to compromise Check Point
+      gateways and deploy a destructive file wiper against VMware ESXi hosts in a
+      first wave; Check Point described a limited number of affected systems.
+  scope: "most internet-facing PHP deployments at risk; realized attacks targeted a limited set of Check Point gateways"
+  reversibility: partially-reversible
+
+cve: ["CVE-2026-109618", "CVE-2026-109619", "CVE-2026-123039"]
+
+timeline:
+  - at: "2026-08-19"
+    event: "Wiz dates its first discovery; Calif had found paths earlier the same month using AI assistance."
+  - at: "2026-10-21"
+    event: "PHP releases patches; PHP2Shell is publicly disclosed."
+  - at: "2026-10-26"
+    event: "CISA adds CVE-2026-109618 and CVE-2026-109619 to its Known Exploited Vulnerabilities catalog."
+  - at: "2026-10-30"
+    event: "A first attack wave uses the flaws against Check Point gateways and deploys a destructive ESXi wiper."
+  - at: "2026-11-12"
+    event: "Check Point Research documents the gateway campaign, backdoor, and wiper."
+
+tags: ["ai-assisted-discovery", "vulnerability-discovery", "php", "mass-exploitation", "weaponization", "offensive-ai", "wiper"]
+related_incidents:
+  - "2026-gtig-ai-developed-zeroday"
+  - "2025-gtg1002-ai-orchestrated-espionage"
+machine_export:
+  replayable: false
+
+sources:
+  - url: "https://www.wiz.io/blog/php2shell-php-rce"
+    title: "PHP2Shell: AI uncovers critical RCE vulnerabilities affecting 70% of the Internet"
+    publisher: Wiz Research
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://calif.io/php2shell/"
+    title: "PHP2Shell"
+    publisher: Calif
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching"
+    title: "Critical Vulnerabilities in PHP Require Immediate Patching"
+    publisher: Cybersecurity and Infrastructure Security Agency
+    type: regulatory-court
+    date_accessed: "2026-11-16"
+  - url: "https://watchtowr.com/intelligence/php-remote-code-execution-php2shell/"
+    title: "PHP Remote Code Execution (PHP2Shell)"
+    publisher: watchTowr
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://research.checkpoint.com/2026/php2shell-exploitation-on-check-point-gateway/"
+    title: "PHP2Shell Exploitation on Check Point Gateway"
+    publisher: Check Point Research
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://www.bleepingcomputer.com/news/security/check-point-gateways-hacked-via-php2shell-to-deploy-vmware-esxi-wiper/"
+    title: "Check Point gateways hacked via PHP2Shell to deploy VMware ESXi wiper"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
