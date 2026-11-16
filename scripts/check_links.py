@@ -8,15 +8,23 @@
 Liveness policy:
   2xx/3xx                       -> ok
   403/405/429                   -> warn (bot-blocked or rate-limited; reachable to humans)
-  404/410, other 4xx/5xx, DNS   -> FAIL, UNLESS the source carries a reachable archive_url,
-                                   in which case the citation survives via Wayback -> warn.
-                                   Only a dead primary AND a dead/absent archive blocks the gate.
+  404/410, other 4xx/5xx        -> FAIL (the host answered: the page is gone), UNLESS the
+                                   source carries a reachable archive_url, in which case the
+                                   citation survives via Wayback -> warn.
+  timeout / connection error    -> "unreachable": no answer, so not evidence the page is gone.
+                                   warn if the source carries an archive_url (whether or not
+                                   Wayback itself answered just now); FAIL only when there is
+                                   no archive on file, i.e. nothing else vouches for the cite.
+  Only a dead primary AND a dead/absent archive blocks the gate.
 
 Usage:
-  uv run scripts/check_links.py             # check every sources[].url in the corpus
-  uv run scripts/check_links.py --backfill  # also write archive_url for sources lacking one
-                                            # (uses the Wayback availability API, then falls
-                                            #  back to requesting a fresh snapshot)
+  uv run scripts/check_links.py                 # check every sources[].url in the corpus
+  uv run scripts/check_links.py incidents/a.yaml incidents/b.yaml
+                                                # check only the given records (CI scopes a
+                                                #  pull request to the records it changes)
+  uv run scripts/check_links.py --backfill      # also write archive_url for sources lacking one
+                                                # (uses the Wayback availability API, then falls
+                                                #  back to requesting a fresh snapshot)
 """
 from __future__ import annotations
 
@@ -40,8 +48,13 @@ WARN_CODES = {401, 403, 405, 406, 429, 451}
 
 
 def probe(url: str) -> tuple[str, str]:
-    """Return (verdict, detail) where verdict is ok | warn | fail."""
+    """Return (verdict, detail) where verdict is ok | warn | fail | unreachable.
+
+    fail means the host answered with a dead status; unreachable means no answer at all
+    (timeout, DNS, reset) after retries, which is a transient-or-dead ambiguity.
+    """
     last = ""
+    answered = False
     for attempt in range(RETRIES + 1):
         try:
             resp = requests.head(url, headers=UA, timeout=15, allow_redirects=True)
@@ -49,6 +62,7 @@ def probe(url: str) -> tuple[str, str]:
                 resp = requests.get(url, headers=UA, timeout=20, allow_redirects=True, stream=True)
                 resp.close()
             code = resp.status_code
+            answered = True
             if code < 400:
                 return "ok", str(code)
             if code in WARN_CODES:
@@ -58,7 +72,7 @@ def probe(url: str) -> tuple[str, str]:
             last = type(exc).__name__
         if attempt < RETRIES:
             time.sleep(2 * (attempt + 1))
-    return "fail", last
+    return ("fail" if answered else "unreachable"), last
 
 
 def wayback_lookup(url: str) -> str | None:
@@ -101,8 +115,10 @@ def backfill_archive(path: Path, url: str, archive_url: str) -> bool:
 
 def main() -> int:
     do_backfill = "--backfill" in sys.argv
+    selected = [Path(a) for a in sys.argv[1:] if not a.startswith("--")]
+    paths = selected or sorted(INCIDENTS_DIR.glob("*.yaml"))
     failures = warnings = archived = 0
-    for path in sorted(INCIDENTS_DIR.glob("*.yaml")):
+    for path in paths:
         if path.name.startswith("_"):
             continue
         record = yaml.safe_load(path.read_text())
@@ -112,10 +128,19 @@ def main() -> int:
             # Link rot is expected; archive_url is the permanence mechanism (ADR-0004).
             # A dead primary whose archive is still reachable degrades to a warning
             # rather than blocking the gate.
-            if verdict == "fail" and isinstance(src, dict) and src.get("archive_url"):
+            has_archive = isinstance(src, dict) and bool(src.get("archive_url"))
+            if verdict == "fail" and has_archive:
                 arc_verdict, _ = probe(src["archive_url"])
                 if arc_verdict != "fail":
                     verdict, detail = "warn", f"{detail}; primary dead, archive live"
+            # No answer is not evidence of death. With an archive on file the citation
+            # is preserved whatever this probe saw, so a transient outage of the primary
+            # (or of Wayback itself) must not fail an unrelated gate run.
+            elif verdict == "unreachable":
+                if has_archive:
+                    verdict, detail = "warn", f"{detail}; primary unreachable, archive on file"
+                else:
+                    verdict, detail = "fail", f"{detail}; unreachable and no archive_url"
             marker = {"ok": "ok  ", "warn": "WARN", "fail": "FAIL"}[verdict]
             print(f"{marker} [{path.stem}] {url} ({detail})")
             if verdict == "fail":
