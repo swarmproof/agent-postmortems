@@ -244,9 +244,11 @@ def discover(days: int, limit: int) -> list[dict]:
         rel = score(it, keywords)
         if rel == 0:                               # not agent-relevant enough
             continue
-        # Curated primaries (research feeds, incident DBs, arXiv, CVE/GHSA) outrank
+        # Curated primaries (research/vendor feeds, incident DBs, CVE/GHSA) outrank
         # general news of equal keyword relevance — favours signal over news volume.
-        if it["source"] in ("arxiv", "rss", "cve", "ghsa"):
+        # arXiv is deliberately not boosted: papers are hazards at best, and with
+        # the boost they displaced breach disclosures under the candidate cap.
+        if it["source"] in ("rss", "cve", "ghsa"):
             rel += 2
         candidates.append({
             "title": it["title"], "url": it["url"], "date": it.get("date", ""),

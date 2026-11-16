@@ -22,8 +22,8 @@ jobs:
 
       - name: Discover candidate incidents
         run: |
-          uv run scripts/discover_incidents.py --markdown > candidates.md
-          uv run scripts/discover_incidents.py --json candidates.json
+          uv run scripts/discover_incidents.py --limit 100 --markdown > candidates.md
+          uv run scripts/discover_incidents.py --limit 100 --json candidates.json
           echo "count=$(python3 -c 'import json;print(len(json.load(open("candidates.json"))))')" >> "$GITHUB_OUTPUT"
         id: discover
 
