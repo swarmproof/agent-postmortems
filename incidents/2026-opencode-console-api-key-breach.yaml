@@ -1,0 +1,156 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-opencode-console-api-key-breach
+title: "OpenCode Console breach exposed users' stored OpenAI, Anthropic and Google API keys, which were then used to run up charges"
+summary: >-
+  OpenCode, an open-source AI coding agent, disclosed that attackers breached an
+  older system behind OpenCode Console, the hosted service where some users
+  store provider API keys, affecting 1.4% of Console users. Stolen keys were
+  used overnight against OpenAI, Anthropic and Google accounts, with individual
+  users reporting charges from several hundred dollars up to about $1,700.
+  OpenCode called it a large-scale distillation attack; providers blocked
+  exposed keys and refunds followed.
+date: "2026-10-17"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  Realized financial harm to an undisclosed number of developers (1.4% of
+  Console users) through unauthorized provider charges, partially reversed by
+  refunds and key revocation; the open-source app and CLI were not affected and
+  the intrusion mechanism remains undisclosed.
+
+system:
+  framework: OpenCode Console (hosted workspace for the OpenCode coding agent)
+  models: []
+  tools: ["opencode-console", "openai-api", "anthropic-api", "google-ai-api"]
+  vendor: OpenCode (Anomaly)
+  autonomy_level: unknown
+
+primary_failure_class: data-exfiltration
+failure_classes:
+  - class: data-exfiltration
+  - class: cost-blowup
+attack_vector: n-a
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Attackers gained access to an older OpenCode system and obtained third-party
+  provider API keys that users had linked in OpenCode Console workspaces; the
+  earliest possible exposure stated in OpenCode's notification email was
+  2026-10-17 00:30 UTC. The keys were then used at volume against the
+  providers' APIs overnight, which OpenCode characterized as a large-scale
+  distillation attack. The same night OpenCode had made GLM-5.3-Flash free for
+  users. OpenCode has not disclosed how the attackers entered, how the keys
+  were stored, or the full extent of misuse.
+root_cause: >-
+  A hosted console for a coding agent held users' long-lived provider API keys
+  in a system that OpenCode described as older, so a single intrusion yielded
+  credentials that were directly spendable against several LLM providers with
+  no per-key spend limit enforced at the console. OpenCode has not published a
+  root cause for the intrusion itself.
+contributing_factors:
+  - Users' provider API keys were stored centrally in Console workspaces rather than held only on their own machines.
+  - The compromised component was described by OpenCode as an older system.
+  - Stolen keys could be driven at high volume against multiple providers before account owners saw spend alerts.
+  - OpenCode co-founder Dax Raad said the team's defensive investigation was slowed when commercial models refused to analyze the malicious code; the team later obtained access to OpenAI's Daybreak program for defensive security work.
+detection: >-
+  Developers reported overnight spend alerts from OpenAI, Anthropic and Google
+  AI accounts; Google suspended some projects citing abusive activity
+  consistent with hijacked resources. OpenCode announced the breach on
+  2026-10-17 via its X account and notified affected users by email, stating
+  that users who received no email were not impacted. Raad said attackers had
+  been targeting OpenCode's systems for at least 48 hours.
+recovery: >-
+  OpenCode told affected users to revoke and replace their keys directly with
+  each provider. Anthropic and Google blocked the API keys believed exposed;
+  OpenAI worked with OpenCode to restore access and refund API credits used in
+  the attack, and OpenCode said refunds for unauthorized charges were
+  underway. OpenCode said the open-source app and CLI were unaffected and that
+  the incident remained ongoing as of 2026-10-19.
+prevention: >-
+  Avoid centralizing long-lived provider keys in hosted consoles, or store
+  them with per-key spend caps, short lifetimes and scoped permissions;
+  decommission older systems that still hold credentials; alert on anomalous
+  key usage volume at the platform rather than relying on provider spend
+  alerts; publish a root-cause disclosure so users can assess exposure.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Third-party provider API keys (OpenAI, Anthropic, Google) stored in
+      affected Console workspaces; OpenCode's email said no other data appeared
+      to have been exposed.
+  user_harm:
+    categories: ["economic"]
+    affected_count:
+    description: >-
+      Unauthorized provider charges reported by individual developers ranging
+      from several hundred dollars to about $1,700 overnight; refunds and key
+      revocation followed. Total affected count undisclosed (1.4% of Console
+      users).
+  scope: "1.4% of OpenCode Console users who had linked external provider keys"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-10-17T00:30Z"
+    event: "Earliest possible exposure of stored provider keys, per OpenCode's notification email."
+  - at: "2026-10-17"
+    event: "OpenCode announces the Console breach on X and emails affected users to revoke and replace keys."
+  - at: "2026-10-18"
+    event: "Developers report overnight spend alerts; Anthropic and Google block exposed keys; OpenCode gains access to OpenAI's Daybreak program for defensive analysis."
+  - at: "2026-10-19"
+    event: "TechCrunch and BleepingComputer report the breach; OpenAI refunds credits used in the attack; OpenCode says the incident remains ongoing."
+
+tags: ["api-keys", "credential-theft", "denial-of-wallet", "distillation", "coding-agent", "hosted-console", "legacy-system"]
+mappings:
+  owasp_llm: [LLM02, LLM10]
+  owasp_agentic: [T4]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2025-claude-code-dns-exfiltration"
+  - "2026-copilot-cli-env-exfiltration"
+  - "2026-claude-code-ci-hf-exfiltration"
+  - "2026-near-ai-sglang-rce-agent-data-breach"
+last_updated: "2026-11-16"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A hosted agent console stores users' provider API keys; measure how much
+    unauthorized provider spend accrues between key theft and the first owner
+    spend alert when keys carry no per-key cap.
+  costbomb_seed_hint: >-
+    Stolen provider API keys from a shared console are driven at high request
+    volume against several LLM providers overnight; measure time-to-detect and
+    the effect of per-key spend limits and short key lifetimes.
+
+sources:
+  - url: "https://techcrunch.com/2026/10/19/hackers-hit-ai-coding-tool-opencode-running-up-charges-on-users-ai-accounts/"
+    title: "Hackers hit AI coding tool OpenCode, running up charges on users' AI accounts"
+    publisher: TechCrunch
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.bleepingcomputer.com/news/security/opencode-hack-exposes-api-keys-amid-ai-distillation-attacks/"
+    title: "OpenCode hack exposes API keys amid AI distillation attacks"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://x.com/opencode/status/2111519637049319818"
+    title: "OpenCode statement on the Console security incident"
+    publisher: OpenCode (X)
+    type: social-primary
+    date_accessed: "2026-11-16"
+  - url: "https://www.infosecurity-magazine.com/news/opencode-breach-openai-anthropic/"
+    title: "OpenCode Breach Could Affect OpenAI, Anthropic and Google"
+    publisher: Infosecurity Magazine
+    type: news
+    date_accessed: "2026-11-16"
