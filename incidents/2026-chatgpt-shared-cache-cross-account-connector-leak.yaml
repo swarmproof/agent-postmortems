@@ -1,0 +1,127 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-chatgpt-shared-cache-cross-account-connector-leak
+title: "Shared package cache behind ChatGPT sandboxes let one account's injected task read another account's Gmail"
+summary: >-
+  Check Point Research demonstrated that ChatGPT's per-conversation code sandboxes,
+  meant to be isolated, could all reach one shared internal package service. A task
+  planted via untrusted input (a pasted prompt, a shared link, or a custom GPT) used
+  that service as a covert channel, so a victim's session read data from a connected
+  app such as Gmail and relayed it to the attacker with no confirmation. A researcher
+  proof of concept; OpenAI confirmed the shared service was decommissioned.
+date: "2026-09-08"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Cross-account exfiltration of data reachable through a victim's connected apps
+  (Gmail, Drive, Teams, GitHub) with no user confirmation and only a minimal
+  after-the-fact trace. Researcher proof of concept; the shared service was
+  decommissioned before any known exploitation.
+
+system:
+  framework: ChatGPT (code-execution sandbox, connected apps)
+  models: []
+  tools: ["gmail", "google-drive", "microsoft-teams", "github", "code-interpreter"]
+  vendor: OpenAI
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A task carrying hidden instructions reached a victim's ChatGPT session through an
+  untrusted entry point: a pasted prompt, a shared conversation link, or a custom GPT
+  with an embedded instruction. The victim's session acted on the instruction during
+  an ordinary turn, read data from a connected app, and placed it where a separate
+  attacker-controlled session could retrieve it.
+root_cause: >-
+  Per-conversation code sandboxes that were expected to be isolated from one another
+  could all reach the same internal package-management service, and that service let a
+  container write metadata that another container could read. Untrusted content was
+  also treated as instructions inside the trust boundary, and the default
+  connected-app setting auto-approved reads judged low-risk, so no confirmation stood
+  between an injected task and a connector read.
+contributing_factors:
+  - Isolated sandboxes shared reachability to one internal package service, giving a side channel between accounts.
+  - Untrusted input (pasted text, shared links, custom GPTs) entered the session with the standing of user instructions.
+  - Default connected-app behaviour auto-approved low-risk reads, so connector access needed no confirmation.
+  - The only user-visible trace was a minimal connector label shown after the read had occurred.
+detection: >-
+  Discovered and disclosed by Check Point Research, which reported the shared channel
+  to OpenAI and published a write-up on 2026-09-08.
+recovery: >-
+  OpenAI confirmed the specific internal package service behind the channel had been
+  decommissioned, so no customer-facing patch was required. Check Point characterised
+  the work as a proof of concept with no evidence of exploitation in the wild.
+prevention: >-
+  Keep per-account sandboxes from sharing reachability to a common internal service
+  that can relay data; separate untrusted retrieved content from instructions;
+  require confirmation before an agent reads from a connected app; scope connector
+  grants narrowly; and log every connected-app read for review.
+
+blast_radius:
+  data:
+    classification: confidential
+    description: >-
+      In the demonstration, email data from a victim's connected Gmail account was
+      read and relayed cross-account. Reach extended to anything the victim's session
+      could access through connectors, including Google Drive, Microsoft Teams and
+      GitHub.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept; OpenAI reported no evidence of exploitation in the
+      wild and no real users were identified as affected.
+  scope: ChatGPT accounts with connected apps, before the shared service was decommissioned
+  reversibility: irreversible
+
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2025-echoleak-m365-copilot"
+  - "2026-salesforce-agentforce-salesbleed"
+  - "2026-openai-eval-sandbox-escape-huggingface"
+tags: ["cross-account", "connectors", "covert-channel", "prompt-injection", "data-exfiltration", "chatgpt"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    Two sandboxed agent sessions under different accounts share reachability to one
+    internal service. An untrusted task in session A writes to that service; measure
+    whether session B reads it, pulls data from its own connected app, and returns it
+    to A without a confirmation step.
+
+sources:
+  - url: "https://blog.checkpoint.com/research/chatgpt-let-attackers-read-victims-gmail-through-a-hidden-channel-between-accounts/"
+    title: "ChatGPT Let Attackers Read Victims' Gmail Through a Hidden Channel Between Accounts"
+    publisher: Check Point Research
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260923010536/https://blog.checkpoint.com/research/chatgpt-let-attackers-read-victims-gmail-through-a-hidden-channel-between-accounts"
+  - url: "https://www.csoonline.com/article/4220203/chatgpt-flaw-lets-attackers-pull-gmail-data-across-accounts-via-a-hidden-channel.html"
+    title: "ChatGPT flaw lets attackers pull Gmail data across accounts via a hidden channel"
+    publisher: CSO Online
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260920150846/https://www.csoonline.com/article/4220203/chatgpt-flaw-lets-attackers-pull-gmail-data-across-accounts-via-a-hidden-channel.html"
+  - url: "https://thecyberexpress.com/chatgpt-sandbox-flaw-leads-to-gmail-leak/"
+    title: "ChatGPT Sandbox Flaw Leads to Gmail Leak"
+    publisher: The Cyber Express
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260913023613/https://thecyberexpress.com/chatgpt-sandbox-flaw-leads-to-gmail-leak/"
