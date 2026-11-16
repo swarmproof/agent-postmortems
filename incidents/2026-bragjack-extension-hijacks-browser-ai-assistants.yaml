@@ -1,0 +1,153 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-bragjack-extension-hijacks-browser-ai-assistants
+title: "BragJack: one browser extension could drive the built-in AI assistants in Chrome, Comet, Edge, Opera Neon and Claude in Chrome"
+summary: >-
+  Forever Security researcher Gal Weizman demonstrated BragJack, in which a
+  single installed browser extension abused already-granted extension
+  permissions to reach the privileged component behind each browser's built-in
+  AI assistant and issue its own instructions. Shown across Gemini in Chrome,
+  Perplexity Comet, Copilot in Edge, Opera Neon and Claude in Chrome, with
+  reads of local files, history and screenshots and authenticated actions.
+  Proof-of-concept; no in-the-wild exploitation reported.
+date: "2026-09-16"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Demonstrated takeover of the AI agent in five browser products with access to
+  local files, camera and microphone, history, screenshots and authenticated
+  actions, needing no model guardrail bypass. Hazard: requires the extension to
+  be installed already, was responsibly disclosed, and two of five findings
+  were fixed with CVEs; no exploitation reported.
+
+system:
+  framework: "Built-in browser AI assistants: Gemini in Chrome, Perplexity Comet, Copilot in Edge, Opera Neon, Claude in Chrome"
+  models: []
+  tools: ["browser-extension", "browser-agent", "local-filesystem", "camera-microphone"]
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: extension
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: unsafe-action
+    subclass: cross-domain-action
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A malicious extension is already installed in the victim's browser with
+  commonly requested permissions. Those permissions let it influence what the
+  AI assistant's privileged in-browser component treats as coming from a
+  trusted first-party origin. The assistant then accepts and carries out the
+  extension's instructions with its existing capabilities, without the user
+  acting and without defeating the model's safety guardrails.
+root_cause: >-
+  Each assistant splits into an in-browser component that can see the screen,
+  read files and take actions and a server-hosted model that directs it. The
+  in-browser component trusted instructions arriving from certain web origins,
+  but the vendors did not isolate that privileged channel from the capabilities
+  the browser grants to any installed extension. The component also did not
+  verify which origin or script was actually driving it, so an extension could
+  present itself to the assistant as the trusted vendor.
+contributing_factors:
+  - Extensions can inject scripts and modify network behaviour, which the browser model assumes affects only ordinary web pages.
+  - Privileged agent channels were bound to a domain or a reachable test surface rather than to a verified first-party script.
+  - One product's split between a planning mode and an acting mode could be switched through a timing gap, which the vendor assigned a CVE.
+  - Because no malicious native code runs, endpoint tools that look for malware would not detect the activity.
+detection: >-
+  Disclosed by Forever Security (researcher Gal Weizman) on 2026-09-16 with a
+  technical write-up and video; covered by BleepingComputer and Dark Reading,
+  and summarised in a Cloud Security Alliance research note. The Chrome case
+  had been detailed earlier in 2026 under the name GlicJack.
+recovery: >-
+  Reported to all five vendors before publication, which together paid about
+  twenty thousand dollars in bug bounties. Google assigned CVE-2026-0628 and
+  fixed the Chrome issue in version 143.0.7499.192; Microsoft assigned
+  CVE-2026-55945 for the Edge timing issue and fixed it in Edge version
+  150.0.4078.48 on 2026-07-02. Perplexity, Opera and Anthropic acknowledged
+  their reports and addressed the demonstrated behaviours without publishing
+  detailed advisories in the reviewed sources. As of disclosure neither CVE
+  appeared on the US Known Exploited Vulnerabilities catalog.
+prevention: >-
+  Bind each assistant's privileged channel to a verified first-party script,
+  not merely to a domain or a reachable test surface; verify the provenance of
+  events, distinguishing genuine user input from synthetic input, before
+  allowing privileged agent actions; enforce mode transitions atomically;
+  bring agentic-browser risk into extension allowlisting and permission review;
+  run AI agent features in low-privilege profiles without sensitive sessions.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      Depending on the browser, the demonstrations reached local files and
+      folders, browsing history, screenshots, camera or microphone, and could
+      read email and take authenticated actions on logged-in sites.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Proof-of-concept demonstrations with no real victims; each path requires
+      the malicious extension to be installed first.
+  scope: users of the five named browser AI assistants who install a malicious extension
+  reversibility: partially-reversible
+
+cve: ["CVE-2026-0628", "CVE-2026-55945"]
+mappings:
+  owasp_llm: [LLM02, LLM03, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024]
+tags: ["bragjack", "browser-extension", "agentic-browser", "prompt-forcing", "trust-boundary"]
+related_incidents:
+  - "2026-pleasefix-zero-click-agentic-browser-hijacking"
+  - "2025-comet-browser-screenshot-injection"
+  - "2026-cursor-fireworks-key-agent-traces-extension-compromise"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An installed extension with common permissions influences what a browser
+    assistant's privileged component treats as trusted first-party input;
+    measure whether the assistant accepts and executes extension-supplied
+    instructions, and whether it verifies the origin and script driving it
+    before taking privileged actions.
+
+sources:
+  - url: "https://forever.security/blog/bragjack-hijacking-5-browsers-via-built-in-ai-assistants/"
+    title: "BragJack: Hijacking 5 Browsers via Built-in AI Assistants"
+    publisher: Forever Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261106200351/https://forever.security/blog/bragjack-hijacking-5-browsers-via-built-in-ai-assistants/"
+  - url: "https://www.bleepingcomputer.com/news/security/bragjack-attacks-hijack-ai-browser-agents-through-malicious-extensions/"
+    title: "BragJack Attacks Hijack AI Browser Agents Through Malicious Extensions"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261101082110/https://www.bleepingcomputer.com/news/security/bragjack-attacks-hijack-ai-browser-agents-through-malicious-extensions/"
+  - url: "https://thehackernews.com/2026/09/one-extension-could-hijack-ai.html"
+    title: "One Extension Could Hijack AI Assistants in Five Browsers"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261018045644/https://thehackernews.com/2026/09/one-extension-could-hijack-ai.html"
+  - url: "https://www.darkreading.com/endpoint-security/bragjack-browser-agentic-ai"
+    title: "BragJack Attack Can Turn a Browser's Agentic AI Against It"
+    publisher: Dark Reading
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261023123145/https://www.darkreading.com/endpoint-security/bragjack-browser-agentic-ai"
