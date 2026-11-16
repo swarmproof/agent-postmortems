@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the link gate diffs a pull request against its base
       - uses: astral-sh/setup-uv@v5
 
       # G-SCHEMA, G-TAX, G-ID, G-NEUTRAL, G-DRIFT — corpus-wide, fail-closed
@@ -24,9 +26,22 @@ jobs:
       - name: Check framework mappings
         run: uv run scripts/apply_mappings.py --check
 
-      # G-LINK — every sources[].url reachable (403/429 warn as likely bot-blocks)
+      # G-LINK — every sources[].url reachable (403/429 warn as likely bot-blocks;
+      # timeouts on a source with an archive_url warn). A pull request checks only
+      # the records it changes, so a flaky third-party host behind an unrelated
+      # record cannot fail it; pushes to main still check the whole corpus.
       - name: Check source links
-        run: uv run scripts/check_links.py
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            changed=$(git diff --name-only --diff-filter=AM "origin/${{ github.base_ref }}...HEAD" -- 'incidents/*.yaml' | grep -v '/_' || true)
+            if [ -n "$changed" ]; then
+              echo "scoped to changed records:"; echo "$changed"
+              echo "$changed" | xargs uv run scripts/check_links.py
+              exit $?
+            fi
+            echo "no incident records changed; checking the whole corpus"
+          fi
+          uv run scripts/check_links.py
 
       # G-EXPORT — exports build cleanly and validate against their schemas.
       # We do NOT require exports to be committed in the PR: export/*.json are
