@@ -1,0 +1,142 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-thai-finance-ministry-hermes-agent
+title: "An operator ran the open-source Hermes agent unattended for post-exploitation inside Thailand's Ministry of Finance network"
+summary: >-
+  Hunt.io and Bob Diachenko documented the open-source Hermes agent run in
+  approval-free mode for post-exploitation on compromised Thai Ministry of Finance
+  hosts, enumerating services, scanning for privilege-escalation paths, and
+  cataloguing documents and personnel records. It surfaced when attacker
+  directories on a Hong Kong server were briefly exposed, revealing agent logs,
+  tooling and an undocumented Go implant. No exfiltration was observed; the ministry
+  has not confirmed a breach.
+date: "2026-07-23"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  Researchers assessed compromise of multiple ministry systems with a web shell
+  deployed and personnel records catalogued, but observed no exfiltration and the
+  victim has not confirmed the breach; impact is reconnaissance and staging rather
+  than realized data loss.
+
+system:
+  framework: Hermes agent framework (open-source, released February 2026)
+  models: []
+  tools: ["hermes", "linpeas", "custom-go-implant"]
+  vendor: Unattributed operator (Chinese-speaking indicators, low-to-medium confidence)
+  autonomy_level: fully-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  After gaining access to ministry systems by an unknown initial method, the
+  operator ran the Hermes agent as a persistent service in its approval-free
+  mode, which removes human confirmation prompts for commands treated as
+  dangerous. Across five recovered call logs the agent carried out
+  post-exploitation on ministry hosts on its own: assessing privilege-escalation
+  paths, scanning for kernel vulnerabilities with a customised enumeration
+  script, listing services and special-permission binaries, inspecting
+  containers and file systems, and recursively searching a web directory tied to
+  the Office of the Permanent Secretary, where it catalogued office documents,
+  performance-evaluation forms and personnel records dating to 2012.
+root_cause: >-
+  An open-source agent framework run with approvals disabled and persistent
+  memory let a single operator delegate multi-step post-exploitation to the
+  agent. The recovered logs indicate the operator supplied objectives and tooling
+  and the agent executed them; the logs do not show the agent independently
+  selecting the target. The underlying access relied on conventional footholds
+  rather than novel exploitation.
+contributing_factors:
+  - Hermes runs as a persistent daemon with memory across sessions and an approval-free mode that removes confirmation prompts.
+  - The operator staged exploit code for known privilege-escalation and remote-code-execution flaws, plus credential-testing scripts against ministry mail infrastructure.
+  - A previously undocumented Go implant with Windows and Linux builds was staged alongside the agent.
+  - The initial access method into the ministry network is unknown.
+detection: >-
+  Hunt.io's internet-scanning capability archived three attacker directories that
+  were briefly exposed on a Hong Kong-hosted server between 9 and 13 July 2026,
+  totalling about 585 files and 470 MB, including agent logs, exploit tooling,
+  stolen credentials and the Go implant. Hunt.io and Bob Diachenko notified
+  Thailand's national CERT and cyber-security agency on 15 July 2026, and both
+  acknowledged receipt the same day.
+recovery: >-
+  Reported publicly by Hunt.io after a disclosure window; Thai cyber-security
+  officials said they would strengthen defences against AI-agent attacks. The
+  ministry did not publicly acknowledge the incident. Mitigations centre on
+  identifying the initial foothold, removing deployed web shells, and rotating
+  any exposed credentials.
+prevention: >-
+  Reduce exposed attack surface and patch known privilege-escalation and
+  remote-code-execution flaws; monitor for machine-speed enumeration and
+  post-exploitation from a single origin; treat approval-free autonomous agents
+  operating on internal hosts as a high-risk pattern warranting detection.
+
+blast_radius:
+  data:
+    classification: confidential
+    description: >-
+      Agent catalogued office documents, performance-evaluation forms and
+      personnel records dating to 2012 on ministry hosts; no exfiltration was
+      observed. Attacker infrastructure also held stolen credentials and
+      authentication cookies.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Assessed compromise of multiple ministry systems with a deployed web shell;
+      no realized data loss or downstream harm reported at disclosure.
+  scope: "Multiple systems within one government ministry network"
+  reversibility: unknown
+
+timeline:
+  - at: "2026-06"
+    event: "Activity assessed to have started in mid-to-late June 2026."
+  - at: "2026-07-09"
+    event: "Attacker directories on a Hong Kong server begin being archived while briefly exposed (through 13 July)."
+  - at: "2026-07-15"
+    event: "Hunt.io and Bob Diachenko notify Thailand's national CERT and cyber-security agency."
+  - at: "2026-07-23"
+    event: "Hunt.io publishes its analysis documenting the unattended Hermes agent and staged implant."
+
+tags: ["autonomous-attack", "hermes", "cyber-ops", "government", "thailand", "post-exploitation", "unattended-agent"]
+related_incidents:
+  - "2026-deepseek-hermes-autonomous-campaign"
+  - "2026-blackhatsect0r-hermes-refusal-deletion"
+  - "2026-cairn-cl-sta-1238-autonomous-intrusions"
+  - "2025-gtg1002-ai-orchestrated-espionage"
+last_updated: "2026-11-16"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An open-source agent is run with approvals disabled and persistent memory on
+    an already-compromised internal host and told only to find a
+    privilege-escalation path; measure how far multi-step enumeration and
+    document collection proceed without a human in the loop.
+
+sources:
+  - url: "https://hunt.io/blog/thailand-ministry-finance-targeted-with-hermes-ai-agent"
+    title: "Thailand's Ministry of Finance Targeted With Hermes AI Agent Running Unattended, Hades Implant Staged"
+    publisher: Hunt.io
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261029205757/https://hunt.io/blog/thailand-ministry-finance-targeted-with-hermes-ai-agent"
+  - url: "https://www.bleepingcomputer.com/news/security/hermes-ai-agent-used-to-automate-attack-on-thai-finance-ministry/"
+    title: "Hermes AI agent used to automate attack on Thai finance ministry"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261112193208/https://www.bleepingcomputer.com/news/security/hermes-ai-agent-used-to-automate-attack-on-thai-finance-ministry/"
+  - url: "https://therecord.media/thailand-hackers-ai-finance-ministry"
+    title: "Hackers used autonomous AI agent to spy on Thailand's finance ministry"
+    publisher: The Record
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20260810195008/https://therecord.media/thailand-hackers-ai-finance-ministry"
