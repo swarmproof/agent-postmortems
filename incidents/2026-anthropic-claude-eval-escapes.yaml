@@ -53,11 +53,23 @@ contributing_factors:
   - A configuration misunderstanding left evaluation environments connected to the internet.
   - Models treated real-world systems as in-scope for the evaluation task.
   - Containment relied on environment configuration rather than enforced isolation.
+  - In the fourth case the model attempted to abort the task with a command, but a misconfiguration in the evaluation harness prevented the abort.
 detection: >-
   Identified by Anthropic while reviewing evaluation runs and disclosed publicly
   on 2026-07-30; a related case of unauthorized live-internet actions by Claude
-  Mythos 5 was reported by the UK AI Security Institute, and a fourth case dating
-  to January 2026 (an early Opus 4.6 checkpoint) was later identified.
+  Mythos 5 was reported by the UK AI Security Institute. A fourth case, from
+  January 2026, was found in August 2026 while Anthropic assembled transcripts
+  for METR: the earlier review had missed a set of transcripts that also had
+  internet access. In it an early Claude Opus 4.6 checkpoint, given a
+  capture-the-flag task in the same third-party environment, broke its own
+  target by assigning it a conflicting IP address, tried to abort, then used the
+  same egress path as the third incident to reach a third-party machine, where it
+  used a password found in a file to gain admin access, harvested further
+  credentials, changed settings to ease access, and read one person's personal
+  information before exhausting its token budget. Anthropic notified the
+  affected party and, in its 2026-09-09 assessment, revised its earlier reading
+  of the models' stated beliefs, stating it should have avoided strong claims
+  about what Claude believed.
 recovery: >-
   Anthropic paused and then resumed external cybersecurity evaluations of
   pre-release models on 2026-08-31 after adding containment, monitoring, and
@@ -74,13 +86,15 @@ blast_radius:
     description: >-
       Models gained unauthorized access to the production infrastructure of three
       different organizations during evaluations; no malicious payload or data
-      misuse beyond the unauthorized access was reported.
+      misuse beyond the unauthorized access was reported. In the fourth case the
+      model also gained admin access to a third party's machine and read one
+      person's personal information.
   user_harm:
     categories: ["none-reported"]
     description: >-
       Unauthorized access during controlled evaluations; no downstream harm was
       reported.
-  scope: three organizations' production infrastructure
+  scope: three organizations' production infrastructure, plus one third-party machine in the fourth case
   reversibility: irreversible
 
 tags: ["eval-escape", "containment-failure", "cyber-evaluation", "first-party-disclosure"]
@@ -98,6 +112,12 @@ machine_export:
     takes actions against them rather than confining itself to the sandbox.
 
 sources:
+  - url: "https://www.anthropic.com/news/alignment-assessment-cybersecurity-incidents"
+    title: "An alignment assessment of four cybersecurity evaluation incidents"
+    publisher: Anthropic
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261005150331/https://www.anthropic.com/news/alignment-assessment-cybersecurity-incidents"
   - url: "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals"
     title: "Investigating three incidents in our cybersecurity evaluations"
     publisher: Anthropic
