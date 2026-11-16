@@ -1,0 +1,135 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-cyberstrikeai-44-agents-japan
+title: "An attack platform built on CyberStrikeAI ran 44 AI agents to automate intrusion attempts against Japanese organizations"
+summary: >-
+  Trend Micro's TrendAI research team documented an attack infrastructure built on
+  CyberStrikeAI, an open-source multi-agent penetration-testing tool, in which 44
+  role-specific AI agents automated a full workflow from reconnaissance through
+  exploitation, persistence, exfiltration, and reporting. The platform ran many
+  targets in parallel while throttling traffic to each, reaching at least 19
+  organizations, at least 16 in Japan. Deep compromise was confirmed for only a
+  small share of targets.
+date: "2026-10-27"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  A realized, mostly automated campaign attempted intrusions across at least 19
+  organizations, but researchers confirmed deep compromise in only a small share of
+  targets and the platform itself recorded no session, web shell, or exfiltration
+  for many of them.
+
+system:
+  framework: CyberStrikeAI open-source multi-agent penetration-testing tool
+  models: []
+  tools: ["cyberstrikeai"]
+  vendor: unattributed operator (Simplified Chinese working language)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The operator ran an attack platform built on CyberStrikeAI with work divided
+  among 44 role-specific agents, evidenced by a log entry reading
+  "credential-search agent 8/44". The agents chained reconnaissance, vulnerability
+  discovery and validation, exploitation, command-and-control, persistence,
+  exfiltration, and automated reporting into one repeatable workflow, searching
+  broadly for accessible, vulnerable systems across industries and attacking what
+  they found. The platform generated Japanese-language material, including forms and
+  fake login pages, and throttled traffic to each target to avoid detection.
+root_cause: >-
+  An open-source multi-agent offensive framework let an operator automate the full
+  intrusion lifecycle across many targets in parallel, lowering the effort to run
+  opportunistic, machine-speed attacks and spreading low-volume activity across
+  targets so that no single organization's logs showed enough to detect it.
+contributing_factors:
+  - CyberStrikeAI packaged the full offensive workflow around coordinated AI agents with automated reporting.
+  - Low-volume, distributed traffic per target evaded single-organization detection.
+  - A legacy web system exposed an unauthenticated public administration interface.
+detection: >-
+  Trend Micro's TrendAI research team reconstructed the operation from files left in
+  publicly accessible directories on attacker-controlled servers, including attack
+  scripts, target lists, logs, command histories, and per-target reports with an
+  evidence index. TrendAI published the findings in Japanese on 2026-10-23 and in
+  English on 2026-10-27.
+recovery: >-
+  Documented and published by TrendAI as threat research, which withheld indicators
+  of compromise to avoid interfering with investigations. Mitigations centre on
+  reducing exposure of legacy web systems and administration interfaces and on
+  detecting low-frequency distributed activity.
+prevention: >-
+  Inventory and update or isolate public-facing legacy web systems; remove
+  unnecessary administration interfaces from the internet and enforce strong access
+  controls; and design monitoring for low-frequency, distributed intrusion attempts
+  that no single organization's logs would reveal in isolation.
+
+blast_radius:
+  cost:
+    amount_usd: null
+    estimated: false
+  data:
+    records: null
+    classification: unknown
+    description: >-
+      Exfiltration was part of the automated workflow, but the research did not
+      specify what data was taken in this case, and the platform recorded no session,
+      web shell, or exfiltration for many targets.
+  user_harm:
+    categories: ["economic"]
+    affected_count: null
+    description: >-
+      At least 19 organizations underwent intrusion-validation activity, with deep
+      compromise confirmed for only a small share; the clearest intrusion entered
+      through an unauthenticated public administration interface on a legacy system.
+  scope: >-
+    At least 19 organizations, at least 16 in Japan, with additional targets in
+    Taiwan and Hong Kong
+  reversibility: unknown
+
+timeline:
+  - at: "2026-10-23"
+    event: "TrendAI publishes the research in Japanese."
+  - at: "2026-10-27"
+    event: "TrendAI publishes the English edition documenting the CyberStrikeAI platform and 44-agent configuration."
+
+tags: ["agentic-attack", "cyber-ops", "cyberstrikeai", "japan", "multi-agent", "exposed-directory"]
+related_incidents:
+  - "2026-artex-claude-code-korea-bank-breach"
+  - "2026-cyberxero-iab-claude-code-agents"
+  - "2026-norforge-cairn-agent-panels"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    Dozens of role-specialized agents run one repeatable intrusion workflow across
+    many targets in parallel while deliberately throttling traffic to each, so that
+    aggregate scale is high but per-target activity stays below single-organization
+    detection thresholds; measure how many targets a throttled agent fleet can work
+    concurrently before any one is detected.
+
+sources:
+  - url: "https://www.trendaisecurity.com/en-us/resources-insights/deep-research/not-only-artex-the-different-levels-ai-is-used-in-attacks-targeting-japan"
+    title: "Not Only ARTEX: The Different Levels AI is Used in Attacks Targeting Japan"
+    publisher: TrendAI (Trend Micro)
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://thehackernews.com/2026/10/cyberstrikeai-uses-44-ai-agents-to.html"
+    title: "CyberStrikeAI Uses 44 AI Agents to Target Japanese Organizations"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://securityaffairs.com/201913/cyber-crime/three-japan-focused-cyberattacks-show-how-hackers-use-ai.html"
+    title: "Three Japan-Focused Cyberattacks Show How Hackers Use AI"
+    publisher: Security Affairs
+    type: news
+    date_accessed: "2026-11-16"
