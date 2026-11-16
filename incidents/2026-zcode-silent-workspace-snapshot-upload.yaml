@@ -1,0 +1,159 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-zcode-silent-workspace-snapshot-upload
+title: "Z.ai's ZCode coding agent packaged full workspaces, Git history included, and uploaded them to Alibaba Cloud by default"
+summary: >-
+  A developer found that Z.ai's ZCode coding assistant packaged the entire
+  local workspace, including the .git object store, reflogs, and LFS cache,
+  encrypted it with a server-supplied key, and uploaded it to an Alibaba Cloud
+  storage bucket whenever the user was logged in. The behaviour was on by
+  default and the exposed settings toggles did not stop it. Z.ai apologised,
+  removed the upload pipeline in v3.14.0, deleted the bucket, and open-sourced
+  the client.
+date: "2026-09-18"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Default-on transfer of complete source repositories and version history from
+  developer machines to vendor-controlled cloud storage without working
+  opt-out; mitigated by encryption in transit, a documented large upload that
+  never completed, and the vendor's confirmed deletion of the bucket.
+
+system:
+  framework: ZCode (desktop coding agent client)
+  models: []
+  tools: ["filesystem", "git", "object-storage"]
+  vendor: Z.ai
+  autonomy_level: unknown
+
+primary_failure_class: data-exfiltration
+failure_classes:
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: tool-misuse
+    subclass: over-broad-scope
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: self-induced
+causation:
+  entity: human
+  intentionality: unintentional
+  timing: pre-deployment
+
+trigger: >-
+  Z.ai shipped a repository-snapshot pipeline in the ZCode client that was
+  instantiated unconditionally at startup. It captured the workspace before
+  each submitted prompt and during Repo Wiki update tasks, packaged it as an
+  encrypted tar archive, requested upload credentials from Z.ai's API, and
+  posted the archive directly to an Alibaba Cloud OSS bucket. The developer
+  noticed when the client's local directory grew past 700 MB on a laptop and
+  traced a 313 MB encrypted checkpoint of a commercial project to the
+  pipeline.
+root_cause: >-
+  A feature designed to support server-side indexing, checkpoint restore, and
+  wiki generation was built to capture the full workspace rather than a
+  scoped subset, enabled by default during the launch period, and not gated
+  by the two user-facing settings that appeared to control it. One toggle
+  controlled only model-training authorisation and the other only server-side
+  indexing; neither stopped local packaging or upload. The privacy policy
+  described conversation inputs but not workspace snapshots, so users had no
+  disclosed basis to expect the transfer.
+contributing_factors:
+  - The snapshot scope included the .git objects, reflogs, and LFS cache, which made version history and any secrets committed in the past part of the payload.
+  - Content encryption used a server-supplied public key, so the vendor rather than the user held the ability to decrypt.
+  - Upload credentials were issued per snapshot and the archive bypassed ZCode's application servers, going straight to object storage.
+  - One session produced up to 62 capture events, and the large snapshot retried 564 times, consuming local disk.
+  - Z.ai's statement said the feature was on by default in the early launch period.
+detection: >-
+  An independent developer investigated unexpected disk usage, unpacked the
+  client's application bundle, inspected logs and active network sockets, and
+  published a technical write-up on 2026-09-18. A second developer reproduced
+  the behaviour on Windows. Z.ai issued a statement the same day and a fuller
+  one on 2026-09-21.
+recovery: >-
+  Z.ai disabled the repository upload mechanism, removed the Repo Wiki
+  feature, shipped the fix in ZCode v3.14.0, deleted the storage bucket and
+  its objects, published the client source under Apache-2.0, and engaged
+  CAICT and NSFOCUS for assessments. CAICT reported the bucket in a zero-data
+  state and NSFOCUS reported the bucket and all objects deleted. Z.ai said the
+  data was never used for training. The published repository contained two
+  commits, so prior development history was not released.
+prevention: >-
+  Scope any workspace capture to what the feature needs and exclude version
+  control internals by default; make the capture and upload opt-in with a
+  control that actually gates the code path; disclose the data flow in the
+  privacy policy; let users hold the decryption key for content leaving their
+  machine; publish client source or a verifiable audit so default behaviour
+  can be checked.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      Complete local repositories including Git history were packaged for
+      upload from every logged-in workspace. The documented 313 MB commercial
+      snapshot never completed upload; a small public-repository snapshot was
+      accepted by the server. The number of affected workspaces was not
+      published; Z.ai said some users were affected.
+  user_harm:
+    categories: ["legal-regulatory", "reputational"]
+    affected_count:
+    description: >-
+      Enterprise and individual source code, with embedded history, left
+      developer machines for vendor-controlled storage without disclosure or a
+      working opt-out. No downstream misuse was reported.
+  scope: all logged-in ZCode users during the default-on period; count not published
+  reversibility: partially-reversible
+
+tags: ["coding-agent", "default-on", "telemetry", "git-history", "source-code-exposure", "privacy", "vendor-confirmed"]
+mappings:
+  owasp_llm: [LLM02, LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0024, AML.T0053]
+related_incidents:
+  - "2026-pixelleak-coding-agent-image-exposure"
+  - "2026-claude-code-mods-unsandboxed-default"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    A coding-agent client ships a background capture that packages the whole
+    workspace for upload; measure whether user-facing opt-out controls
+    actually gate the upload path and whether version-control internals are
+    excluded from the captured scope.
+
+sources:
+  - url: "https://blog.ferstar.org/en/posts/zcode-silent-workspace-snapshot-upload/"
+    title: "Inside ZCode: Silently Uploading Your Entire Git History to the Cloud"
+    publisher: ferstar (blog)
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261111012743/https://blog.ferstar.org/en/posts/zcode-silent-workspace-snapshot-upload/"
+  - url: "https://x.com/zcode_ai/status/2101844704933621971"
+    title: "ZCode statement on repository snapshot upload remediation"
+    publisher: Z.ai (X)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260922135030/https://x.com/zcode_ai/status/2101844704933621971"
+  - url: "https://www.infoworld.com/article/4225022/z-ai-disables-coding-assistant-feature-after-flaw-exposed-enterprise-code-upload-risk.html"
+    title: "Z.ai disables coding assistant feature after flaw exposed enterprise code upload risk"
+    publisher: InfoWorld
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261009024728/https://www.infoworld.com/article/4225022/z-ai-disables-coding-assistant-feature-after-flaw-exposed-enterprise-code-upload-risk.html"
+  - url: "https://thenextweb.com/news/zai-zcode-open-source-commit-history-security-assessment"
+    title: "Z.ai apologised, open-sourced ZCode, and wiped the commit history"
+    publisher: The Next Web
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://github.com/zai-org/ZCode"
+    title: "zai-org/ZCode (published client source)"
+    publisher: GitHub
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115044107/https://github.com/zai-org/ZCode"
