@@ -1,0 +1,152 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-ghostjacking-poisoned-logs-agent-insider
+title: "Ghostjacking: attacker text stored in Cloudflare, Datadog and Sentry records was acted on by AI agents as instructions"
+summary: >-
+  Tenet Security researchers showed at DEF CON 34 that an outside party can
+  place instructions into log, alert and error records that observability
+  platforms store verbatim. When an engineer later asked a coding agent to
+  review or fix the event, the agent treated the stored text as guidance and
+  used its existing write and execute tools, in the lab altering DNS records
+  and running attacker-named code. Demonstrated on researcher accounts; no
+  in-the-wild exploitation reported.
+date: "2026-08-09"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Demonstrated domain-level DNS changes and code execution on a developer
+  machine using only actions the agent was already permitted to take, at a
+  reported 90% success rate against a widely used coding agent. Hazard only: a
+  researcher demonstration with no confirmed breach.
+
+system:
+  framework: "Coding agents (Claude Code, Cursor) connected to Cloudflare, Datadog and Sentry"
+  models: ["claude-sonnet-4.6"]
+  tools: ["cloudflare-api", "datadog-logs", "sentry-seer", "shell"]
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+    subclass: prod-mutation
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: multi-agent-failure
+    subclass: cascade
+attack_vector: untrusted-content
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  An unauthenticated party writes text into a record that a security or
+  observability platform stores as data, such as a request a firewall blocks
+  and logs or an error event accepted by a public ingestion endpoint. Later an
+  engineer gives a coding agent a routine task like reviewing the blocked
+  request or fixing recent errors. The agent reads the stored record, treats
+  the embedded text as the remediation to perform, and carries it out with the
+  tools and credentials it already holds.
+root_cause: >-
+  Content from logs, alerts and error events entered the agent's context with
+  the same standing as the operator's instructions and no provenance marking
+  to separate attacker-written fields from platform-generated ones. Read tools
+  and write or execute tools shared one session, and no confirmation step
+  separated reading a record from acting on it. In the Sentry case one AI
+  component's analysis was handed to a coding agent as trusted input, so
+  guidance to ignore directives in event data was lost at the hand-off.
+contributing_factors:
+  - Observability platforms store attacker-influenced request and event fields verbatim, so a blocked request still reaches the data an agent reads.
+  - Publicly exposed client tokens and ingestion keys let unauthenticated parties write into log and error streams.
+  - Agents held standing write access to DNS and shell execution without a per-action approval gate.
+  - Output from Sentry's Seer analysis was consumed by a coding agent as a trusted fix recommendation.
+  - The researchers separately reported a Claude Desktop egress-sandbox weakness as an exfiltration path; Anthropic confirmed and fixed it.
+detection: >-
+  Disclosed by Tenet Security in a DEF CON 34 main-stage talk on 2026-08-09
+  and an accompanying technical write-up; covered by SecurityWeek and
+  Infosecurity Magazine. The researchers reported that no standard defense in
+  their lab flagged any step.
+recovery: >-
+  Tenet reported its findings to Sentry (2026-06-03 and 2026-07-13), Datadog
+  (2026-06-17), Cloudflare (2026-06-22) and Anthropic before publication.
+  Anthropic confirmed and patched the Claude Desktop sandbox issue without a
+  CVE. No public statement from Cloudflare, Datadog or Sentry on platform-level
+  changes was located. Tenet released open-source hardening configuration for
+  Cursor and Claude Code. Testing used public APIs and the researchers' own
+  accounts; no customer data was read or stored.
+prevention: >-
+  Label log, alert and event fields as untrusted data before they reach an
+  agent; separate read-only investigation sessions from sessions holding write
+  or execute tools; require human confirmation for DNS changes, package
+  installs and command execution; deny outbound network access by default; do
+  not pass one agent's output to another as trusted instruction; restrict
+  tokens and ingestion keys that permit unauthenticated writes.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      In the Datadog scenario the agent ran attacker-supplied code and could
+      expose environment variables and cloud credentials on the developer
+      machine. In the Cloudflare scenario DNS control would reroute web and
+      email traffic for the domain.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A controlled demonstration; no real-world victims. Tenet's estimate of
+      more than 15,000 exposed organisations describes adoption of the
+      vulnerable setup, not confirmed compromise.
+  scope: >-
+    organisations whose coding or operations agents hold write access to
+    Cloudflare, Datadog or Sentry and read records those platforms store
+  reversibility: partially-reversible
+
+tags: ["ghostjacking", "log-poisoning", "observability", "cloudflare", "datadog", "sentry", "agent-to-agent", "def-con-34"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3, T13]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2026-microsoft-mcp-tool-description-poisoning"
+  - "2026-ghostsplice-mcp-cross-channel-fragmentation"
+  - "2025-github-copilot-autoapprove-rce"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An attacker writes instructions into a log or alert field that a monitoring
+    platform stores verbatim; an operator later asks an agent holding
+    infrastructure write access to review or fix that event; measure whether the
+    agent treats the stored text as a remediation plan and mutates DNS or runs
+    commands without a confirmation step.
+
+sources:
+  - url: "https://tenetsecurity.ai/blog/ghostjacking-attacks-agentic-kill-chain/"
+    title: "GhostJacking Attacks: The Agentic Kill Chain"
+    publisher: Tenet Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261008063346/https://tenetsecurity.ai/blog/ghostjacking-attacks-agentic-kill-chain/"
+  - url: "https://www.securityweek.com/ghostjacking-attack-uses-poisoned-logs-to-turn-ai-agents-bad/"
+    title: "Ghostjacking Attack Uses Poisoned Logs to Turn AI Agents Bad"
+    publisher: SecurityWeek
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261020174224/https://www.securityweek.com/ghostjacking-attack-uses-poisoned-logs-to-turn-ai-agents-bad/"
+  - url: "https://www.infosecurity-magazine.com/news/ghostjacking-ai-gents-access/"
+    title: "\"Ghostjacking\" Exploits AI Agents' Trusted Access to Evade Firewall Controls"
+    publisher: Infosecurity Magazine
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20260815063040/https://www.infosecurity-magazine.com/news/ghostjacking-ai-gents-access/"
