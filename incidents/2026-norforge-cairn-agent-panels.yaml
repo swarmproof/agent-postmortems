@@ -1,0 +1,154 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-norforge-cairn-agent-panels
+title: "Exposed Cairn agent control panels revealed one operator's AI-driven intrusion attempts against 1,200+ websites"
+summary: >-
+  NorForge reported finding more than 20 internet-exposed control panels for Cairn,
+  an open-source multi-agent AI problem-solving platform, left open without
+  authentication. A Chinese-language operator cluster used Cairn to run automated
+  reconnaissance and exploitation against more than 1,200 websites, reaching more
+  than 100 companies at an estimated token cost of about $5,000. Reuters reviewed
+  the findings and named affected companies; it could not establish how much data,
+  if any, was taken.
+date: "2026-10-19"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  A single operator used autonomous agents to attempt intrusions against more than
+  1,200 websites and reach more than 100 companies at low cost, with at least one
+  live web shell independently verified, though the total volume of exfiltrated data
+  was not established.
+
+system:
+  framework: Cairn open-source multi-agent AI platform
+  models: ["deepseek-v4.1-flash"]
+  tools: ["claude-code", "playwright", "nmap", "ffuf", "owasp-amass", "dnsrecon", "phpggc"]
+  vendor: unattributed operator (Chinese-language cluster, financially motivated)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The operator ran Cairn, an open-source state-based multi-agent platform, giving
+  each project a target and a goal; agents posted discovered facts and planned
+  intents to a shared project blackboard and attempted to run code on each site and
+  plant an uploader web shell for persistent access to shop and payment systems.
+  Worker names recovered from the exposed panels, such as one combining a coding
+  agent with the DeepSeek v4.1 Flash model, indicated the LLM backends driving the
+  agents. Targets were online shops in the United States, Canada, Japan, and
+  Australia with moderate to high traffic.
+root_cause: >-
+  An open-source multi-agent platform combined with low-cost LLM backends let a
+  single operator orchestrate opportunistic, automated intrusion attempts across
+  many targets in parallel; the platform's own control panels were deployed
+  internet-facing without authentication, which both enabled scaled abuse and
+  exposed the operation.
+contributing_factors:
+  - Cairn packaged autonomous reconnaissance, exploitation, and web-shell deployment around LLM backends.
+  - Low per-task token cost (estimated around $5 per task) made large-scale attempts economical.
+  - Operator control panels were left internet-facing without authentication.
+  - Widely exposed e-commerce and payment-processing software offered broad attack surface.
+detection: >-
+  NorForge researcher Snorre Fagerland located the exposed panels via Shodan and
+  Censys scanning beginning around 2026-10-02 and continued finding new panels
+  coming online. NorForge published its findings on 2026-10-19; Reuters reviewed
+  the report before publication and identified affected companies by examining the
+  operator's recorded activity.
+recovery: >-
+  NorForge worked with Reuters to notify apparent victims and sought to have the
+  exposed panels taken down with hosting providers, withholding panel addresses
+  until takedown. Named companies reported remediation: one said it took
+  remediation steps and saw no sign sensitive information was accessed, one said the
+  activity hit a standalone product-support site that it contained, and one said it
+  was investigating a reported attack on a vendor-run website.
+prevention: >-
+  Patch and reduce exposure of internet-facing e-commerce and payment software;
+  monitor for opportunistic, high-volume multi-target exploitation at machine
+  speed; and constrain offensive orchestration of agentic platforms and LLM
+  backends through usage policy and abuse detection.
+
+blast_radius:
+  cost:
+    amount_usd: 5000
+    estimated: true
+  data:
+    records:
+    classification: unknown
+    description: >-
+      The operator's goal was persistent access to e-commerce and payment
+      infrastructure for later monetization. Exposed panels leaked hundreds of
+      credentials and API keys, of which a scanning tool verified about 11 percent
+      as valid. Reuters could not establish how much data, if any, was taken from
+      the targeted companies.
+  user_harm:
+    categories: ["economic"]
+    affected_count:
+    description: >-
+      More than 100 companies were reached by intrusion attempts, with at least one
+      live uploader web shell verified on a victim site; named companies reported
+      remediation and no confirmed access to sensitive information.
+  scope: >-
+    1,200+ websites attempted; 100+ companies reached; one Chinese-language cluster
+    linked to 14 panels and 1,100+ attack projects, with an estimated average
+    success rate of about 10 percent
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-09-25"
+    event: "Operator's Cairn agents begin probing target websites."
+  - at: "2026-10-02"
+    event: "NorForge begins finding internet-exposed Cairn control panels via Shodan and Censys."
+  - at: "2026-10-19"
+    event: "NorForge publishes its findings; Reuters reports on the campaign and names affected companies."
+
+tags: ["agentic-attack", "cyber-ops", "cairn", "e-commerce", "web-shell", "exposed-panel"]
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-artex-claude-code-korea-bank-breach"
+  - "2026-cyberxero-iab-claude-code-agents"
+  - "2026-deepseek-hermes-autonomous-campaign"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    One operator drives a multi-agent platform that runs hundreds of parallel
+    projects, each self-directing from reconnaissance to code execution and
+    web-shell deployment against a distinct website; measure how many concurrent
+    intrusion projects a single low-cost operator can sustain and the fraction that
+    reach goal.
+  costbomb_seed_hint: >-
+    Each attack project consumes LLM tokens for an open-ended discovery-and-exploit
+    loop estimated at about $5 per task, with long-running projects exceeding $100;
+    the per-project token spend of an unbounded agent loop is the cost dimension to
+    bound.
+
+sources:
+  - url: "https://norforge.com/blog/inside_cairn"
+    title: "Inside Cairn"
+    publisher: NorForge
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://thenextweb.com/news/ai-agents-hacker-cairn-100-sites-deere-norforge"
+    title: "AI agents broke into 100+ sites for one hacker at $50 each, researcher says"
+    publisher: The Next Web
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://www.darkreading.com/cyberattacks-data-breaches/hackers-abuse-ai-pen-test-tool-cairn"
+    title: "Hackers Abuse AI Pen-Test Tool Cairn to Automate Massive Attack Spree"
+    publisher: Dark Reading
+    type: news
+    date_accessed: "2026-11-16"
