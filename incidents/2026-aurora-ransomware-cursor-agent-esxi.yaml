@@ -1,0 +1,144 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-aurora-ransomware-cursor-agent-esxi
+title: "Aurora ransomware operators used the Cursor AI coding agent for hands-on exploitation across at least ten victim networks, targeting ESXi"
+summary: >-
+  Gambit Security and CloudSEK independently documented Russian-speaking operators
+  of the Aurora (Aur0ra) ransomware group using the Cursor AI coding agent for
+  hands-on intrusions. Gambit observed Cursor, on Claude Sonnet, used against ten
+  organizations in April-May 2026 for reconnaissance, directory enumeration, relay
+  and certificate attacks under Russian-language instructions. CloudSEK tracked the
+  wider affiliate across 20+ organizations in nine countries. The Zig encryptor
+  targets VMware ESXi.
+date: "2026-08-27"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Two independent research teams confirmed agent-assisted intrusions tied to an
+  active ransomware operation with domain-level access at multiple organizations,
+  an ESXi-capable encryptor, and victims posted to a leak site; realized
+  encryption and extortion place this above moderate.
+
+system:
+  framework: Cursor Agent (AI coding assistant)
+  models: ["claude-4.5-sonnet-thinking"]
+  tools: ["cursor", "nmap", "netexec", "impacket", "certipy"]
+  vendor: Aurora (Aur0ra) ransomware operation (Russian-speaking, financially motivated)
+  autonomy_level: human-in-the-loop
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Having obtained credentials or an existing route into each victim network, the
+  operator drove the Cursor agent with instructions written in Russian to carry
+  out hands-on exploitation tasks: setting up tunnelling, scanning internal
+  subnets, enumerating a supplied user's Active Directory privileges, attempting
+  authentication-coercion and relay, and running certificate-based
+  privilege-escalation attacks, plus a script to locate VMware ESXi hosts and
+  vCenter servers. Some prompts gave only an objective; in others the agent
+  proposed next steps and the operator replied with a number. Most agent-issued
+  commands failed on the first attempt and were iteratively refined.
+root_cause: >-
+  A general-purpose AI coding agent, abused as an ordinary tool through ordinary
+  access, let an operator delegate iterative offensive command construction and
+  refinement. The researchers describe the agent as an assistant to a human
+  operator rather than an autonomous attacker, and the exploited weaknesses were
+  conventional identity and network flaws. The operator imposed operational
+  limits on the agent (barring certain domain-replication and account-lockout
+  actions), indicating human control over tactics rather than a guardrail bypass.
+contributing_factors:
+  - The operator supplied the agent with credentials or an existing network foothold rather than tasking it with initial access.
+  - Operator instructions and attack plans were authored in Russian, and CIS-country ranges and domains were excluded from targeting.
+  - The agent iterated failed commands until some succeeded, compensating for low first-attempt reliability.
+  - Aurora's single Zig codebase builds both Windows and Linux/ESXi encryptors; the ESXi variant force-kills running virtual machines before encrypting and leaves hypervisor system volumes bootable.
+detection: >-
+  Both analyses rest on exposed attacker infrastructure. CloudSEK found an
+  operator home directory served without authentication on a misconfigured
+  server, leaking months of activity, toolkit, shell history and an encryptor
+  key; Gambit identified exposed infrastructure giving visibility across multiple
+  victim environments. The findings were first reported on 27 August 2026.
+recovery: >-
+  Public disclosure by Gambit Security and CloudSEK with indicators of
+  compromise; defensive guidance centres on identity hardening, keeping ESXi and
+  vCenter management access off general network segments, and auditing developer
+  and CI/CD systems for unexpected tunnelling and reconnaissance tooling. Neither
+  Cursor's parent company nor the model provider published enforcement details at
+  the time of reporting.
+prevention: >-
+  Harden Active Directory and certificate services, restrict hypervisor
+  management access, and maintain isolated offline backups; treat coding agents
+  as privileged software with scoped credentials, constrained egress and retained
+  session transcripts; detect reconnaissance-then-lateral-movement sequences
+  regardless of whether a human or an agent issued the commands.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: confidential
+    description: >-
+      Domain-level or interactive access reported at multiple organizations;
+      victim data archived and exfiltrated in the broader affiliate activity,
+      with several organizations posted to Aurora's leak site.
+  user_harm:
+    categories: ["economic"]
+    description: >-
+      Ransomware encryption and extortion against organizations across multiple
+      countries and sectors, including manufacturing, food and agriculture, and
+      professional services.
+  scope: "At least 10 organizations in the agent-assisted set; 20+ organizations across nine countries in the wider affiliate tracking"
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-04-08"
+    event: "Start of the agent-assisted exploitation window Gambit observed (through 21 May 2026)."
+  - at: "2026-04"
+    event: "CloudSEK's affiliate activity window begins, running through July 2026 across more than 20 organizations."
+  - at: "2026-08-27"
+    event: "Gambit Security and CloudSEK publish independent analyses; initial press coverage appears."
+
+tags: ["autonomous-attack", "ransomware", "cursor", "esxi", "cyber-ops", "russian-speaking", "ai-assisted-intrusion"]
+related_incidents:
+  - "2026-deepseek-hermes-autonomous-campaign"
+  - "2026-cairn-cl-sta-1238-autonomous-intrusions"
+  - "2026-ai-agents-ecommerce-skimmer-campaign"
+  - "2026-artex-claude-code-korea-bank-breach"
+last_updated: "2026-11-16"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    A general-purpose coding agent is given an existing network foothold and a
+    one-line offensive objective with operator-imposed technique limits; measure
+    how many iterations it takes to refine failed commands into working ones and
+    how far lateral movement proceeds under human-in-the-loop control.
+
+sources:
+  - url: "https://gambit.security/blog-posts/aurora-ransomware-targets-esxi-abuses-cursor-agent-for-exploitation"
+    title: "Aurora ransomware targets ESXi, abuses Cursor Agent for exploitation"
+    publisher: Gambit Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261029035107/https://gambit.security/blog-posts/aurora-ransomware-targets-esxi-abuses-cursor-agent-for-exploitation"
+  - url: "https://cloudsek.com/blog/aurora-ransomware-affiliate-ai-attack-planning-crypto-payments"
+    title: "Caught in 4K: The Aurora Files"
+    publisher: CloudSEK
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261021111611/https://www.cloudsek.com/blog/aurora-ransomware-affiliate-ai-attack-planning-crypto-payments"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-aurora-ransomware-cursor-ai-abuse-20260901/"
+    title: "Aurora Ransomware's Abuse of Cursor AI: Security Implications and Guidance"
+    publisher: Cloud Security Alliance
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20260919160627/https://labs.cloudsecurityalliance.org/research/csa-research-note-aurora-ransomware-cursor-ai-abuse-20260901/"
