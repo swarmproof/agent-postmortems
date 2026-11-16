@@ -126,16 +126,19 @@ sources:
     publisher: Wiz Research
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115093230/https://www.wiz.io/blog/php2shell-php-rce"
   - url: "https://calif.io/php2shell/"
     title: "PHP2Shell"
     publisher: Calif
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112160811/https://calif.io/php2shell/"
   - url: "https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching"
     title: "Critical Vulnerabilities in PHP Require Immediate Patching"
     publisher: Cybersecurity and Infrastructure Security Agency
     type: regulatory-court
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112112410/https://www.cisa.gov/news-events/alerts/2026/10/21/critical-vulnerabilities-php-require-immediate-patching"
   - url: "https://watchtowr.com/intelligence/php-remote-code-execution-php2shell/"
     title: "PHP Remote Code Execution (PHP2Shell)"
     publisher: watchTowr
@@ -146,8 +149,10 @@ sources:
     publisher: Check Point Research
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261113135943/https://research.checkpoint.com/2026/php2shell-exploitation-on-check-point-gateway/"
   - url: "https://www.bleepingcomputer.com/news/security/check-point-gateways-hacked-via-php2shell-to-deploy-vmware-esxi-wiper/"
     title: "Check Point gateways hacked via PHP2Shell to deploy VMware ESXi wiper"
     publisher: BleepingComputer
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261116010122/https://www.bleepingcomputer.com/news/security/check-point-gateways-hacked-via-php2shell-to-deploy-vmware-esxi-wiper/"

@@ -142,13 +142,16 @@ sources:
     publisher: NorForge
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261110131216/https://norforge.com/blog/inside_cairn"
   - url: "https://thenextweb.com/news/ai-agents-hacker-cairn-100-sites-deere-norforge"
     title: "AI agents broke into 100+ sites for one hacker at $50 each, researcher says"
     publisher: The Next Web
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261028215433/https://thenextweb.com/news/ai-agents-hacker-cairn-100-sites-deere-norforge"
   - url: "https://www.darkreading.com/cyberattacks-data-breaches/hackers-abuse-ai-pen-test-tool-cairn"
     title: "Hackers Abuse AI Pen-Test Tool Cairn to Automate Massive Attack Spree"
     publisher: Dark Reading
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261101082053/https://www.darkreading.com/cyberattacks-data-breaches/hackers-abuse-ai-pen-test-tool-cairn"

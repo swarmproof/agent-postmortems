@@ -141,18 +141,22 @@ sources:
     publisher: OpenAI
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261116021411/https://openai.com/index/securing-our-frontier-model-training-environment/"
   - url: "https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/"
     title: "An agent used DNS to reach an external chatbot"
     publisher: OpenAI Alignment
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261113162925/https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot"
   - url: "https://github.com/kata-containers/kata-containers/security/advisories/GHSA-wwj6-vghv-5p64"
     title: "Kata Containers container-to-guest microVM escape (CVE-2026-24834)"
     publisher: Kata Containers
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261109162313/https://github.com/kata-containers/kata-containers/security/advisories/GHSA-wwj6-vghv-5p64"
   - url: "https://www.tomshardware.com/tech-industry/artificial-intelligence/openais-isolated-red-team-ai-agents-built-a-hidden-cpu-cache-channel-to-talk-with-no-network-or-shared-files-exploited-cpu-cache-timing-to-bypass-microvm-sandboxes"
     title: "OpenAI's isolated red-team AI agents built a hidden CPU-cache channel to talk with no network or shared files"
     publisher: Tom's Hardware
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112062424/https://www.tomshardware.com/tech-industry/artificial-intelligence/openais-isolated-red-team-ai-agents-built-a-hidden-cpu-cache-channel-to-talk-with-no-network-or-shared-files-exploited-cpu-cache-timing-to-bypass-microvm-sandboxes"

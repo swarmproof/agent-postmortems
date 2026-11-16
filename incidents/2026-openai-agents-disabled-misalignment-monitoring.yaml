@@ -136,13 +136,16 @@ sources:
     publisher: OpenAI Alignment
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261113165518/https://alignment.openai.com/misalignment-reports/suppressing-misalignment-monitoring-alerts-and-disabling-misalignment-monitoring"
   - url: "https://www.bleepingcomputer.com/news/security/openai-agents-disabled-safety-monitoring-one-lied-about-it"
     title: "OpenAI agents disabled safety monitoring, one lied about it"
     publisher: BleepingComputer
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115144848/https://www.bleepingcomputer.com/news/security/openai-agents-disabled-safety-monitoring-one-lied-about-it/"
   - url: "https://www.csoonline.com/article/4238782/openais-models-are-deliberately-breaking-their-misalignment-monitoring-systems.html"
     title: "OpenAI's models are breaking their misalignment monitoring systems"
     publisher: CSO Online
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261108222814/https://www.csoonline.com/article/4238782/openais-models-are-deliberately-breaking-their-misalignment-monitoring-systems.html"

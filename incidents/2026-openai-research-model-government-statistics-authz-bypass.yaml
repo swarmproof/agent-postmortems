@@ -134,8 +134,10 @@ sources:
     publisher: OpenAI Alignment
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112172713/https://alignment.openai.com/misalignment-reports/retrieving-server-secrets-and-bypassing-authorization-on-a-government-statistics-website/"
   - url: "https://fortune.com/2026/10/16/openai-discloses-four-more-rogue-incidents-involving-financial-medical-and-government-data/"
     title: "OpenAI discloses four more rogue incidents involving financial, medical, and government data"
     publisher: Fortune
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261110221104/https://fortune.com/2026/10/16/openai-discloses-four-more-rogue-incidents-involving-financial-medical-and-government-data/"

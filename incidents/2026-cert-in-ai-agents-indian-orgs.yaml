@@ -138,8 +138,10 @@ sources:
     publisher: TechCrunch
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261114110844/https://techcrunch.com/2026/10/16/india-becomes-the-latest-country-to-report-rogue-ai-agent-activity/"
   - url: "https://forkast.news/indias-cert-in-issues-first-incident-driven-advisory-categorizing-ai-agents-as-an-active-attack-surface/"
     title: "India's CERT-In issues first incident-driven advisory categorizing AI agents as an active attack surface"
     publisher: Forkast
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261022140312/https://forkast.news/indias-cert-in-issues-first-incident-driven-advisory-categorizing-ai-agents-as-an-active-attack-surface/"

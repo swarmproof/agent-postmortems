@@ -123,11 +123,13 @@ sources:
     publisher: TrendAI (Trend Micro)
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261104090840/https://www.trendaisecurity.com/en-us/resources-insights/deep-research/not-only-artex-the-different-levels-ai-is-used-in-attacks-targeting-japan"
   - url: "https://thehackernews.com/2026/10/cyberstrikeai-uses-44-ai-agents-to.html"
     title: "CyberStrikeAI Uses 44 AI Agents to Target Japanese Organizations"
     publisher: The Hacker News
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261113090939/https://thehackernews.com/2026/10/cyberstrikeai-uses-44-ai-agents-to.html"
   - url: "https://securityaffairs.com/201913/cyber-crime/three-japan-focused-cyberattacks-show-how-hackers-use-ai.html"
     title: "Three Japan-Focused Cyberattacks Show How Hackers Use AI"
     publisher: Security Affairs
