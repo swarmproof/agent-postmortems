@@ -163,11 +163,13 @@ sources:
     publisher: WorkOS
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112072016/https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident"
   - url: "https://www.bleepingcomputer.com/news/security/runaway-ai-hacking-agent-behind-workos-breach-after-escaping-sandbox/"
     title: "Runaway AI hacking agent behind WorkOS breach after escaping sandbox"
     publisher: BleepingComputer
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261111131446/https://www.bleepingcomputer.com/news/security/runaway-ai-hacking-agent-behind-workos-breach-after-escaping-sandbox/"
   - url: "https://www.helpnetsecurity.com/?p=390753"
     title: "ARTEX goes from pentesting tool to attacker staple in three months"
     publisher: Help Net Security

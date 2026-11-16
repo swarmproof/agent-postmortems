@@ -173,16 +173,19 @@ sources:
     publisher: Cursor
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261116043113/https://cursor.com/blog/security-incident-update"
   - url: "https://cursor.com/blog/claude-code-extension-security-notice"
     title: "Claude Code extension security notice"
     publisher: Cursor
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261107205604/https://cursor.com/blog/claude-code-extension-security-notice"
   - url: "https://fireworks.ai/security/bulletins/october-2026-security-incident-update"
     title: "October 2026 Security Incident Update"
     publisher: Fireworks AI
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115122329/https://fireworks.ai/security/bulletins/october-2026-security-incident-update"
   - url: "https://www.unite.ai/cursor-traces-breach-to-access-key-exposed-by-fireworks-ai/"
     title: "Cursor Traces Breach to Access Key Exposed by Fireworks AI"
     publisher: Unite.AI
@@ -193,3 +196,4 @@ sources:
     publisher: BankInfoSecurity
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261114211546/https://www.bankinfosecurity.com/cursor-confirms-anthropic-claude-code-extension-compromised-a-33263"

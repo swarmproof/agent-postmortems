@@ -139,18 +139,22 @@ sources:
     publisher: TechCrunch
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261104202820/https://techcrunch.com/2026/10/19/hackers-hit-ai-coding-tool-opencode-running-up-charges-on-users-ai-accounts/"
   - url: "https://www.bleepingcomputer.com/news/security/opencode-hack-exposes-api-keys-amid-ai-distillation-attacks/"
     title: "OpenCode hack exposes API keys amid AI distillation attacks"
     publisher: BleepingComputer
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261029193007/https://www.bleepingcomputer.com/news/security/opencode-hack-exposes-api-keys-amid-ai-distillation-attacks/"
   - url: "https://x.com/opencode/status/2111519637049319818"
     title: "OpenCode statement on the Console security incident"
     publisher: OpenCode (X)
     type: social-primary
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261017181318/https://x.com/opencode/status/2111519637049319818"
   - url: "https://www.infosecurity-magazine.com/news/opencode-breach-openai-anthropic/"
     title: "OpenCode Breach Could Affect OpenAI, Anthropic and Google"
     publisher: Infosecurity Magazine
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261024093425/https://www.infosecurity-magazine.com/news/opencode-breach-openai-anthropic/"

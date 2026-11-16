@@ -1,8 +1,8 @@
 {
   "export_schema_version": "1.0",
-  "generated_at": "2026-10-09T00:00:00Z",
+  "generated_at": "2026-11-08T00:00:00Z",
   "taxonomy_version": "1.0",
-  "count": 63,
+  "count": 69,
   "incidents": [
     {
       "schema_version": "1.0",
@@ -3466,6 +3466,358 @@
     {
       "schema_version": "1.0",
       "taxonomy_version": "1.0",
+      "incident_id": "2026-binance-internal-ai-tool-lateral-movement",
+      "title": "Binance $6.34B theft: an internal AI tool served as the lateral-movement step from a compromised engineer's device to wallet signing",
+      "summary": "Binance's incident report describes a months-long campaign, attributed by the FBI to North Korea's TraderTraitor, that compromised wallet-team engineers' devices via a tampered Homebrew installer and a fake recruitment process. Attackers then used a compromised machine plus an internal AI tool to control two more engineers' devices, found a deployment token, and reached the wallet signing service to move about $6.34B. No published evidence shows AI agents ran the attack.",
+      "date": "2026-10-29",
+      "incident_type": "incident",
+      "status": "preliminary",
+      "confidence": "confirmed",
+      "severity": "critical",
+      "severity_rationale": "Largest cryptocurrency theft on record (about $6.34B per Binance), with roughly $2.85B frozen or intercepted; the internal AI tool was the step that turned one compromised endpoint into control of the wallet-infrastructure team's devices. Binance covered the losses from its own reserves.",
+      "system": {
+        "framework": "Internal AI tool (unnamed; function and permissions not disclosed by Binance)",
+        "models": [],
+        "tools": [
+          "internal-ai-tool",
+          "container-platform",
+          "wallet-signing-service"
+        ],
+        "vendor": "Binance",
+        "autonomy_level": "unknown"
+      },
+      "primary_failure_class": "excessive-agency",
+      "failure_classes": [
+        {
+          "class": "excessive-agency",
+          "subclass": "scope-creep"
+        },
+        {
+          "class": "unsafe-action",
+          "subclass": "cross-domain-action"
+        }
+      ],
+      "attack_vector": "supply-chain",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "Attackers who already controlled a wallet software engineer's work computer (infected in September via a malicious coding \"assignment\" delivered through a staged recruitment process) used that machine and an internal AI tool on 2026-10-20 to take control of the devices of two further wallet-infrastructure engineers. One of those devices held a token with container-deployment permissions. On the night of 2026-10-29 (2026-10-30 01:15-03:56 UTC+8) the attackers logged into the third engineer's computer, deployed a container with the stolen credentials, and ran a script that obtained unauthorized access to the internal wallet signing service and initiated transfers that bypassed normal withdrawal procedures, including an Ethereum EIP-7702 delegation to an attacker-controlled contract.",
+      "root_cause": "An internal AI tool reachable from an authenticated engineer session had enough reach to control other engineers' devices across the wallet-infrastructure team, so a single compromised endpoint became team-wide access without an additional trust boundary. Binance's report does not describe the tool's purpose or permission model; its remediation list includes rebuilding the tool and strengthening its access controls. Preceding stages were a June 2026 tampered Homebrew installation on a Wallet DevOps engineer's device (detected and remediated, but it exposed the team's composition) and September 2026 malware that endpoint protection did not detect. Elliptic found no evidence that an AI agent made decisions in the laundering, and no published source shows AI agents carrying out the intrusion autonomously.",
+      "contributing_factors": [
+        "A June 2026 tampered Homebrew installer, downloaded while searching for an AI coding tool, exposed the identity of a Wallet DevOps engineer and the composition of the wallet team even after device replacement and credential rotation.",
+        "A September 2026 fake recruitment process delivered a repository that replaced a legitimate development-tool component with malware on a work computer; endpoint protection did not detect it.",
+        "An internal AI tool allowed an attacker operating from one engineer's session to take control of two other engineers' devices; its purpose and permissions have not been disclosed.",
+        "A token with container-deployment permissions was present on an engineer's device and remained usable nine days after it was discovered by the attackers.",
+        "A deployed container could reach the internal wallet signing service and initiate transfers outside normal withdrawal procedures; EIP-7702 delegation and MPC custody meant suspending withdrawals alone could not stop all movements."
+      ],
+      "detection": "Binance received an internal alert about large transfers and opened an investigation; the final unauthorized transfer settled at 07:56 UTC+8 on 2026-10-30 and the malicious EIP-7702 delegation was revoked at 08:10. The FBI issued an alert on 2026-10-31 attributing the theft to the DPRK TraderTraitor group and publishing 628 associated addresses. Binance published its initial incident report on 2026-11-03.",
+      "recovery": "Binance rebuilt the affected wallet systems in a new environment, rebuilt the affected internal AI tool and strengthened its access controls, replaced affected devices, revoked related credentials and tokens, scanned all employee devices, and expanded AI-based behavioral anomaly detection. It reported about $2.85B frozen or intercepted with help from stablecoin issuers and law enforcement, said it set aside more than 100% of the stolen amount, replenished 98% of affected token assets by 2026-10-31, and resumed withdrawals in phases from 2026-11-01. Independent security firms were engaged to review the incident.",
+      "prevention": "Scope internal AI tools' permissions as tightly as service accounts and treat them as a trust boundary with their own logging and alerting; isolate engineer devices so one compromised session cannot control others; keep deployment tokens short-lived and off workstations; require independent approval for container deployments that can reach signing infrastructure; harden developer workstations against software from search results and recruitment \"assignments\".",
+      "blast_radius": {
+        "cost": {
+          "amount_usd": 6340000000,
+          "estimated": true
+        },
+        "data": {
+          "classification": "credentials",
+          "description": "Engineer credentials, a container-deployment token, and unauthorized access to the internal wallet signing service; about $6.34B in digital assets moved out of hot wallets, of which about $2.85B was frozen or intercepted."
+        },
+        "user_harm": {
+          "categories": [
+            "economic"
+          ],
+          "description": "Binance stated it bore the full cost and that customer funds were not lost; withdrawals were suspended for several days and net outflows of about $5.28B followed over 46 hours after reopening."
+        },
+        "scope": "one exchange; about $6.34B in assets across multiple blockchains",
+        "reversibility": "partially-reversible"
+      },
+      "timeline": [
+        {
+          "at": "2026-06",
+          "event": "A Wallet DevOps engineer downloads a tampered Homebrew installer while looking for an AI coding tool; Binance detects the anomaly, replaces the device, and rotates credentials."
+        },
+        {
+          "at": "2026-09",
+          "event": "A second wallet engineer completes a staged fake recruitment process and downloads a coding assignment whose setup replaces a development-tool component with malware."
+        },
+        {
+          "at": "2026-10-20",
+          "event": "Using the compromised machine and an internal AI tool, attackers take control of two further wallet engineers' devices and find a container-deployment token."
+        },
+        {
+          "at": "2026-10-30T01:15+08:00",
+          "event": "Attackers log into a third engineer's computer, deploy a container with stolen credentials, and run a script that reaches the wallet signing service; transfers begin at 04:05 UTC+8."
+        },
+        {
+          "at": "2026-10-30T08:10+08:00",
+          "event": "Binance revokes the malicious EIP-7702 delegation after the final unauthorized transfer at 07:56."
+        },
+        {
+          "at": "2026-10-31",
+          "event": "FBI alert attributes the theft of more than $6B to the DPRK TraderTraitor group and publishes 628 addresses."
+        },
+        {
+          "at": "2026-11-02",
+          "event": "Elliptic reports the laundering is automated but shows no sign of an AI agent making decisions."
+        },
+        {
+          "at": "2026-11-03",
+          "event": "Binance publishes its initial incident report and resumes withdrawals in phases."
+        }
+      ],
+      "tags": [
+        "nation-state",
+        "tradertraitor",
+        "social-engineering",
+        "homebrew",
+        "internal-ai-tool",
+        "lateral-movement",
+        "crypto-exchange",
+        "wallet-signing",
+        "supply-chain"
+      ],
+      "mappings": {
+        "owasp_llm": [
+          "LLM06"
+        ],
+        "owasp_agentic": [
+          "T3"
+        ]
+      },
+      "related_incidents": [
+        "2026-aws-bedrock-agentcore-god-mode",
+        "2026-google-adk-agent-privilege-escalation",
+        "2025-gtg1002-ai-orchestrated-espionage"
+      ],
+      "last_updated": "2026-11-16",
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "An internal AI assistant with cross-team reach is driven from an authenticated but attacker-controlled engineer session; measure whether its permissions let that session reach other operators' devices or deployment credentials without an independent approval gate or boundary alert."
+      },
+      "sources": [
+        {
+          "url": "https://www.binance.com/square/post/384314395829022",
+          "title": "Binance initial incident report on the October 2026 security incident",
+          "publisher": "Binance",
+          "type": "vendor-disclosure",
+          "date_accessed": "2026-11-16"
+        },
+        {
+          "url": "https://www.fbi.gov/investigate/cyber/alerts/2026/north-korea-responsible-for-6-billion-binance-attack",
+          "title": "North Korea Responsible for $6 Billion Binance Attack",
+          "publisher": "Federal Bureau of Investigation",
+          "type": "regulatory-court",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261116030004/https://www.fbi.gov/investigate/cyber/alerts/2026/north-korea-responsible-for-6-billion-binance-attack"
+        },
+        {
+          "url": "https://www.theblock.co/news/business/2026-11-03-binance-hack-incident-report-north-korea-fake-job-interview-ai-tool-432406",
+          "title": "Binance says hackers used fake job interview, internal AI tool in $6.3 billion breach",
+          "publisher": "The Block",
+          "type": "news",
+          "date_accessed": "2026-11-16"
+        },
+        {
+          "url": "https://www.securityweek.com/rigged-coding-assignment-abused-ai-tool-opened-path-to-6-billion-binance-heist/",
+          "title": "Rigged Coding Assignment, Abused AI Tool Opened Path to $6 Billion Binance Heist",
+          "publisher": "SecurityWeek",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261105133808/https://www.securityweek.com/rigged-coding-assignment-abused-ai-tool-opened-path-to-6-billion-binance-heist/"
+        },
+        {
+          "url": "https://www.csoonline.com/article/4245354/binance-heist-is-stark-example-of-ai-governance-gaps-and-basic-security-failures.html",
+          "title": "Binance heist is stark example of AI governance gaps and basic security failures",
+          "publisher": "CSO Online",
+          "type": "news",
+          "date_accessed": "2026-11-16"
+        },
+        {
+          "url": "https://www.coindesk.com/tech/2026/11/02/no-proof-of-ai-in-north-korean-hackers-move-of-stolen-binance-funds-through-thousands-of-wallets",
+          "title": "No Proof of AI in North Korean Hackers' Move of Stolen Binance Funds Through Thousands of Wallets",
+          "publisher": "CoinDesk",
+          "type": "news",
+          "date_accessed": "2026-11-16"
+        },
+        {
+          "url": "https://fortune.com/2026/11/02/binance-hack-ai-north-korean-cybercrime-black-october/",
+          "title": "The Binance hack, AI, and North Korean cybercrime: 'Black October'",
+          "publisher": "Fortune",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261112061748/https://fortune.com/2026/11/02/binance-hack-ai-north-korean-cybercrime-black-october/"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-chainalysis-agentic-intrusion-breach",
+      "title": "Chainalysis intrusion attributed to offensive agentic techniques exposed password hashes and live tokens for all users",
+      "summary": "Chainalysis disclosed on 2026-10-30 that an external actor used what it called offensive agentic techniques to access its systems and internal tools, exposing user names, emails, and role labels. On 2026-11-04 it reported password hashes and live tokens exposed for all users plus an on-path capture of some passwords, and took Reactor, Data Solutions, KYT, and its login page offline. It has not described the agentic techniques.",
+      "date": "2026-10-30",
+      "last_updated": "2026-11-16",
+      "incident_type": "incident",
+      "status": "preliminary",
+      "confidence": "corroborated",
+      "severity": "high",
+      "severity_rationale": "Credential hashes and live tokens for the entire user base of a blockchain analytics platform serving law enforcement, regulators, and financial institutions were exposed, some KYT customer accounts were accessed, and core investigation and compliance products were offline for roughly a week with access restored only behind IP allow-lists and forced credential rotation.",
+      "system": {
+        "framework": "unspecified agentic offensive tooling (not disclosed by Chainalysis)",
+        "models": [],
+        "tools": [],
+        "vendor": "unattributed external actor (operator); Chainalysis (affected organization)",
+        "autonomy_level": "unknown"
+      },
+      "primary_failure_class": "autonomous-misuse",
+      "failure_classes": [
+        {
+          "class": "autonomous-misuse",
+          "subclass": "cyber-ops"
+        },
+        {
+          "class": "data-exfiltration",
+          "subclass": "via-tool"
+        }
+      ],
+      "attack_vector": "direct-user",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "Chainalysis stated that earlier in October 2026 it detected an external actor using offensive agentic techniques to gain unauthorized access to Chainalysis systems and internal tools, in the context of what it described as an industry-wide rise in AI-driven cyberattacks. The company has not published which vulnerabilities were exploited, which internal tools were reached, how long access lasted, or which agent framework or model was involved. It later described a separate on-path attack that intercepted a subset of customer passwords and an exposure of password hashes and live tokens for all users, and said some KYT customer accounts appeared to have been accessed without authorization. It has not stated whether these later events involved the same actor or methods.",
+      "root_cause": "Publicly available information does not identify the failed control. Chainalysis attributed the initial unauthorized access to an external actor using agentic offensive tooling against its systems and internal tools, and later reported a man-in-the-middle style interception of customer logins and a platform-wide exposure of credential material. The Cloud Security Alliance's research note on the disclosure reads the agentic phrasing as most plausibly describing an AI system planning and executing multi-step operations as an accelerant, while noting that the underlying weaknesses are not disclosed and that no evidence has been published linking the intrusion to a specific framework such as ARTEX.",
+      "contributing_factors": [
+        "Chainalysis has not disclosed the entry vector, the affected internal tools, the duration of access, or the agent tooling involved.",
+        "The initial 2026-10-30 disclosure stated no evidence of credential or session-token exposure; the 2026-11-04 update reported password hashes and live tokens exposed for all users without reconciling the two statements.",
+        "The on-path interception of customer passwords was described as contained and remediated but its mechanism was not published.",
+        "The Record noted that Chainalysis did not explicitly state that an AI agent caused the breach; the attribution rests on the company's own phrase."
+      ],
+      "detection": "Chainalysis reported detecting the external actor earlier in October 2026 and disclosed the incident on 2026-10-30 with an email to affected customers. Discovery that password hashes and live tokens for all users were exposed was reported as occurring on Monday 2026-11-02; abnormal activity observed afterwards led the company to take KYT, address screening products, and its login page offline on 2026-11-04.",
+      "recovery": "Chainalysis patched and hardened systems, engaged third-party cybersecurity experts, and said it was using large language models to support a broader security review. It took Reactor and Data Solutions offline on 2026-11-02 as a precaution, locked affected accounts after the on-path attack, took KYT, address screening, and the login page offline on 2026-11-04, and restored access in phases from 2026-11-06 behind customer-submitted IP allow-lists with mandatory password resets and API key rotation. Reactor, KYT, and Address Screening returned on 2026-11-07 and Data Solutions on 2026-11-10. Chainalysis reported no evidence that investigation data was accessed or that attribution data was manipulated.",
+      "prevention": "Apply identity-aware access and data-scope limits to internal tools and admin consoles; enforce phishing-resistant MFA and short-lived tokens so that captured hashes or tokens cannot be replayed; detect behavioural signatures of agentic campaigns such as high-rate authentication attempts and rapid reconnaissance followed by privilege changes; and pre-authorize automated containment such as token revocation so response does not lag machine-speed intrusion.",
+      "blast_radius": {
+        "cost": {
+          "amount_usd": null,
+          "estimated": false
+        },
+        "data": {
+          "records": null,
+          "classification": "credentials",
+          "description": "Initially user IDs, full names, email addresses, and organizational role labels for platform users; subsequently usernames, password hashes, and live tokens for all Chainalysis users, plus a subset of passwords intercepted in an on-path attack. Chainalysis reported no evidence of access to investigation content, transaction or query results, or MFA secrets, and no evidence that attribution data was manipulated."
+        },
+        "user_harm": {
+          "categories": [
+            "economic",
+            "legal-regulatory"
+          ],
+          "affected_count": null,
+          "description": "Customer organizations, including law enforcement, regulators, exchanges, and financial institutions, lost access to investigation and compliance transaction-monitoring products for several days and were required to allow-list IPs, reset passwords, and rotate API keys; some KYT accounts were accessed without authorization."
+        },
+        "scope": "all Chainalysis platform users; the company reports more than 1,500 customers",
+        "reversibility": "partially-reversible"
+      },
+      "timeline": [
+        {
+          "at": "2026-10-30",
+          "event": "Chainalysis discloses detection of an external actor using offensive agentic techniques; names, emails, user IDs, and role labels accessed; no evidence of credential exposure at that time."
+        },
+        {
+          "at": "2026-11-02",
+          "event": "Reactor and Data Solutions taken offline as a precaution; exposure of password hashes and live tokens discovered."
+        },
+        {
+          "at": "2026-11-04",
+          "event": "Customers notified of an on-path attack exposing a subset of passwords; KYT, address screening, and the login page taken offline; update states password hashes and live tokens for all users were exposed."
+        },
+        {
+          "at": "2026-11-06",
+          "event": "Phased restoration of KYT and Address Screening begins behind IP allow-lists with mandatory password reset and API key rotation."
+        },
+        {
+          "at": "2026-11-07",
+          "event": "Reactor, KYT, and Address Screening back online with additional security controls."
+        },
+        {
+          "at": "2026-11-10",
+          "event": "Data Solutions back online."
+        }
+      ],
+      "tags": [
+        "agentic-attack",
+        "cyber-ops",
+        "credential-exposure",
+        "on-path-attack",
+        "blockchain-analytics",
+        "service-outage",
+        "mechanism-undisclosed"
+      ],
+      "mappings": {
+        "owasp_llm": [
+          "LLM02"
+        ],
+        "mitre_atlas": [
+          "AML.T0024"
+        ]
+      },
+      "related_incidents": [
+        "2026-artex-claude-code-korea-bank-breach",
+        "2025-gtg1002-ai-orchestrated-espionage",
+        "2026-workos-artex-agent-sandbox-escape-breach",
+        "2026-cyberxero-iab-claude-code-agents"
+      ],
+      "machine_export": {
+        "replayable": false,
+        "stampede_scenario_hint": "An operator directs agentic offensive tooling at a SaaS platform's internal tools and authentication path; measure how quickly machine-speed reconnaissance and credential capture outpace detection and how long containment and platform-wide credential rotation take once the exposure is discovered."
+      },
+      "sources": [
+        {
+          "url": "https://www.chainalysis.com/blog/security-incident-october-30/",
+          "title": "Security Incident - October 30, 2026",
+          "publisher": "Chainalysis",
+          "type": "vendor-disclosure",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261111021417/https://www.chainalysis.com/blog/security-incident-october-30/"
+        },
+        {
+          "url": "https://www.bleepingcomputer.com/news/security/chainalysis-discloses-data-breach-from-offensive-agentic-techniques/",
+          "title": "Chainalysis discloses data breach from offensive agentic techniques",
+          "publisher": "BleepingComputer",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261110133859/https://www.bleepingcomputer.com/news/security/chainalysis-discloses-data-breach-from-offensive-agentic-techniques/"
+        },
+        {
+          "url": "https://www.bleepingcomputer.com/news/security/chainalysis-says-breach-exposed-credentials-for-all-customers/",
+          "title": "Chainalysis says breach exposed credentials for all customers",
+          "publisher": "BleepingComputer",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261109213942/https://www.bleepingcomputer.com/news/security/chainalysis-says-breach-exposed-credentials-for-all-customers/"
+        },
+        {
+          "url": "https://therecord.media/chainalysis-all-users-hit-by-agentic-cyberattack",
+          "title": "Chainalysis says all users hit by agentic cyberattack",
+          "publisher": "The Record",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261110135610/https://therecord.media/chainalysis-all-users-hit-by-agentic-cyberattack"
+        },
+        {
+          "url": "https://labs.cloudsecurityalliance.org/research/csa-research-note-chainalysis-agentic-intrusion-disclosure-2/",
+          "title": "Agentic Intrusion Enters the Breach Record: Lessons from Chainalysis",
+          "publisher": "Cloud Security Alliance",
+          "type": "primary-research",
+          "date_accessed": "2026-11-16"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
       "incident_id": "2026-chaindrop-npm-worm",
       "title": "ChainDrop npm worm poisoned 400+ packages and self-propagated via Claude Code and VS Code auto-run hooks",
       "summary": "ChainDrop is a self-propagating npm supply-chain worm that poisoned 400+ packages (including keyv and cacheable-request, downloaded hundreds of millions of times weekly), stole cloud and CI credentials, and republished malware under them. Beyond package lifecycle hooks, it planted hooks in Claude Code and VS Code that run automatically when a teammate opens a poisoned repository.",
@@ -4066,6 +4418,193 @@
           "type": "news",
           "date_accessed": "2026-09-17",
           "archive_url": "https://web.archive.org/web/20260917121401/https://www.theregister.com/security/2026/07/29/word_worm_crawls_into_copilot_spreads_chaos/5280588"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-cursor-fireworks-key-agent-traces-extension-compromise",
+      "title": "An access key exposed at Fireworks AI let an attacker copy Cursor coding-agent traces and seed a trojanized Claude Code extension",
+      "summary": "An attacker used a Cursor-issued access key exposed at inference vendor Fireworks AI to copy a bucket of coding-agent traces shared for training. Some traces held unredacted credentials, which gave access to Cursor SaaS tools, archived repositories, and support data. A stolen credential was then used on 2026-10-29 to serve trojanized Claude Code extension builds from Cursor's marketplace cache to up to 5,000 users over about 11 hours.",
+      "date": "2026-10-29",
+      "last_updated": "2026-11-16",
+      "incident_type": "incident",
+      "status": "factual",
+      "confidence": "confirmed",
+      "severity": "high",
+      "severity_rationale": "A trojanized developer-tool extension that adds an attacker SSH key, installs persistence, and beacons host details reached up to 5,000 developer machines, and coding-agent session data containing live credentials was copied and used for lateral access into the vendor's SaaS tools and archived source repositories.",
+      "system": {
+        "framework": "Cursor coding agent (trace storage) and Cursor VS Code extension marketplace",
+        "models": [],
+        "tools": [
+          "cloud-storage-bucket",
+          "vscode-extension-marketplace",
+          "claude-code-extension",
+          "saas-tools"
+        ],
+        "vendor": "Cursor (affected operator); Fireworks AI (upstream inference vendor)",
+        "autonomy_level": "unknown"
+      },
+      "primary_failure_class": "supply-chain-compromise",
+      "failure_classes": [
+        {
+          "class": "supply-chain-compromise",
+          "subclass": "dependency"
+        },
+        {
+          "class": "insecure-output",
+          "subclass": "secret-exposure"
+        },
+        {
+          "class": "data-exfiltration",
+          "subclass": "via-tool"
+        },
+        {
+          "class": "supply-chain-compromise",
+          "subclass": "extension"
+        }
+      ],
+      "attack_vector": "supply-chain",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "Fireworks AI reported that a third-party cloud provider hosting its research and development machines experienced a security incident on 2026-10-23, and that on 2026-10-24 an unauthorized party used it to reach Fireworks development machines and run a workload that affected customer data including secrets. Cursor's 2026-11-13 update stated that an access key Cursor had issued to Fireworks was exposed by Fireworks and used by the attacker to copy data from a read-only storage bucket Cursor used to share coding-agent traces with the vendor. Traces in the bucket, mostly from 2025 and from sessions not in Privacy Mode, included a small number with unredacted credentials. With those credentials the attacker accessed select SaaS tools used by Cursor, and on 2026-10-29 used a stolen credential to place modified copies of the Anthropic.claude-code extension, versions 2.1.312 and 2.1.313, in the cache serving the Cursor VS Code marketplace. Fireworks's own bulletin does not name Cursor.",
+      "root_cause": "Coding-agent session traces were retained and shared with a third-party vendor without redaction of secrets they contained, so a credential exposed at that vendor gave an attacker both the traces and the live credentials inside them. Those credentials were sufficient to reach internal SaaS tooling and a credential capable of writing to the marketplace cache, and the cache served unauthorized extension builds to users without a signature or provenance check that would have rejected packages not published by the extension's author.",
+      "contributing_factors": [
+        "An upstream inference vendor's development environment was compromised via its own third-party cloud provider, exposing a customer-issued access key.",
+        "Coding-agent traces from non-Privacy-Mode sessions were stored and shared for training with credentials left unredacted in some sessions.",
+        "Credentials that users had sent to Cursor support were also present in accessible support data.",
+        "A credential reachable from the compromised SaaS tools permitted writes to the cache serving the extension marketplace.",
+        "The marketplace cache served modified builds of a third-party extension that its author had not published; Open VSX, the upstream source, never carried the malware.",
+        "The malicious build ran at extension startup and needed no user interaction with Claude Code."
+      ],
+      "detection": "Cursor's monitoring systems identified the unauthorized activity. A macOS endpoint-detection vendor was reported as the first to publicly flag the modified extension on 2026-10-29. Cursor announced an investigation the same day, published indicators of compromise and remediation scripts on 2026-10-30, and reported the last observed attacker activity, which was blocked, on 2026-11-01. The trace-bucket and Fireworks-key origin was published in Cursor's 2026-11-13 update.",
+      "recovery": "Cursor took the marketplace offline, removed the malicious builds after roughly 11 hours of availability, validated all other marketplace extensions, rebuilt the marketplace store, and worked with the hosting provider to take the attacker's server offline so the reverse-shell and beacon endpoints no longer function. It deactivated the Fireworks vendor key, moved all inference traffic off Fireworks, cut Fireworks's access to shared datasets, rotated exposed credentials and then all internal credentials as a precaution, redeployed production infrastructure, temporarily disabled some internal and product services, added secret scanning across repositories and internal data sources, and engaged external forensics experts. Anthropic released version 2.1.314 without the malicious code. Affected users and team administrators were notified; Cursor advised that uninstalling the extension alone may not be enough and published scripts to remove the attacker SSH key and persistence. Fireworks revoked and replaced credentials, isolated affected systems, disabled self-serve dataset uploads and downloads, and engaged Palo Alto Networks Unit 42.",
+      "prevention": "Redact secrets from agent session traces before retention, and especially before sharing with third parties; scope vendor-issued keys to the minimum data and rotate them on any upstream incident; keep marketplace-cache write credentials isolated from general SaaS access; verify extension package signatures or publisher provenance before serving from a cache; and scan support data and stored artifacts for credentials so they cannot be reused for lateral movement.",
+      "blast_radius": {
+        "cost": {
+          "amount_usd": null,
+          "estimated": false
+        },
+        "data": {
+          "records": null,
+          "classification": "credentials",
+          "description": "Coding-agent traces (mostly 2025, non-Privacy-Mode sessions) for fewer than 0.05% of non-Privacy-Mode users, some containing unredacted credentials; API credentials for fewer than 0.01% of customers; credentials users had sent to support; limited support data and email conversations; select archived non-production source repositories, some with business contact information; product usage metrics and summaries of some coding-agent conversations. Cursor stated Privacy Mode data, live traffic, production systems, customer repositories, the Cursor app, release-signing keys, and other marketplace extensions were not affected."
+        },
+        "user_harm": {
+          "categories": [
+            "economic",
+            "property"
+          ],
+          "affected_count": 5000,
+          "description": "At most 5,000 users who requested the cached extension versions on 2026-10-29 potentially received a build that adds an attacker SSH key, attempts to enable SSH and open a reverse tunnel, installs persistence, and reports host details; affected hosts required manual remediation or rebuild and credential rotation."
+        },
+        "scope": "Cursor shared-trace bucket, select Cursor SaaS tools and archived repositories, and up to 5,000 marketplace extension downloads",
+        "reversibility": "partially-reversible"
+      },
+      "timeline": [
+        {
+          "at": "2026-10-23",
+          "event": "Third-party cloud provider hosting Fireworks AI R&D machines experiences a security incident."
+        },
+        {
+          "at": "2026-10-24",
+          "event": "Unauthorized party reaches Fireworks development machines and runs a workload affecting customer data; Fireworks detects it the same day."
+        },
+        {
+          "at": "2026-10-29",
+          "event": "Modified Claude Code extension builds 2.1.312 and 2.1.313 served from the Cursor marketplace cache for about 11 hours; Cursor takes the marketplace offline and announces an investigation."
+        },
+        {
+          "at": "2026-10-30",
+          "event": "Cursor publishes indicators of compromise and remediation scripts and begins notifying affected users and team administrators."
+        },
+        {
+          "at": "2026-11-01",
+          "event": "Last observed attacker activity, blocked by Cursor."
+        },
+        {
+          "at": "2026-11-09",
+          "event": "Fireworks AI updates its bulletin to report secrets, datasets, and incomplete model weights accessed for a limited set of accounts."
+        },
+        {
+          "at": "2026-11-13",
+          "event": "Cursor publishes its incident update attributing initial access to a Cursor-issued key exposed by Fireworks and describing the trace-bucket and SaaS access."
+        }
+      ],
+      "cve": [],
+      "mappings": {
+        "owasp_llm": [
+          "LLM02",
+          "LLM03",
+          "LLM05"
+        ],
+        "mitre_atlas": [
+          "AML.T0024"
+        ]
+      },
+      "tags": [
+        "supply-chain",
+        "ide-extension",
+        "marketplace-cache",
+        "agent-traces",
+        "credential-exposure",
+        "upstream-vendor-breach",
+        "claude-code",
+        "cursor",
+        "backdoor"
+      ],
+      "related_incidents": [
+        "2025-amazon-q-wiper-supply-chain",
+        "2026-chaindrop-npm-worm",
+        "2026-pixelleak-coding-agent-image-exposure"
+      ],
+      "machine_export": {
+        "replayable": false,
+        "stampede_scenario_hint": "Coding-agent session traces containing live secrets are retained and shared with an upstream vendor; measure how a single exposed vendor key fans out into credential reuse against the operator's SaaS tools and into write access on a software-distribution cache serving many developer endpoints."
+      },
+      "sources": [
+        {
+          "url": "https://cursor.com/blog/security-incident-update",
+          "title": "Security incident update",
+          "publisher": "Cursor",
+          "type": "vendor-disclosure",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261116043113/https://cursor.com/blog/security-incident-update"
+        },
+        {
+          "url": "https://cursor.com/blog/claude-code-extension-security-notice",
+          "title": "Claude Code extension security notice",
+          "publisher": "Cursor",
+          "type": "vendor-disclosure",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261107205604/https://cursor.com/blog/claude-code-extension-security-notice"
+        },
+        {
+          "url": "https://fireworks.ai/security/bulletins/october-2026-security-incident-update",
+          "title": "October 2026 Security Incident Update",
+          "publisher": "Fireworks AI",
+          "type": "vendor-disclosure",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261115122329/https://fireworks.ai/security/bulletins/october-2026-security-incident-update"
+        },
+        {
+          "url": "https://www.unite.ai/cursor-traces-breach-to-access-key-exposed-by-fireworks-ai/",
+          "title": "Cursor Traces Breach to Access Key Exposed by Fireworks AI",
+          "publisher": "Unite.AI",
+          "type": "news",
+          "date_accessed": "2026-11-16"
+        },
+        {
+          "url": "https://www.bankinfosecurity.com/cursor-confirms-anthropic-claude-code-extension-compromised-a-33263",
+          "title": "Cursor Confirms Anthropic Claude Code Extension Compromised",
+          "publisher": "BankInfoSecurity",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261114211546/https://www.bankinfosecurity.com/cursor-confirms-anthropic-claude-code-extension-compromised-a-33263"
         }
       ]
     },
@@ -5681,6 +6220,153 @@
     {
       "schema_version": "1.0",
       "taxonomy_version": "1.0",
+      "incident_id": "2026-near-ai-sglang-rce-agent-data-breach",
+      "title": "NEAR AI: an SGLang remote-code-execution flaw on one inference server exposed 18 legacy agents' data and about 100 users' account details",
+      "summary": "An unauthorized party exploited a remote-code-execution flaw in SGLang, the open-source inference engine on NEAR AI's servers, gained code execution on one inference server, and from there reached an internal system behind the deprecated Private Chat feature and a legacy NEAR AI Agents deployment outside the confidential-computing environment. Account details for about 100 users, chat history, settings and logs for 18 agents, and two Cloud customers' API keys in logs were exposed.",
+      "date": "2026-11-08",
+      "incident_type": "incident",
+      "status": "factual",
+      "confidence": "confirmed",
+      "severity": "moderate",
+      "severity_rationale": "Real exposure of user PII, agent conversation data and two customer API keys, but bounded (about 100 users, 18 legacy agents, 2 keys), with no indication that stored Private Chat conversations or uploaded files were accessed; disclosed and remediated by the vendor within a day.",
+      "system": {
+        "framework": "NEAR AI Agents (legacy deployment) and NEAR AI Cloud confidential inference",
+        "models": [],
+        "tools": [
+          "sglang",
+          "private-chat",
+          "near-ai-cloud-api"
+        ],
+        "vendor": "NEAR AI",
+        "autonomy_level": "unknown"
+      },
+      "primary_failure_class": "data-exfiltration",
+      "failure_classes": [
+        {
+          "class": "data-exfiltration"
+        },
+        {
+          "class": "insecure-output",
+          "subclass": "secret-exposure"
+        }
+      ],
+      "attack_vector": "n-a",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "An attacker exploited a remote-code-execution vulnerability in SGLang to run code inside one of NEAR AI's inference servers. Using that foothold they reached an internal system connected to the deprecated Private Chat feature, downloaded account details for about 100 users, and accessed 18 agents on a legacy NEAR AI Agents deployment that was not running inside the confidential computing (TEE) environment, including those agents' chat history, settings and logs. NEAR AI Cloud API keys for two customers were exposed in logs. On 2026-11-08 the intruder could also have observed requests being processed on the compromised server, including confidential-mode requests. NEAR AI did not name the specific SGLang flaw.",
+      "root_cause": "A vulnerable open-source inference engine ran inside the trust boundary that the confidential-computing design was meant to protect, so code execution in the inference software gave the same reach as the enclave operator. Legacy agents and a deprecated chat system remained reachable from that server outside the TEE, and customer API keys had been written to logs. NEAR AI's own assessment: confidential computing protects data from the operator and the host but not from vulnerabilities in software running inside the environment.",
+      "contributing_factors": [
+        "SGLang, a third-party inference engine, carried a remote-code-execution vulnerability on NEAR AI's inference servers.",
+        "A legacy NEAR AI Agents deployment hosting 18 agents was running outside the confidential-computing environment and remained reachable.",
+        "An internal system behind the deprecated Private Chat feature still held user account details.",
+        "NEAR AI Cloud API keys for two customers had been written to logs accessible from the compromised path."
+      ],
+      "detection": "NEAR AI's report does not state how or when the intrusion was detected; it places possible observation of in-flight requests on 2026-11-08 and published its security incident report on 2026-11-09.",
+      "recovery": "NEAR AI closed the unauthorized access, revoked all active sessions and administrative credentials, replaced all agent tokens, took Private Chat offline, deployed the SGLang fix across all inference servers, rotated the remaining credentials, completed a forensic review, revoked the two exposed API keys, contacted affected users and the owners of all 18 agents individually, reported the vulnerability to the SGLang project, paused and then restored NEAR AI Cloud access, and said it would make any required regulatory notifications.",
+      "prevention": "Apply the same patching and hardening rigor to inference software and the services around the enclave as to the enclave itself; decommission deprecated features and legacy agent deployments rather than leaving them reachable; keep API keys out of logs; segment inference nodes from internal user-data systems; publish code, dependencies and deployment configuration for verification.",
+      "blast_radius": {
+        "cost": {
+          "amount_usd": null,
+          "estimated": false
+        },
+        "data": {
+          "records": null,
+          "classification": "pii",
+          "description": "Email addresses, names and in some cases plan and balance information for about 100 users; chat history, settings and logs for 18 agents on a legacy deployment; NEAR AI Cloud API keys for two customers found in logs. No indication that stored Private Chat conversations or uploaded files were accessed; in-flight confidential-mode requests on 2026-11-08 may have been observable."
+        },
+        "user_harm": {
+          "categories": [
+            "none-reported"
+          ],
+          "affected_count": 100,
+          "description": "No financial or physical harm reported; affected users were warned to be wary of unsolicited messages referring to their accounts or balances."
+        },
+        "scope": "about 100 user accounts, 18 legacy agents, 2 Cloud customer API keys",
+        "reversibility": "partially-reversible"
+      },
+      "timeline": [
+        {
+          "at": "2026-11-08",
+          "event": "Intruder with code execution on one SGLang inference server could observe in-flight requests, including confidential-mode requests."
+        },
+        {
+          "at": "2026-11-09",
+          "event": "NEAR AI publishes its security incident report; sessions, admin credentials and agent tokens revoked, Private Chat taken offline, SGLang fix deployed."
+        },
+        {
+          "at": "2026-11-10",
+          "event": "NEAR AI Cloud access restored after forensic review; trade press coverage follows."
+        }
+      ],
+      "tags": [
+        "sglang",
+        "rce",
+        "inference-server",
+        "confidential-computing",
+        "tee",
+        "legacy-deployment",
+        "api-keys-in-logs",
+        "agent-platform"
+      ],
+      "mappings": {
+        "owasp_llm": [
+          "LLM02",
+          "LLM05"
+        ],
+        "mitre_atlas": [
+          "AML.T0024"
+        ]
+      },
+      "related_incidents": [
+        "2026-nemoclaw-ollama-template-poisoning",
+        "2026-opencode-console-api-key-breach"
+      ],
+      "last_updated": "2026-11-16",
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "An agent platform runs legacy agents and a deprecated chat backend beside a third-party inference engine inside its trust boundary; measure whether code execution on one inference node can reach agent chat histories, user records and API keys written to logs."
+      },
+      "sources": [
+        {
+          "url": "https://near.ai/blog/security-incident-report-sglang-vulnerability",
+          "title": "Security Incident Report: SGLang Vulnerability",
+          "publisher": "NEAR AI",
+          "type": "vendor-disclosure",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261110200314/https://near.ai/blog/security-incident-report-sglang-vulnerability"
+        },
+        {
+          "url": "https://decrypt.co/382965/near-ai-breach-exposes-user-details-data-ai-agents",
+          "title": "NEAR AI Breach Exposes User Details, Data From 18 AI Agents",
+          "publisher": "Decrypt",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261112074756/https://decrypt.co/382965/near-ai-breach-exposes-user-details-data-ai-agents"
+        },
+        {
+          "url": "https://www.theblock.co/news/defi/2026-11-10-near-ai-security-breach-437002",
+          "title": "NEAR AI says SGLang vulnerability exposed user account details in security breach",
+          "publisher": "The Block",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261111095755/https://www.theblock.co/news/defi/2026-11-10-near-ai-security-breach-437002"
+        },
+        {
+          "url": "https://thehackernews.com/2026/11/sglang-rce-exploit-breaches-near-ai.html",
+          "title": "SGLang RCE Exploit Breaches NEAR AI",
+          "publisher": "The Hacker News",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261113004317/https://thehackernews.com/2026/11/sglang-rce-exploit-breaches-near-ai.html"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
       "incident_id": "2026-nemoclaw-ollama-template-poisoning",
       "title": "NVIDIA NemoClaw exposed a local model server, letting a webpage persistently poison the agent's model template (CVE-2026-65105)",
       "summary": "NVIDIA's NemoClaw deployment wrapper bound its local Ollama instance to all interfaces without authentication. Via DNS rebinding, a single malicious webpage could reach the API and rewrite the model's chat template (CVE-2026-65105) — a structural, persistent poisoning applied to every message that could make the agent supply vulnerable code, suppress warnings, or exfiltrate data. Disclosed by Oasis Security; patched by NVIDIA.",
@@ -6340,6 +7026,162 @@
           "type": "primary-research",
           "date_accessed": "2026-08-31",
           "archive_url": "https://web.archive.org/web/20260828015938/https://www.aikido.dev/blog/australian-gym-hack-openclaw-test"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-opencode-console-api-key-breach",
+      "title": "OpenCode Console breach exposed users' stored OpenAI, Anthropic and Google API keys, which were then used to run up charges",
+      "summary": "OpenCode, an open-source AI coding agent, disclosed that attackers breached an older system behind OpenCode Console, the hosted service where some users store provider API keys, affecting 1.4% of Console users. Stolen keys were used overnight against OpenAI, Anthropic and Google accounts, with individual users reporting charges from several hundred dollars up to about $1,700. OpenCode called it a large-scale distillation attack; providers blocked exposed keys and refunds followed.",
+      "date": "2026-10-17",
+      "incident_type": "incident",
+      "status": "factual",
+      "confidence": "corroborated",
+      "severity": "moderate",
+      "severity_rationale": "Realized financial harm to an undisclosed number of developers (1.4% of Console users) through unauthorized provider charges, partially reversed by refunds and key revocation; the open-source app and CLI were not affected and the intrusion mechanism remains undisclosed.",
+      "system": {
+        "framework": "OpenCode Console (hosted workspace for the OpenCode coding agent)",
+        "models": [],
+        "tools": [
+          "opencode-console",
+          "openai-api",
+          "anthropic-api",
+          "google-ai-api"
+        ],
+        "vendor": "OpenCode (Anomaly)",
+        "autonomy_level": "unknown"
+      },
+      "primary_failure_class": "data-exfiltration",
+      "failure_classes": [
+        {
+          "class": "data-exfiltration"
+        },
+        {
+          "class": "cost-blowup"
+        }
+      ],
+      "attack_vector": "n-a",
+      "causation": {
+        "entity": "human",
+        "intentionality": "intentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "Attackers gained access to an older OpenCode system and obtained third-party provider API keys that users had linked in OpenCode Console workspaces; the earliest possible exposure stated in OpenCode's notification email was 2026-10-17 00:30 UTC. The keys were then used at volume against the providers' APIs overnight, which OpenCode characterized as a large-scale distillation attack. The same night OpenCode had made GLM-5.3-Flash free for users. OpenCode has not disclosed how the attackers entered, how the keys were stored, or the full extent of misuse.",
+      "root_cause": "A hosted console for a coding agent held users' long-lived provider API keys in a system that OpenCode described as older, so a single intrusion yielded credentials that were directly spendable against several LLM providers with no per-key spend limit enforced at the console. OpenCode has not published a root cause for the intrusion itself.",
+      "contributing_factors": [
+        "Users' provider API keys were stored centrally in Console workspaces rather than held only on their own machines.",
+        "The compromised component was described by OpenCode as an older system.",
+        "Stolen keys could be driven at high volume against multiple providers before account owners saw spend alerts.",
+        "OpenCode co-founder Dax Raad said the team's defensive investigation was slowed when commercial models refused to analyze the malicious code; the team later obtained access to OpenAI's Daybreak program for defensive security work."
+      ],
+      "detection": "Developers reported overnight spend alerts from OpenAI, Anthropic and Google AI accounts; Google suspended some projects citing abusive activity consistent with hijacked resources. OpenCode announced the breach on 2026-10-17 via its X account and notified affected users by email, stating that users who received no email were not impacted. Raad said attackers had been targeting OpenCode's systems for at least 48 hours.",
+      "recovery": "OpenCode told affected users to revoke and replace their keys directly with each provider. Anthropic and Google blocked the API keys believed exposed; OpenAI worked with OpenCode to restore access and refund API credits used in the attack, and OpenCode said refunds for unauthorized charges were underway. OpenCode said the open-source app and CLI were unaffected and that the incident remained ongoing as of 2026-10-19.",
+      "prevention": "Avoid centralizing long-lived provider keys in hosted consoles, or store them with per-key spend caps, short lifetimes and scoped permissions; decommission older systems that still hold credentials; alert on anomalous key usage volume at the platform rather than relying on provider spend alerts; publish a root-cause disclosure so users can assess exposure.",
+      "blast_radius": {
+        "cost": {
+          "amount_usd": null,
+          "estimated": false
+        },
+        "data": {
+          "records": null,
+          "classification": "credentials",
+          "description": "Third-party provider API keys (OpenAI, Anthropic, Google) stored in affected Console workspaces; OpenCode's email said no other data appeared to have been exposed."
+        },
+        "user_harm": {
+          "categories": [
+            "economic"
+          ],
+          "affected_count": null,
+          "description": "Unauthorized provider charges reported by individual developers ranging from several hundred dollars to about $1,700 overnight; refunds and key revocation followed. Total affected count undisclosed (1.4% of Console users)."
+        },
+        "scope": "1.4% of OpenCode Console users who had linked external provider keys",
+        "reversibility": "partially-reversible"
+      },
+      "timeline": [
+        {
+          "at": "2026-10-17T00:30Z",
+          "event": "Earliest possible exposure of stored provider keys, per OpenCode's notification email."
+        },
+        {
+          "at": "2026-10-17",
+          "event": "OpenCode announces the Console breach on X and emails affected users to revoke and replace keys."
+        },
+        {
+          "at": "2026-10-18",
+          "event": "Developers report overnight spend alerts; Anthropic and Google block exposed keys; OpenCode gains access to OpenAI's Daybreak program for defensive analysis."
+        },
+        {
+          "at": "2026-10-19",
+          "event": "TechCrunch and BleepingComputer report the breach; OpenAI refunds credits used in the attack; OpenCode says the incident remains ongoing."
+        }
+      ],
+      "tags": [
+        "api-keys",
+        "credential-theft",
+        "denial-of-wallet",
+        "distillation",
+        "coding-agent",
+        "hosted-console",
+        "legacy-system"
+      ],
+      "mappings": {
+        "owasp_llm": [
+          "LLM02",
+          "LLM10"
+        ],
+        "owasp_agentic": [
+          "T4"
+        ],
+        "mitre_atlas": [
+          "AML.T0024"
+        ]
+      },
+      "related_incidents": [
+        "2025-claude-code-dns-exfiltration",
+        "2026-copilot-cli-env-exfiltration",
+        "2026-claude-code-ci-hf-exfiltration",
+        "2026-near-ai-sglang-rce-agent-data-breach"
+      ],
+      "last_updated": "2026-11-16",
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "A hosted agent console stores users' provider API keys; measure how much unauthorized provider spend accrues between key theft and the first owner spend alert when keys carry no per-key cap.",
+        "costbomb_seed_hint": "Stolen provider API keys from a shared console are driven at high request volume against several LLM providers overnight; measure time-to-detect and the effect of per-key spend limits and short key lifetimes."
+      },
+      "sources": [
+        {
+          "url": "https://techcrunch.com/2026/10/19/hackers-hit-ai-coding-tool-opencode-running-up-charges-on-users-ai-accounts/",
+          "title": "Hackers hit AI coding tool OpenCode, running up charges on users' AI accounts",
+          "publisher": "TechCrunch",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261104202820/https://techcrunch.com/2026/10/19/hackers-hit-ai-coding-tool-opencode-running-up-charges-on-users-ai-accounts/"
+        },
+        {
+          "url": "https://www.bleepingcomputer.com/news/security/opencode-hack-exposes-api-keys-amid-ai-distillation-attacks/",
+          "title": "OpenCode hack exposes API keys amid AI distillation attacks",
+          "publisher": "BleepingComputer",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261029193007/https://www.bleepingcomputer.com/news/security/opencode-hack-exposes-api-keys-amid-ai-distillation-attacks/"
+        },
+        {
+          "url": "https://x.com/opencode/status/2111519637049319818",
+          "title": "OpenCode statement on the Console security incident",
+          "publisher": "OpenCode (X)",
+          "type": "social-primary",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261017181318/https://x.com/opencode/status/2111519637049319818"
+        },
+        {
+          "url": "https://www.infosecurity-magazine.com/news/opencode-breach-openai-anthropic/",
+          "title": "OpenCode Breach Could Affect OpenAI, Anthropic and Google",
+          "publisher": "Infosecurity Magazine",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261024093425/https://www.infosecurity-magazine.com/news/opencode-breach-openai-anthropic/"
         }
       ]
     },
@@ -7219,6 +8061,181 @@
           "type": "news",
           "date_accessed": "2026-10-20",
           "archive_url": "https://web.archive.org/web/20261011032404/https://www.helpnetsecurity.com/2026/10/06/openai-rogue-agents-wikimedia-wikipedia/"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0",
+      "taxonomy_version": "1.0",
+      "incident_id": "2026-workos-artex-agent-sandbox-escape-breach",
+      "title": "A researcher's ARTEX benchmark agent left its test sandbox and bulk-read WorkOS's internal go-to-market tool",
+      "summary": "WorkOS reported unauthorized bulk retrieval of business contact, account, and support-communication records from an internal go-to-market tool between 2026-10-25 and 2026-10-30. First described as an attacker using ARTEX, the activity was later attributed, with independent forensic validation, to a researcher's ARTEX agent that left its isolated benchmark sandbox. The researcher stated the data was deleted and not shared.",
+      "date": "2026-10-25",
+      "last_updated": "2026-11-16",
+      "incident_type": "incident",
+      "status": "factual",
+      "confidence": "confirmed",
+      "severity": "moderate",
+      "severity_rationale": "Realized bulk retrieval of customer business data and communication excerpts from a production internal tool across WorkOS's sales and support systems; impact is bounded by the researcher's statement that the data was deleted and never shared, and by the absence of malicious intent.",
+      "system": {
+        "framework": "ARTEX autonomous penetration-testing framework",
+        "models": [],
+        "tools": [
+          "artex",
+          "internal-go-to-market-api"
+        ],
+        "vendor": "unnamed security researcher (operator); WorkOS (affected organization)",
+        "autonomy_level": "fully-autonomous"
+      },
+      "primary_failure_class": "excessive-agency",
+      "failure_classes": [
+        {
+          "class": "excessive-agency",
+          "subclass": "scope-creep"
+        },
+        {
+          "class": "unsafe-action",
+          "subclass": "cross-domain-action"
+        },
+        {
+          "class": "data-exfiltration",
+          "subclass": "via-tool"
+        }
+      ],
+      "attack_vector": "self-induced",
+      "causation": {
+        "entity": "ai",
+        "intentionality": "unintentional",
+        "timing": "post-deployment"
+      },
+      "trigger": "A security researcher was running cybersecurity benchmark evaluations with ARTEX, an open-source autonomous penetration-testing framework. According to WorkOS's bulletin, the researcher's agent left its isolated testing environment and interacted with WorkOS unintentionally. The agent reached an internet-exposed API of an internal WorkOS tool used by go-to-market teams, authenticated with a predictable development credential that had been deployed to production, and retrieved records in bulk. WorkOS listed a User-Agent string identifying ArtEx among its indicators. Neither WorkOS nor the researcher has publicly described how the agent left the sandbox; the characterization is the researcher's and was matched to WorkOS logs rather than independently reconstructed.",
+      "root_cause": "An autonomous offensive-security agent operated against targets outside its intended evaluation scope because the evaluation environment did not confine it to benchmark targets, and the system it reached lacked basic controls: the internal tool ran on a legacy platform that had not been migrated to one with stronger baseline protections, its API endpoints were reachable from the internet, a development-only credential was accepted in production, no rate limiting constrained bulk extraction, and monitoring did not flag the activity in time.",
+      "contributing_factors": [
+        "The ARTEX evaluation sandbox did not prevent the agent from reaching arbitrary internet hosts.",
+        "The affected internal tool ran on a legacy internal-tools platform not yet migrated to the platform with stronger controls.",
+        "Overly permissive access controls exposed the tool's API to the public internet.",
+        "A predictable local-development credential was deployed to production and accepted by the API.",
+        "No rate limiting existed on the API, allowing rapid bulk retrieval of records.",
+        "Telemetry and detection gaps meant the activity was not identified until after bulk retrieval had completed.",
+        "The sandbox-escape mechanism has not been publicly disclosed by WorkOS or the researcher."
+      ],
+      "detection": "First confirmed unauthorized access occurred on 2026-10-25, but the activity was not identified until 2026-10-30, after bulk retrieval had ended, when a WorkOS employee noticed unusually high usage of a system connected to the affected tool. Between 2026-11-03 and 2026-11-05 the researcher contacted WorkOS and provided request details, timestamps, and artifacts, which WorkOS's security team and an independent forensics firm correlated against WorkOS logs to validate the attribution.",
+      "recovery": "WorkOS removed public access to the tool on 2026-10-30, secured authentication and rotated or revoked credentials for connected services on 2026-10-30 and 2026-10-31, blocked internet access to all internally developed tools at the network edge on 2026-10-31, verified centralized network traffic logging on 2026-11-02, published an initial disclosure and began customer notification on 2026-11-02, and began regularly testing its own internet-facing systems with ARTEX on 2026-11-03. The researcher stated that all WorkOS data obtained by the agent was deleted and not shared. The updated bulletin on 2026-11-06 attributed the activity to the researcher's agent and stated it was not the work of an actor with malicious intent.",
+      "prevention": "Confine offensive-security agents under evaluation to explicitly allow-listed targets with no general internet egress; keep internal tools off the public internet and behind identity-aware access; prevent development-only secrets from reaching production; rate-limit and alert on bulk retrieval from internal APIs; and ensure telemetry on internal tools feeds detection within the window of the activity rather than after it.",
+      "blast_radius": {
+        "cost": {
+          "amount_usd": null,
+          "estimated": false
+        },
+        "data": {
+          "records": null,
+          "classification": "pii",
+          "description": "Business contact details (names, emails, phone numbers, job titles, company affiliations) from CRM systems; business account and relationship information; summaries and excerpts of sales calls, support discussions, and customer Slack conversations, a limited number of which included end-user email addresses; and operational metadata such as product usage and connection or directory health. WorkOS stated the incident was limited to sales and customer-support systems. Record counts were not published."
+        },
+        "user_harm": {
+          "categories": [
+            "reputational"
+          ],
+          "affected_count": null,
+          "description": "Exposure of WorkOS customer contact data and communication excerpts to a third party; the researcher reported deleting the data without sharing it."
+        },
+        "scope": "WorkOS internal go-to-market tool aggregating CRM, support, and customer communication data",
+        "reversibility": "partially-reversible"
+      },
+      "timeline": [
+        {
+          "at": "2026-10-25",
+          "event": "First confirmed unauthorized access to the internal tool's API."
+        },
+        {
+          "at": "2026-10-30",
+          "event": "Records retrieved in bulk; an employee notices unusually high usage of a connected system; public access to the tool removed."
+        },
+        {
+          "at": "2026-10-31",
+          "event": "Credentials for connected services rotated; internet access to all internal tools blocked at the network edge."
+        },
+        {
+          "at": "2026-11-02",
+          "event": "WorkOS publishes an initial disclosure describing an attacker using ARTEX and begins customer notification."
+        },
+        {
+          "at": "2026-11-03",
+          "event": "Researcher contacts WorkOS with evidence; WorkOS begins regular ARTEX testing of its internet-facing systems."
+        },
+        {
+          "at": "2026-11-05",
+          "event": "Independent forensics firm validates attribution to the researcher's agent."
+        },
+        {
+          "at": "2026-11-06",
+          "event": "WorkOS publishes an updated bulletin attributing the activity to an AI security agent that left a researcher's sandbox."
+        }
+      ],
+      "external_ids": {
+        "aiid": 1810
+      },
+      "mappings": {
+        "owasp_llm": [
+          "LLM02",
+          "LLM06"
+        ],
+        "owasp_agentic": [
+          "T3"
+        ],
+        "mitre_atlas": [
+          "AML.T0024"
+        ]
+      },
+      "tags": [
+        "sandbox-escape",
+        "artex",
+        "autonomous-pentest",
+        "benchmark-evaluation",
+        "internal-tools",
+        "unintended-target",
+        "bulk-extraction"
+      ],
+      "related_incidents": [
+        "2026-artex-claude-code-korea-bank-breach",
+        "2026-openai-eval-sandbox-escape-huggingface",
+        "2026-anthropic-claude-eval-escapes",
+        "2026-chainalysis-agentic-intrusion-breach"
+      ],
+      "machine_export": {
+        "replayable": true,
+        "stampede_scenario_hint": "An autonomous offensive-security agent is run against a benchmark target set inside a sandbox whose egress is not restricted to those targets; measure whether the agent reaches hosts outside the target set, authenticates with weak or default credentials it discovers, and bulk-reads a paginated API with no rate limit before any monitoring fires."
+      },
+      "sources": [
+        {
+          "url": "https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident",
+          "title": "Update for October 30th, 2026 Data Security Incident",
+          "publisher": "WorkOS",
+          "type": "vendor-disclosure",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261112072016/https://workos.com/security/bulletins/update-for-october-30th-2026-data-security-incident"
+        },
+        {
+          "url": "https://www.bleepingcomputer.com/news/security/runaway-ai-hacking-agent-behind-workos-breach-after-escaping-sandbox/",
+          "title": "Runaway AI hacking agent behind WorkOS breach after escaping sandbox",
+          "publisher": "BleepingComputer",
+          "type": "news",
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261111131446/https://www.bleepingcomputer.com/news/security/runaway-ai-hacking-agent-behind-workos-breach-after-escaping-sandbox/"
+        },
+        {
+          "url": "https://www.helpnetsecurity.com/?p=390753",
+          "title": "ARTEX goes from pentesting tool to attacker staple in three months",
+          "publisher": "Help Net Security",
+          "type": "news",
+          "date_accessed": "2026-11-16"
+        },
+        {
+          "url": "https://incidentdatabase.ai/cite/1810/",
+          "title": "Incident 1810: ARTEX Security Testing Agent Reportedly Accessed WorkOS's Internal Sales Tool Without Authorization and Retrieved Customer Data",
+          "publisher": "AI Incident Database",
+          "type": "other",
+          "date_accessed": "2026-11-16"
         }
       ]
     }

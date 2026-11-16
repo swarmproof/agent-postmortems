@@ -163,6 +163,7 @@ sources:
     publisher: Federal Bureau of Investigation
     type: regulatory-court
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261116030004/https://www.fbi.gov/investigate/cyber/alerts/2026/north-korea-responsible-for-6-billion-binance-attack"
   - url: "https://www.theblock.co/news/business/2026-11-03-binance-hack-incident-report-north-korea-fake-job-interview-ai-tool-432406"
     title: "Binance says hackers used fake job interview, internal AI tool in $6.3 billion breach"
     publisher: The Block
@@ -173,6 +174,7 @@ sources:
     publisher: SecurityWeek
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261105133808/https://www.securityweek.com/rigged-coding-assignment-abused-ai-tool-opened-path-to-6-billion-binance-heist/"
   - url: "https://www.csoonline.com/article/4245354/binance-heist-is-stark-example-of-ai-governance-gaps-and-basic-security-failures.html"
     title: "Binance heist is stark example of AI governance gaps and basic security failures"
     publisher: CSO Online
@@ -188,3 +190,4 @@ sources:
     publisher: Fortune
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112061748/https://fortune.com/2026/11/02/binance-hack-ai-north-korean-cybercrime-black-october/"

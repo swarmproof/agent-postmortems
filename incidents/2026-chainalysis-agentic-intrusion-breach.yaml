@@ -156,21 +156,25 @@ sources:
     publisher: Chainalysis
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261111021417/https://www.chainalysis.com/blog/security-incident-october-30/"
   - url: "https://www.bleepingcomputer.com/news/security/chainalysis-discloses-data-breach-from-offensive-agentic-techniques/"
     title: "Chainalysis discloses data breach from offensive agentic techniques"
     publisher: BleepingComputer
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261110133859/https://www.bleepingcomputer.com/news/security/chainalysis-discloses-data-breach-from-offensive-agentic-techniques/"
   - url: "https://www.bleepingcomputer.com/news/security/chainalysis-says-breach-exposed-credentials-for-all-customers/"
     title: "Chainalysis says breach exposed credentials for all customers"
     publisher: BleepingComputer
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261109213942/https://www.bleepingcomputer.com/news/security/chainalysis-says-breach-exposed-credentials-for-all-customers/"
   - url: "https://therecord.media/chainalysis-all-users-hit-by-agentic-cyberattack"
     title: "Chainalysis says all users hit by agentic cyberattack"
     publisher: The Record
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261110135610/https://therecord.media/chainalysis-all-users-hit-by-agentic-cyberattack"
   - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-chainalysis-agentic-intrusion-disclosure-2/"
     title: "Agentic Intrusion Enters the Breach Record: Lessons from Chainalysis"
     publisher: Cloud Security Alliance

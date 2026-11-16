@@ -138,18 +138,22 @@ sources:
     publisher: NEAR AI
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261110200314/https://near.ai/blog/security-incident-report-sglang-vulnerability"
   - url: "https://decrypt.co/382965/near-ai-breach-exposes-user-details-data-ai-agents"
     title: "NEAR AI Breach Exposes User Details, Data From 18 AI Agents"
     publisher: Decrypt
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112074756/https://decrypt.co/382965/near-ai-breach-exposes-user-details-data-ai-agents"
   - url: "https://www.theblock.co/news/defi/2026-11-10-near-ai-security-breach-437002"
     title: "NEAR AI says SGLang vulnerability exposed user account details in security breach"
     publisher: The Block
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261111095755/https://www.theblock.co/news/defi/2026-11-10-near-ai-security-breach-437002"
   - url: "https://thehackernews.com/2026/11/sglang-rce-exploit-breaches-near-ai.html"
     title: "SGLang RCE Exploit Breaches NEAR AI"
     publisher: The Hacker News
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261113004317/https://thehackernews.com/2026/11/sglang-rce-exploit-breaches-near-ai.html"
