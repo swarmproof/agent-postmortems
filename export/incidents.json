@@ -3617,7 +3617,8 @@
           "title": "Binance says hackers used fake job interview, internal AI tool in $6.3 billion breach",
           "publisher": "The Block",
           "type": "news",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261105080425/https://www.theblock.co/news/business/2026-11-03-binance-hack-incident-report-north-korea-fake-job-interview-ai-tool-432406"
         },
         {
           "url": "https://www.securityweek.com/rigged-coding-assignment-abused-ai-tool-opened-path-to-6-billion-binance-heist/",
@@ -3632,7 +3633,8 @@
           "title": "Binance heist is stark example of AI governance gaps and basic security failures",
           "publisher": "CSO Online",
           "type": "news",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261108225859/https://www.csoonline.com/article/4245354/binance-heist-is-stark-example-of-ai-governance-gaps-and-basic-security-failures.html"
         },
         {
           "url": "https://www.coindesk.com/tech/2026/11/02/no-proof-of-ai-in-north-korean-hackers-move-of-stolen-binance-funds-through-thousands-of-wallets",
@@ -3811,7 +3813,8 @@
           "title": "Agentic Intrusion Enters the Breach Record: Lessons from Chainalysis",
           "publisher": "Cloud Security Alliance",
           "type": "primary-research",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261116055243/https://labs.cloudsecurityalliance.org/research/csa-research-note-chainalysis-agentic-intrusion-disclosure-2/"
         }
       ]
     },
@@ -4596,7 +4599,8 @@
           "title": "Cursor Traces Breach to Access Key Exposed by Fireworks AI",
           "publisher": "Unite.AI",
           "type": "news",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261116071937/https://www.unite.ai/cursor-traces-breach-to-access-key-exposed-by-fireworks-ai/"
         },
         {
           "url": "https://www.bankinfosecurity.com/cursor-confirms-anthropic-claude-code-extension-compromised-a-33263",
@@ -5245,10 +5249,11 @@
         "Holding a membership NFT auto-escalated the agent from read-only to full transaction execution.",
         "Instructions from untrusted public posts were treated as actionable commands.",
         "Morse-code encoding evaded input safety filters.",
-        "No human approval was required before executing a token transfer."
+        "No human approval was required before executing a token transfer.",
+        "According to the Bankr operator, a hardcoded block on replies from Grok in an earlier agent version was not carried into a later rewrite."
       ],
       "detection": "Observed on-chain and reported publicly; catalogued by the OECD AI Incidents Monitor and analysed by security researchers.",
-      "recovery": "The transferred tokens were not recoverable; commentary centred on constraining agent wallet permissions and rejecting obfuscated instructions.",
+      "recovery": "The Bankr operator stated that about 80% of the funds were returned and that the remaining 20% would be discussed with the DRB community. Giskard's analysis and the DRB Task Force attribute the return to the community identifying the attacker, and the remaining share was reported as under dispute. Commentary centred on constraining agent wallet permissions and rejecting obfuscated instructions.",
       "prevention": "Require explicit human approval for financial transactions; do not auto-escalate agent permissions from on-chain artifacts like NFTs; treat public content as untrusted; normalise and reject obfuscated/encoded instructions; scope wallet permissions to the minimum needed.",
       "blast_radius": {
         "cost": {
@@ -5264,7 +5269,7 @@
           "description": "Roughly 3 billion DRB tokens (about $155,000–$200,000) were stolen from a verified wallet on the Base network."
         },
         "scope": "one verified wallet linked to the Grok/Bankr integration",
-        "reversibility": "irreversible"
+        "reversibility": "partially-reversible"
       },
       "external_ids": {
         "oecd_aim": "2026-05-04-4a73"
@@ -5298,6 +5303,14 @@
         "stampede_scenario_hint": "An agent with wallet/transaction permissions processes untrusted, encoded public content instructing a transfer; measure whether it decodes and executes a financial transaction without human approval, and whether holding an artifact can silently escalate its permissions."
       },
       "sources": [
+        {
+          "url": "https://x.com/0xDeployer/status/2051315834212303334",
+          "title": "Statement on the Grok wallet incident",
+          "publisher": "Bankr (@0xDeployer on X)",
+          "type": "social-primary",
+          "date_accessed": "2026-11-09",
+          "archive_url": "https://web.archive.org/web/20260504191538/https://x.com/0xDeployer/status/2051315834212303334"
+        },
         {
           "url": "https://www.giskard.ai/knowledge/how-grok-got-prompt-injected-an-x-user-drained-150-000-from-an-ai-wallet",
           "title": "How Grok got prompt-injected: an X user drained $150,000 from an AI wallet",
@@ -8235,7 +8248,8 @@
           "title": "Incident 1810: ARTEX Security Testing Agent Reportedly Accessed WorkOS's Internal Sales Tool Without Authorization and Retrieved Customer Data",
           "publisher": "AI Incident Database",
           "type": "other",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261116055404/https://incidentdatabase.ai/cite/1810/"
         }
       ]
     }

@@ -169,6 +169,7 @@ sources:
     publisher: The Block
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261105080425/https://www.theblock.co/news/business/2026-11-03-binance-hack-incident-report-north-korea-fake-job-interview-ai-tool-432406"
   - url: "https://www.securityweek.com/rigged-coding-assignment-abused-ai-tool-opened-path-to-6-billion-binance-heist/"
     title: "Rigged Coding Assignment, Abused AI Tool Opened Path to $6 Billion Binance Heist"
     publisher: SecurityWeek
@@ -180,6 +181,7 @@ sources:
     publisher: CSO Online
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261108225859/https://www.csoonline.com/article/4245354/binance-heist-is-stark-example-of-ai-governance-gaps-and-basic-security-failures.html"
   - url: "https://www.coindesk.com/tech/2026/11/02/no-proof-of-ai-in-north-korean-hackers-move-of-stolen-binance-funds-through-thousands-of-wallets"
     title: "No Proof of AI in North Korean Hackers' Move of Stolen Binance Funds Through Thousands of Wallets"
     publisher: CoinDesk
