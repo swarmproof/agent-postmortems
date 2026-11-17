@@ -1,0 +1,156 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-unit42-ai-agent-enterprise-intrusion-10-hours
+title: "Unit 42 investigated an enterprise intrusion in which AI agents ran a 50-technique chain in under ten hours and left an 80-page audit"
+summary: >-
+  Palo Alto Networks Unit 42 investigated an intrusion in which a human operator used frontier AI models and agentic frameworks to compress an estimated two weeks of work into under ten hours. Agents mapped internal services, scraped repositories for secrets, reached the secrets manager, exfiltrated cloud keys via CI/CD, and repurposed the victim's cloud AI endpoints. The operator had an agent leave an 80-page audit of the exploited findings on the victim's systems.
+date: "2026-09-02"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  A realized intrusion that reached master administrative credentials, cloud
+  access keys, and CI/CD pipelines of one enterprise and repurposed its cloud AI
+  endpoints as attacker infrastructure; the victim, data volumes, and financial
+  impact were not disclosed, and a backdoor attempt was blocked.
+
+system:
+  framework: attack-specific agentic AI frameworks orchestrating multiple frontier-model agents (tooling not named by Unit 42)
+  models: []
+  tools: ["code-repositories", "secrets-manager", "ci-cd-pipeline", "terraform", "cloud-ai-endpoints"]
+  vendor: unattributed threat actor
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The operator breached a publicly accessible web service, then deployed a
+  reconnaissance agent to map the victim's internal microservices. Sub-agents
+  scraped source-code repositories for hard-coded tokens and service passwords,
+  used an exposed token to reach the secrets-management system, and harvested
+  master administrative credentials. The agents triggered CI/CD workflows to
+  exfiltrate cloud access keys, attempted to add backdoors to Terraform
+  configurations, and used the stolen keys to turn the victim's cloud AI model
+  endpoints into post-compromise infrastructure. Unit 42 observed parallel calls
+  to multiple frontier agents, structured Markdown files passing state between
+  agents and sessions, and scripts it assessed with high confidence as
+  AI-generated; the operator stated during negotiations that frontier models and
+  agentic frameworks were used.
+root_cause: >-
+  Hard-coded secrets in repositories, a broadly scoped token that reached the
+  secrets manager, and CI/CD pipelines able to emit cloud keys formed a chain
+  that required no zero-day, only speed. Agentic orchestration let a separate
+  agent work each layer of defense toward a shared goal, completing the intrusion
+  in under ten hours, inside the window in which human-paced detection and
+  containment normally operate.
+contributing_factors:
+  - Hard-coded tokens and service passwords in source repositories provided the first privilege step.
+  - A token exposed in code had enough scope to reach the secrets manager holding master administrative credentials.
+  - CI/CD workflows could be invoked to run builds and emit cloud access keys.
+  - Stolen cloud keys gave direct access to the victim's AI model endpoints, which were reused as attack infrastructure.
+  - Agents exchanged state through Markdown files and ran in parallel, compressing an estimated two weeks of work into under ten hours.
+  - Branch protection on infrastructure-as-code blocked the attempted Terraform backdoor.
+detection: >-
+  Unit 42 was engaged as incident responder; the public write-up does not state
+  how the victim first noticed the activity. Investigators identified AI
+  involvement from parallel calls to multiple frontier agents, inter-agent
+  Markdown handoff files, AI-generated scripts, an 80-page technical audit the
+  operator directed an agent to produce on the victim's systems, and the
+  operator's statements during ransom negotiations.
+recovery: >-
+  Unit 42 published the investigation on 2026-09-02 and clarified on 2026-09-03
+  that the event was an intrusion with ransom negotiations rather than a
+  ransomware deployment. The write-up does not describe victim-specific
+  remediation; it recommends synchronized containment across identity, cloud,
+  and pipeline layers, governance of AI infrastructure, detection of behavioral
+  loops, and DevOps-pipeline hardening.
+prevention: >-
+  Remove secrets from source repositories and scope tokens so a single leak
+  cannot reach the secrets manager; require approval and provenance checks for
+  CI/CD runs that can emit cloud credentials; keep branch protection on
+  infrastructure-as-code; treat cloud AI endpoints as privileged assets with
+  usage monitoring; and tune detection for machine-speed, multi-agent patterns
+  such as parallel reconnaissance and rapid credential chaining.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Hard-coded repository secrets, master administrative credentials from the
+      secrets manager, and cloud access keys were harvested; the agents also
+      had read access to internal architecture and source code. No data volume
+      or exfiltration total was published.
+  user_harm:
+    categories: ["economic"]
+    affected_count:
+    description: >-
+      One enterprise faced ransom negotiations, loss of control over
+      administrative credentials and cloud keys, and unauthorized use of its
+      cloud AI compute; downstream user impact was not disclosed.
+  scope: >-
+    One enterprise victim (sector and location not disclosed); more than 50
+    MITRE ATT&CK techniques executed in under ten hours
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-09-02"
+    event: "Unit 42 publishes the investigation describing the sub-ten-hour AI-assisted intrusion."
+  - at: "2026-09-03"
+    event: "Unit 42 updates the post to clarify the event was an intrusion with ransom negotiations, not a ransomware attack."
+
+tags: ["agentic-attack", "cyber-ops", "multi-agent", "ci-cd", "secrets-management", "cloud-ai-hijack", "unit42"]
+mappings:
+  owasp_llm: [LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-deepseek-hermes-autonomous-campaign"
+  - "2026-cyberxero-iab-claude-code-agents"
+  - "2025-gtg1002-ai-orchestrated-espionage"
+  - "2026-gtig-multi-agent-credential-harvesting-six-hours"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    Several role-specialized agents each take one defensive layer in sequence
+    (public service, repositories, secrets manager, CI/CD, cloud AI endpoints)
+    and hand state forward through shared files, so the credential harvested by
+    one agent becomes the next agent's starting point; measure how far the chain
+    reaches before a human-paced containment step would land.
+
+sources:
+  - url: "https://unit42.paloaltonetworks.com/ai-assisted-cyber-attack-inside-a-unit-42-investigation/"
+    title: "An AI-Assisted Cyber Attack: Inside a Unit 42 Investigation"
+    publisher: Palo Alto Networks Unit 42
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261030041355/https://unit42.paloaltonetworks.com/ai-assisted-cyber-attack-inside-a-unit-42-investigation/"
+  - url: "https://www.csoonline.com/article/4217976/ai-agents-help-compress-ransomware-intrusion-to-under-10-hours-raising-stakes-for-cisos.html"
+    title: "AI agents help compress ransomware intrusion to under 10 hours, raising stakes for CISOs"
+    publisher: CSO Online
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261022171122/https://www.csoonline.com/article/4217976/ai-agents-help-compress-ransomware-intrusion-to-under-10-hours-raising-stakes-for-cisos.html"
+  - url: "https://www.darkreading.com/cyberattacks-data-breaches/ai-machine-speed-2-week-attack-10-hours"
+    title: "AI 'Machine Speed' Cuts 2-Week Attack Down to 10 Hours"
+    publisher: Dark Reading
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260909114332/https://www.darkreading.com/cyberattacks-data-breaches/ai-machine-speed-2-week-attack-10-hours"
