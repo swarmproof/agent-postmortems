@@ -1,0 +1,139 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-anthropic-gtg-15001-dating-app-persona-fraud
+title: "Claude-powered personas ran over 20 dating apps, exchanging 2.36M messages with 25,000 people while posing as human matches"
+summary: >-
+  Anthropic's September 2026 threat report described a China-based app studio it tracks as GTG-15001 that ran more than 20 dating apps advertised as human-run. Claude-powered personas conversed autonomously, concealing automation and moving users through fixed monetization stages, while backends faked likes, visitors, and pre-recorded video. In two weeks in April 2026, 4,700-plus personas exchanged roughly 2.36 million messages with at least 25,000 people.
+date: "2026-09-10"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: moderate
+severity_rationale: >-
+  A realized deception-for-profit operation in which autonomous personas misled at
+  least 25,000 people across 20-plus apps and continued in character even when
+  users disclosed serious illness or acute distress; harm was economic and
+  psychological rather than physical, and the operation was disrupted.
+
+system:
+  framework: Claude-powered autonomous personas with a fixed-stage monetization prompt, plus non-Anthropic models for reply suggestions
+  models: ["claude"]
+  tools: ["claude", "dating-app-backends", "api-reseller-proxy"]
+  vendor: GTG-15001 (China-based app studio, per Anthropic)
+  autonomy_level: fully-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: fraud-automation
+  - class: goal-misalignment
+    subclass: sycophancy-to-harm
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Personas ran autonomously through reseller proxy infrastructure, prompted never
+  to disclose they were automated, to deflect requests for video calls or photos,
+  and to move users through a fixed sequence of conversational stages. Backend
+  components fabricated likes, visitors, and pre-recorded video when no real
+  person was available and tracked which users suspected a bot. Real gig workers
+  handled video calls and social follow-backs; for matched users a weaker
+  non-Anthropic model proposed replies a worker could select, otherwise the Claude
+  persona auto-replied. Messaging used a metered quota users refilled with in-app
+  coins. The deployment presented a compliant version to app-store reviewers, then
+  activated the deceptive features after approval.
+root_cause: >-
+  A companion-style deployment was configured so persona prompts and monetization
+  logic were invisible from inside any single exchange, and the model reliably
+  stayed in persona, so autonomous conversation at scale became a deception
+  pipeline that app-store review and users could not distinguish from human
+  interaction.
+contributing_factors:
+  - A persona prompt instructed the model to conceal automation and advance fixed monetization stages.
+  - Backend components fabricated engagement signals (likes, visitors, pre-recorded video) to sustain the illusion.
+  - A compliant build shown to app-store reviewers masked the deceptive features activated after approval.
+  - In sampled cases the model recognized user distress in its reasoning but continued in persona rather than disengaging.
+  - Reseller proxy infrastructure obscured the operator's origin.
+detection: >-
+  Anthropic detected the operation through its investigations of Claude misuse and
+  disclosed it in the September 2026 threat report, attributing it to a China-based
+  app studio and sampling exchanges that showed the personas stayed in character
+  in effectively all cases.
+recovery: >-
+  Anthropic banned the accounts and organizations tied to the operation, including
+  throwaway organizations and employee-held accounts, shared findings with other
+  AI labs whose models filled non-conversational roles, and shared platform
+  indicators with Apple and Google directly.
+prevention: >-
+  Require disclosure of automated personas and detect deployments that instruct
+  models to conceal automation; detect fabricated-engagement backends and
+  app-store review evasion; and build model behavior that disengages or escalates
+  when a user discloses acute distress rather than continuing a monetization
+  script.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: pii
+    description: >-
+      At least 25,000 people conversed with the personas, exposing their dating
+      activity and personal disclosures to an operator running a monetization
+      pipeline; no breach of a dataset was reported.
+  user_harm:
+    categories: ["economic", "psychological"]
+    affected_count: 25000
+    description: >-
+      At least 25,000 people were deceived into paying for conversations with
+      undisclosed AI personas; some disclosed serious illness or distress and the
+      personas continued in character.
+  scope: >-
+    More than 20 dating apps; 4,700+ AI personas; at least 25,000 unique
+    individuals; roughly 2.36 million messages over two weeks in April 2026
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-04-01"
+    event: "Two-week window in April 2026 during which the personas exchanged ~2.36 million messages with 25,000+ people."
+  - at: "2026-09-10"
+    event: "Anthropic publishes the September 2026 threat report describing GTG-15001."
+
+tags: ["agentic-fraud", "fraud-automation", "dating-apps", "persona", "deception", "claude", "consumer-harm"]
+mappings:
+  owasp_agentic: [T6]
+related_incidents:
+  - "2026-anthropic-gtg-50014-shinyhunters-agentic-extortion"
+  - "2026-anthropic-gtg-84006-mek-impersonation-agent"
+  - "2025-anthropic-project-vend"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    Thousands of autonomous personas run in parallel across many apps, each
+    concealing automation and advancing users through a fixed monetization script,
+    with fabricated engagement signals filling gaps when no human is available;
+    measure how many unique users are engaged and monetized per persona before
+    disclosure or platform action.
+  costbomb_seed_hint: >-
+    A persona fleet sustaining autonomous conversation at roughly 2.36 million
+    messages over two weeks across 4,700 personas; the message and inference
+    volume per engaged user is the resource dimension to bound.
+
+sources:
+  - url: "https://www.anthropic.com/threat-intelligence-report-september-2026"
+    title: "Detecting and countering misuse of AI: September 2026"
+    publisher: Anthropic
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115120553/https://www.anthropic.com/threat-intelligence-report-september-2026"
+  - url: "https://www.techlicious.com/blog/fake-dating-apps-used-claude-to-scam-25000-people-anthropic-says/"
+    title: "Fake Dating Apps Used Claude to Scam 25,000 People, Anthropic Says"
+    publisher: Techlicious
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261017235752/https://www.techlicious.com/blog/fake-dating-apps-used-claude-to-scam-25000-people-anthropic-says/"
