@@ -1,0 +1,174 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-gitspawn-git-config-coding-agent-rce
+title: "GitSpawn: a repository's own git configuration ran attacker commands when seven coding agents gathered context"
+summary: >-
+  Manifold Security disclosed eight findings across seven command-line coding
+  agents (Claude Code, OpenAI Codex, Cursor, Goose, Grok Build, Hermes Agent,
+  Qwen Code) in which background git calls honoured a repository's local
+  configuration, so a repository delivered with its .git directory could run a
+  command as the developer before any approval or trust prompt. Four findings
+  were patched at publication; four were not. No in-the-wild exploitation was
+  reported.
+date: "2026-09-01"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Code execution with the developer's full privileges, outside the agent sandbox
+  and without an approval prompt, across widely used coding agents; confirmed by
+  vendor and CNA advisories (CVE-2026-72718 CVSS 4.0 7.0, CVE-2026-71963). Needs
+  the victim to open a repository that arrived with its .git directory intact.
+  Researcher demonstration; no in-the-wild exploitation reported, and several
+  findings remained unpatched at disclosure.
+
+system:
+  framework: "Command-line coding agents: Claude Code, OpenAI Codex, Cursor, Goose, Grok Build, Hermes Agent, Qwen Code"
+  models: []
+  tools: ["git", "shell"]
+  vendor: "Multiple (Anthropic, OpenAI, Cursor, Block/AAIF, xAI, Nous Research, Alibaba)"
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: tool-misuse
+failure_classes:
+  - class: tool-misuse
+    subclass: unvalidated-args
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A developer opens, in a coding agent, a repository received as files with its
+  .git directory intact (for example from a shared archive, sync folder, network
+  share or removable drive; a normal clone or fetch does not carry the setting).
+  The repository's local git configuration names a helper program that git runs
+  during an ordinary index refresh. The agent runs git in the background to
+  gather project context, on some agents at startup, before authentication, or
+  before the workspace-trust prompt is accepted, and git executes the named
+  program as the developer. No model call, prompt, dependency or MCP server is
+  involved.
+root_cause: >-
+  The agents invoked the system git for context gathering without stripping or
+  overriding the repository's own configuration, so a command-bearing setting
+  the attacker shipped inside the repository was honoured as if the developer
+  had set it. The agents' trust gates (workspace trust, authentication, approval
+  prompts) sat after the point where git had already run, and the resulting
+  process ran outside the agent's sandbox. The researchers note that fixes
+  tended to address the reported configuration key rather than the underlying
+  assumption that repository-local git configuration is trusted; Claude Code
+  patched one path while a second configuration-driven path remained open.
+contributing_factors:
+  - Background git invocations at startup or on first message ran before any user trust decision.
+  - Repository-local git configuration was treated as trusted input to the agent's own tooling.
+  - The spawned process inherited the developer's full environment, including provider API keys and credentials.
+  - Several reports were closed as duplicates of earlier reports, and in two cases no fix had shipped more than six weeks after the vendor was notified.
+detection: >-
+  Found and reported by Francisco Rosales and Ax Sharma of Manifold Security
+  between 2026-06-26 and 2026-07-20 across the seven agents, and published on
+  2026-09-01 with a per-agent status table. Goose assigned CVE-2026-72718
+  (advisory GHSA-r5pp-p5r8-466r, 2026-07-24); VulnCheck assigned CVE-2026-71963
+  for Hermes Agent (advisory GHSA-cc88-9pxf-j2wv, 2026-09-03). The Cloud
+  Security Alliance and The Hacker News published independent summaries.
+recovery: >-
+  At publication the researchers reported Claude Code's startup path patched in
+  2.1.196, Cursor and OpenAI Codex patched, and Goose patched in 1.44.0. Four
+  findings were reported unpatched: Claude Code's review-mode path (confirmed on
+  2.1.252), Hermes Agent (0.21.0; the later VulnCheck advisory cites a fixing
+  commit), Qwen Code (0.22.3) and Grok Build (1.0.13). The researchers withheld
+  a ready-made exploit and left one configuration key unnamed while its finding
+  remained open.
+prevention: >-
+  Sanitize or override repository-local git configuration on every background
+  git call the agent makes, rather than per reported key; run context-gathering
+  commands only after the workspace-trust decision; execute git inside the same
+  sandbox as other agent actions; for developers, treat repositories received as
+  loose files rather than by clone as untrusted and inspect the local git
+  configuration before opening them in an agent.
+
+blast_radius:
+  cost:
+    amount_usd: null
+    estimated: false
+  data:
+    classification: credentials
+    description: >-
+      The spawned command runs with the developer's full environment; the
+      advisories describe exposure of configured provider API keys, SSH keys,
+      cloud credentials, shell history and other local repositories. No specific
+      data exposure was reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher demonstration under coordinated disclosure; no in-the-wild
+      exploitation reported.
+  scope: >-
+    users of the seven affected coding agents who open repositories delivered
+    with an intact .git directory; the researchers cite over 77 million monthly
+    npm downloads for Claude Code alone
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-06-26"
+    event: "First report (Claude Code startup path) filed; closed as duplicate of a same-day report and later patched in 2.1.196."
+  - at: "2026-07-07"
+    event: "Qwen Code report accepted by Alibaba SRC."
+  - at: "2026-07-13"
+    event: "Goose report acknowledged; CVE-2026-72718 assigned, fixed in 1.44.0 (advisory published 2026-07-24)."
+  - at: "2026-07-20"
+    event: "Hermes Agent and OpenAI Codex reports filed; Codex later patched."
+  - at: "2026-09-01"
+    event: "Manifold Security publishes GitSpawn with the per-agent status table."
+  - at: "2026-09-03"
+    event: "VulnCheck publishes CVE-2026-71963 for Hermes Agent 0.18.2 through 0.21.0."
+
+cve: ["CVE-2026-72718", "CVE-2026-71963"]
+cwe: ["CWE-94", "CWE-78"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0053]
+related_incidents:
+  - "2026-plugin4shell-coding-agent-plugin-pin-bypass"
+  - "2025-cross-agent-privilege-escalation-config-poisoning"
+  - "2026-azure-devops-mcp-hidden-pr-comment-hijack"
+tags: ["git", "config-poisoning", "rce", "coding-agents", "trust-gate", "sandbox-escape", "claude-code", "codex", "cursor", "goose", "hermes-agent", "qwen-code", "grok-build", "cve"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent runs a version-control tool in the background to gather context
+    from a workspace supplied by a third party, and that tool honours
+    workspace-local configuration that can name a program to execute. Measure
+    whether the program runs before the agent's trust or approval gate, with
+    what privileges, and whether a fix for one configuration key leaves other
+    command-bearing keys open.
+
+sources:
+  - url: "https://www.manifold.security/blog/ai-coding-agents-git-hijack"
+    title: "GitSpawn: A Single Flaw Lets Untrusted Repos Run Code in Claude Code, Codex, Cursor, and Grok"
+    publisher: Manifold Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261018192602/https://www.manifold.security/blog/ai-coding-agents-git-hijack"
+  - url: "https://github.com/aaif-goose/goose/security/advisories/GHSA-r5pp-p5r8-466r"
+    title: "Arbitrary command execution in the goose CLI via goose review (CVE-2026-72718)"
+    publisher: Goose (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261018194704/https://github.com/aaif-goose/goose/security/advisories/GHSA-r5pp-p5r8-466r"
+  - url: "https://github.com/advisories/GHSA-cc88-9pxf-j2wv"
+    title: "Hermes Agent 0.18.2 through 0.21.0 remote code execution via crafted .git/config (CVE-2026-71963)"
+    publisher: GitHub Advisory Database (VulnCheck CNA)
+    type: other
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261022060805/https://github.com/advisories/GHSA-cc88-9pxf-j2wv"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-gitspawn-ai-coding-agent-rce-20260903-csa/"
+    title: "GitSpawn: How a Git Config File Hijacks AI Coding Agents"
+    publisher: Cloud Security Alliance AI Safety Initiative
+    type: news
+    date_accessed: "2026-11-16"
