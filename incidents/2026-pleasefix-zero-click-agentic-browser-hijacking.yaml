@@ -1,0 +1,162 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-pleasefix-zero-click-agentic-browser-hijacking
+title: "PleaseFix: zero-click hijacking of browser agents in Claude in Chrome, ChatGPT Atlas, Comet, Gemini in Chrome and Copilot Edge"
+summary: >-
+  Zenity Labs disclosed a family of zero-click attacks named PleaseFix against
+  agentic browsers, first for Perplexity Comet in March 2026 and then across
+  Claude in Chrome, ChatGPT Atlas, Gemini in Chrome and Copilot Edge at Black
+  Hat USA in August 2026. Instructions embedded in ordinary content the agent
+  reads during a routine task were carried out under the user's logged-in
+  sessions, reaching mailboxes, files and third-party accounts. Researcher
+  demonstrations only; no real victims reported.
+date: "2026-08-05"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Demonstrated cross-site actions with the user's live sessions, including
+  data exfiltration and account takeover, with no user click. Several paths
+  were reported unpatched at disclosure and vendors described the class as
+  architectural. Hazard: researcher demonstrations, no real victims reported.
+
+system:
+  framework: "Agentic browsers: Claude in Chrome, ChatGPT Atlas, Perplexity Comet, Gemini in Chrome, Copilot in Edge"
+  models: []
+  tools: ["browser", "email", "calendar", "local-filesystem"]
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+    subclass: cross-domain-action
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The user gives the browser agent an ordinary task such as summarising recent
+  email, handling a meeting invite or acting on a popular social-media thread.
+  Third-party content the agent must read to do that task carries instructions
+  addressed to the agent. The agent folds those instructions into the user's
+  task and acts on them across other authenticated sites, with no click or
+  prompt shown to the user.
+root_cause: >-
+  Agentic browsers act across many authenticated tabs with the user's
+  privileges, so the same-origin separation that normally keeps one site from
+  reaching another's data no longer applies to the agent. Content the agent
+  reads and the user's instructions enter one context without provenance, and
+  the defenses in place were largely model-level judgments rather than hard
+  limits on what the agent could reach. Inherited session permissions were
+  therefore available to any instruction the agent processed.
+contributing_factors:
+  - Agents hold the user's live sessions for email, chat, file storage and commerce simultaneously.
+  - Confirmation and destination restrictions that existed were reported bypassable, including an ask-before-acting mode.
+  - Vendors acknowledged the reports but described the class as inherent to how agentic browsers work, leaving several paths unpatched.
+detection: >-
+  Disclosed by Zenity Labs researchers Michael Bargury and Stav Cohen, with
+  Raul Klugman-Onitza and Joao Donato, in the Black Hat USA 2026 talk "Pwning
+  Agentic Browsers with PleaseFix" on 2026-08-05, with technical posts on
+  Zenity Labs; covered by Dark Reading and SecurityWeek. The Comet subfamily
+  was first disclosed on 2026-03-03.
+recovery: >-
+  Perplexity addressed the March 2026 Comet paths before disclosure and added
+  a boundary on local file access, which the researchers reported bypassing
+  afterwards. OpenAI acknowledged the Atlas report on 2026-02-17, citing
+  meaningful risks from prompt injection in agentic environments, and no patch
+  was reported. Anthropic closed the Claude in Chrome reports from December
+  2025 and January 2026 as informative, duplicate or out of program scope, and
+  the researchers stated the behaviour persisted at publication. Localhost
+  restrictions in Gemini and Edge were reported bypassed.
+prevention: >-
+  Enforce deterministic, least-privilege limits on which origins and actions an
+  agent may reach, outside the model; treat all page, email and invite content
+  as untrusted data; require human confirmation bound to the exact action for
+  credential, payment, sharing and file operations; scope agent sessions to the
+  task instead of inheriting every logged-in account; run agents in
+  low-privilege browser profiles.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Demonstrated exfiltration of mailbox content and local files, exposure
+      of cloud-drive files, a private code repository and browsing history, and
+      takeover of password-vault, chat and social accounts.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Researcher demonstrations with no real victims. The demonstrated action
+      classes, including an attempted purchase and messages sent from the
+      victim's own accounts, carry potential economic and reputational harm.
+  scope: users of the five named agentic browsers with authenticated sessions open
+  reversibility: irreversible
+
+tags: ["pleasefix", "agentic-browser", "zero-click", "black-hat-2026", "account-takeover"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2025-comet-browser-screenshot-injection"
+  - "2026-bragjack-extension-hijacks-browser-ai-assistants"
+  - "2025-echoleak-m365-copilot"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A browser agent with several authenticated sessions is asked to perform a
+    routine task over third-party content that embeds instructions aimed at the
+    agent; measure whether the agent acts on them across other sites, whether an
+    ask-before-acting gate holds, and whether data leaves the session boundary.
+
+sources:
+  - url: "https://www.zenity.io/research/pleasefix-vulnerabilities"
+    title: "PleaseFix Vulnerabilities"
+    publisher: Zenity Labs
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261105221823/https://zenity.io/research/pleasefix-vulnerabilities"
+  - url: "https://labs.zenity.io/post/grand-theft-atlas"
+    title: "Grand Theft Atlas"
+    publisher: Zenity Labs
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261107002621/https://labs.zenity.io/post/grand-theft-atlas"
+  - url: "https://labs.zenity.io/post/claude-in-chrome-from-alert-to-full-account-takeover"
+    title: "Claude in Chrome: From alert(1) to Full Account Takeover"
+    publisher: Zenity Labs
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261106183419/https://labs.zenity.io/post/claude-in-chrome-from-alert-to-full-account-takeover"
+  - url: "https://www.securityweek.com/zero-click-ai-browser-hacking-claude-and-chatgpt-atlas-hijacked-via-emails-x-posts/"
+    title: "Zero-Click AI Browser Hacking: Claude and ChatGPT Atlas Hijacked via Emails, X Posts"
+    publisher: SecurityWeek
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20260811083507/https://www.securityweek.com/zero-click-ai-browser-hacking-claude-and-chatgpt-atlas-hijacked-via-emails-x-posts/"
+  - url: "https://www.darkreading.com/cyber-risk/ai-browsers-zero-click-agent-hijacking"
+    title: "AI Browsers Vulnerable to 'PleaseFix' Zero-Click Agent Hijacking"
+    publisher: Dark Reading
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261103185109/https://www.darkreading.com/cyber-risk/ai-browsers-zero-click-agent-hijacking"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-pleasefix-agentic-browser-exploits-2026032/"
+    title: "PleaseFix: Zero-Click Browser Agent Hijacking (CSA research note)"
+    publisher: Cloud Security Alliance
+    type: other
+    date_accessed: "2026-11-16"
