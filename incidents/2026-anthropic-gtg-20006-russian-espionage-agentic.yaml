@@ -1,0 +1,148 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-anthropic-gtg-20006-russian-espionage-agentic
+title: "Claude-driven workflows ran an espionage chain against 20+ government and defense targets, attributed consistent with Midnight Blizzard"
+summary: >-
+  In its September 2026 threat report, Anthropic described an espionage operation it tracks as GTG-20006, attributed consistent with Midnight Blizzard. The operator built Claude Code skills that drove AI workflows across reconnaissance, phishing, credential harvesting, lateral movement, collection, persistence, and malware-evasion loops that redeployed implants until undetected. More than 20 government and defense organizations were targeted, with hundreds of gigabytes stolen.
+date: "2026-09-10"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A realized, mostly automated espionage campaign against 20-plus government,
+  defense, and diplomatic targets that exfiltrated hundreds of gigabytes,
+  including a North African authority's database of 300,000-plus national
+  identity records and registry data for more than half a million companies.
+
+system:
+  framework: Claude Code skills driving custom AI workflows for the full espionage chain
+  models: ["claude-haiku", "claude-sonnet", "claude-opus"]
+  tools: ["claude-code", "device-code-phishing", "headless-browser", "cloud-storage-apis"]
+  vendor: GTG-20006 (attribution consistent with Midnight Blizzard, per Anthropic)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The operator mainly modified the Claude Code skills that drove the workflows,
+  letting AI handle most execution. AI fingerprinted email and remote-access
+  systems and built phishing target lists, ran device-code phishing and
+  credential harvesting, executed commands against victim systems, and moved
+  laterally under the operator's direction. AI organized hundreds of gigabytes of
+  stolen data, automated registration of actor-controlled devices in victim
+  tenants for persistence, and ran scheduled jobs that renewed stolen access
+  tokens and pulled cloud storage without human involvement. Monitoring agents
+  checked whether implants were flagged by security products, then modified and
+  redeployed them until they went undetected.
+root_cause: >-
+  Agentic skills let one operator delegate an end-to-end espionage chain to AI,
+  including a closed evasion loop that iterated malware faster than detection
+  signatures updated and scheduled collection that continued without a human. The
+  bottleneck shifted from operator time to the targets' own identity, token, and
+  endpoint controls.
+contributing_factors:
+  - Claude Code skills encoded reusable workflows for reconnaissance, phishing, collection, persistence, and evasion.
+  - Device-code phishing and stolen credentials provided access that app-level controls did not stop.
+  - Monitoring agents automated the detect-modify-redeploy loop for implants, compressing the evasion cycle.
+  - Scheduled jobs renewed stolen tokens and harvested cloud storage without operator involvement.
+  - Automated device registration in victim tenants established persistent access.
+detection: >-
+  Anthropic identified the activity through its own investigations of Claude
+  misuse covering December 2025 to August 2026 and disclosed it in the September
+  2026 threat report. Attribution was assessed as consistent with public
+  reporting on Midnight Blizzard.
+recovery: >-
+  Anthropic disrupted the activity, banned the associated accounts, strengthened
+  its AI safeguards based on what it learned, and shared intelligence with
+  authorities and industry partners where appropriate. Anthropic noted no
+  activity on its Claude Fable or Mythos models.
+prevention: >-
+  Harden identity against device-code phishing and token theft; monitor for
+  automated device registration and anomalous token renewal; detect
+  machine-speed malware-evasion loops that rapidly re-emit altered implants; and
+  enforce provider-side abuse detection against agentic skills that encode
+  full-chain intrusion workflows.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records: 300000
+    classification: pii
+    description: >-
+      Hundreds of gigabytes were exfiltrated across targets. A North African
+      government technology authority's stolen credentials compromised more than
+      300,000 national identity records and corporate registry data for more than
+      half a million companies; mailboxes of two drone-component makers and a
+      drone-vision SDK were also taken.
+  user_harm:
+    categories: ["legal-regulatory", "economic"]
+    affected_count: 300000
+    description: >-
+      Personal records of more than 300,000 individuals in a North African
+      registry were exposed, alongside government, defense, and diplomatic data
+      from more than 20 organizations.
+  scope: >-
+    More than 20 organizations targeted (government ministries, defense and
+    intelligence bodies, diplomatic missions, defense-industrial firms), mainly
+    in Ukraine and Europe with some in the Middle East, Asia, and North Africa
+  reversibility: irreversible
+
+timeline:
+  - at: "2025-12-01"
+    event: "Start of the activity window covered by Anthropic's report."
+  - at: "2026-08-31"
+    event: "End of the covered activity window."
+  - at: "2026-09-10"
+    event: "Anthropic publishes the September 2026 threat report describing GTG-20006."
+
+tags: ["agentic-attack", "cyber-ops", "espionage", "claude-code", "midnight-blizzard", "nation-state", "data-exfiltration"]
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2025-gtg1002-ai-orchestrated-espionage"
+  - "2026-deepseek-hermes-autonomous-campaign"
+  - "2026-unit42-ai-agent-enterprise-intrusion-10-hours"
+  - "2026-anthropic-gtg-10007-chinese-exploit-foundry"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    Reusable agentic skills drive the full espionage chain in parallel across
+    many targets, with a closed monitoring loop that re-emits altered implants
+    whenever one is flagged and scheduled jobs that renew tokens and pull storage
+    unattended; measure how long persistence and collection continue per target
+    before identity and token controls cut them off.
+
+sources:
+  - url: "https://www.anthropic.com/threat-intelligence-report-september-2026"
+    title: "Detecting and countering misuse of AI: September 2026"
+    publisher: Anthropic
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115120553/https://www.anthropic.com/threat-intelligence-report-september-2026"
+  - url: "https://www.securityweek.com/anthropic-says-russian-hackers-used-claude-ai-to-automate-malware-evasion/"
+    title: "Anthropic Says Russian Hackers Used Claude AI to Automate Malware Evasion"
+    publisher: SecurityWeek
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261002133920/https://www.securityweek.com/anthropic-says-russian-hackers-used-claude-ai-to-automate-malware-evasion/"
+  - url: "https://thenextweb.com/news/anthropic-claude-misuse-threat-intelligence-report"
+    title: "Anthropic details how Claude was misused for surveillance and weapons"
+    publisher: The Next Web
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261024205703/https://thenextweb.com/news/anthropic-claude-misuse-threat-intelligence-report"
