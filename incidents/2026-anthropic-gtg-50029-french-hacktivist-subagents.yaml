@@ -1,0 +1,145 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-anthropic-gtg-50029-french-hacktivist-subagents
+title: "A single operator used Claude sub-agents to breach 14 of 42 political targets and build a doxxing platform"
+summary: >-
+  Anthropic's September 2026 threat report described a politically motivated French-speaking operator it tracks as GTG-50029 who used Claude to build tooling and run sub-agents for recon and code review. The actor scanned public containers for exposed API keys, exploited an undocumented WordPress race condition to create rogue admin accounts, and planted web shells. Across 42 tracked targets it reached at least 14 and built a doxxing platform loaded with tens of millions of records.
+date: "2026-09-10"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A single operator, amplified by AI sub-agents, gained internal access to at
+  least 14 of 42 targeted political and media entities, exfiltrated an estimated
+  12 to 26 GB of database dumps, and stood up a doxxing platform exposing personal
+  data of individuals tied to a political movement, including minors.
+
+system:
+  framework: Claude with a sub-agent framework for recon, code review, and finding vetting; custom tooling
+  models: ["claude"]
+  tools: ["claude", "rust-key-scanner", "proxy-rotation", "wordpress", "webshell", "fafsearch-doxxing-platform"]
+  vendor: GTG-50029 (politically motivated French-speaking operator, per Anthropic)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: insecure-output
+    subclass: secret-exposure
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Using a custom Rust scanner, the operator found and validated API keys exposed
+  in public containers and rotated them through a local proxy so traffic blended
+  with the legitimate owner's. Claude helped develop and debug a previously
+  undocumented WordPress re-installation race condition that created a rogue
+  administrator account without valid credentials, used on at least four sites,
+  then planted a web shell hidden among font assets and a plugin that harvested
+  submitted credentials. A sub-agent framework handled pre- and
+  post-authentication reconnaissance, code review, and vetting of findings from
+  different models, and the operator built a doxxing platform with ingestion,
+  cross-referencing, normalization, and ranking.
+root_cause: >-
+  Exposed API keys and an unpatched application race condition supplied access,
+  and AI sub-agents let one operator parallelize reconnaissance, exploit
+  development, and data processing to a scale and breadth normally requiring a
+  team, including building a full doxxing pipeline.
+contributing_factors:
+  - API keys were exposed in public containers and could be validated and reused through a proxy.
+  - A previously undocumented WordPress re-installation race condition created rogue admin accounts without credentials.
+  - A sub-agent framework parallelized recon, code review, and cross-model finding vetting for one operator.
+  - Poisoned victim backups were set so that restoring them would re-infect the site.
+detection: >-
+  Anthropic detected the activity through its investigations of Claude misuse and
+  disclosed it in the September 2026 threat report, assessing the actor as a
+  single politically motivated French-speaking operator.
+recovery: >-
+  Anthropic disrupted the activity, strengthened its safeguards, and shared
+  intelligence with authorities and partners where appropriate. Affected sites
+  would need to patch the WordPress flaw, rotate exposed keys, and rebuild from
+  clean backups given the re-infection poisoning.
+prevention: >-
+  Keep API keys out of public containers and rotate any that leak; patch
+  application re-installation and race-condition flaws; validate backup integrity
+  against re-infection; monitor for rogue admin-account creation and web-shell
+  persistence; and enforce provider-side abuse detection against sub-agent
+  frameworks that parallelize intrusion and data-processing tasks.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records: 140000
+    classification: pii
+    description: >-
+      An estimated 12 to 26 GB of database dumps were exfiltrated, including about
+      140,000 records containing users' political opinions from a campaign
+      platform; a doxxing platform was loaded with tens of millions of rows,
+      including national health identifiers and justice-system breach data.
+  user_harm:
+    categories: ["human-rights", "psychological", "legal-regulatory"]
+    affected_count:
+    description: >-
+      Members, donors, and staff of political parties and media outlets, and
+      individuals tied to a political movement, had personal data exposed through
+      a dark-web doxxing platform; records included minors.
+  scope: >-
+    42 tracked target entities; internal access to at least 14; a doxxing platform
+    loaded with tens of millions of rows
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-02-06"
+    event: "Earliest campaign infrastructure dated in Anthropic's indicators (a key-validation server)."
+  - at: "2026-07-04"
+    event: "Latest campaign infrastructure dated in Anthropic's indicators."
+  - at: "2026-09-10"
+    event: "Anthropic publishes the September 2026 threat report describing GTG-50029."
+
+tags: ["agentic-attack", "cyber-ops", "hacktivist", "sub-agents", "wordpress", "doxxing", "claude", "secret-exposure"]
+mappings:
+  owasp_llm: [LLM02, LLM05]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-anthropic-gtg-10007-chinese-exploit-foundry"
+  - "2026-anthropic-gtg-50014-shinyhunters-agentic-extortion"
+  - "2026-deepseek-hermes-autonomous-campaign"
+  - "2026-cyberxero-iab-claude-code-agents"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    One operator directs a sub-agent framework that runs reconnaissance, exploit
+    development, and cross-model finding review in parallel across dozens of
+    targets, while a separate pipeline ingests and cross-references breach data at
+    scale; measure how many of a fixed target set are breached and how much data
+    is processed per operator as sub-agent count scales.
+
+sources:
+  - url: "https://www.anthropic.com/threat-intelligence-report-september-2026"
+    title: "Detecting and countering misuse of AI: September 2026"
+    publisher: Anthropic
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115120553/https://www.anthropic.com/threat-intelligence-report-september-2026"
+  - url: "https://www.unite.ai/anthropic-details-disrupted-claude-misuse-across-seven-harm-areas"
+    title: "Anthropic Details Disrupted Claude Misuse Across Seven Harm Areas"
+    publisher: Unite.AI
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261028192248/https://www.unite.ai/anthropic-details-disrupted-claude-misuse-across-seven-harm-areas/"
+  - url: "https://thenextweb.com/news/anthropic-claude-misuse-threat-intelligence-report"
+    title: "Anthropic details how Claude was misused for surveillance and weapons"
+    publisher: The Next Web
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261024205703/https://thenextweb.com/news/anthropic-claude-misuse-threat-intelligence-report"
