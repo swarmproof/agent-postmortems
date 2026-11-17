@@ -1,0 +1,144 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-pandex-coding-agents-unowned-package-installs
+title: "Coding agents followed vendor llms.txt documentation into unclaimed packages and ran researcher code inside corporate networks"
+summary: >-
+  PANDEX Research reported a study, covered by Ars Technica, in which AI coding agents followed install instructions in companies' published llms.txt documentation and pulled in unregistered packages. The researchers scanned thousands of domains, found documentation pointing to unregistered package or domain names, registered a handful, and hosted benign packages that phoned home. A Fortune 500 machine called back within an hour; beacons linked installs to Claude, Codex, and Hermes.
+date: "2026-08-27"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  A controlled study with benign beacon packages, not a malicious compromise, but
+  it demonstrated that coding agents will install unowned code referenced in
+  vendor documentation and that such installs executed inside real Fortune 500 and
+  startup networks, a dependency-confusion path comparable to past supply-chain
+  attacks.
+
+system:
+  framework: AI coding agents following published llms.txt documentation
+  models: ["claude", "codex", "hermes"]
+  tools: ["llms-txt", "npm", "pypi", "rdap"]
+  vendor: PANDEX Research (study authors)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: dependency
+  - class: tool-misuse
+    subclass: unvalidated-args
+attack_vector: supply-chain
+causation:
+  entity: ai
+  intentionality: unintentional
+  timing: post-deployment
+
+trigger: >-
+  Companies publish llms.txt and llms-full.txt files to guide AI agents, and some
+  of those files list install commands that reference package or domain names
+  nobody has registered. The researchers scanned 6,214 live company domains,
+  found 8,265 llms.txt and llms-full.txt files, and identified about 120 that
+  pointed to unregistered package or domain names. They registered a handful of
+  the unclaimed names and hosted packages that made any machine running them
+  contact the researchers' server, and their beacon recorded the chain of parent
+  processes behind each install. When an agent followed the documentation, it
+  installed the unowned package without verifying that the referenced name
+  belonged to the vendor.
+root_cause: >-
+  Coding agents treated vendor-published documentation as a trusted instruction
+  source and executed install commands without checking that the referenced
+  package or domain was actually registered to the vendor, so a name left
+  unclaimed in public documentation became a path for arbitrary code to run inside
+  the reader's environment.
+contributing_factors:
+  - Published llms.txt and llms-full.txt documentation referenced package and domain names that were never registered.
+  - Agents followed install commands from documentation without validating package ownership against the registry.
+  - Install commands appeared in the vendor's own instruction files, so they looked legitimate to the agent.
+  - Running from within corporate environments, the installs executed on real Fortune 500 and startup machines.
+detection: >-
+  PANDEX Research detected the behavior through its own instrumentation: registered
+  unclaimed names, benign beacon packages, and parent-process logging. Within an
+  hour a Fortune 500 company's machine phoned home, followed by a few dozen more
+  callbacks from other Fortune 500 companies and startups; the parent-process data
+  linked the installs to Claude, OpenAI Codex, and Nous Research Hermes. Ars
+  Technica reported the findings in August 2026.
+recovery: >-
+  The study used benign packages that only sent beacons, so no malicious payload
+  ran. The disclosure recommends that vendors audit published llms.txt
+  documentation for unregistered references and that agent operators validate
+  package provenance before install.
+prevention: >-
+  Audit and lock the package and domain names referenced in published llms.txt and
+  llms-full.txt files, and pre-register or remove unclaimed references; configure
+  coding agents to verify package ownership and provenance against registries
+  before running install commands from documentation; and sandbox agent-driven
+  installs so unowned code cannot reach production environments.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: internal
+    description: >-
+      No data was exfiltrated; the benign beacon packages recorded only callback
+      and parent-process metadata from the machines that ran them.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A controlled demonstration: real corporate machines ran the researchers'
+      benign packages, but no malicious code was deployed and no harm was reported.
+  scope: >-
+    6,214 company domains scanned; 8,265 documentation files found; ~120 with
+    unregistered references; callbacks from a Fortune 500 company within an hour and
+    a few dozen more organizations over time
+  reversibility: reversible
+
+timeline:
+  - at: "2026-08-27"
+    event: "Ars Technica reports the PANDEX Research study on coding agents installing unowned code referenced in vendor documentation."
+  - at: "2026-09-04"
+    event: "Security commentary summarizes the study and its figures."
+
+tags: ["supply-chain", "dependency-confusion", "coding-agents", "llms-txt", "hazard", "claude", "codex", "hermes"]
+mappings:
+  owasp_llm: [LLM03, LLM06]
+  owasp_agentic: [T2]
+  mitre_atlas: [AML.T0053]
+related_incidents:
+  - "2026-chaindrop-npm-worm"
+  - "2026-tensorlake-npm-shaihulud-compromise"
+  - "2026-microsoft-mcp-tool-description-poisoning"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    Many coding agents across different organizations read the same class of
+    vendor documentation that references an unregistered package name; an attacker
+    who registers that name once has their code fetched and run by every agent that
+    follows the documentation, so one unclaimed reference fans out to many
+    environments in parallel.
+
+sources:
+  - url: "https://whatwouldai.do/"
+    title: "PANDEX Research: Data became code - we ran code inside Fortune 500s using files they published for AI agents"
+    publisher: PANDEX Research
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261013102044/https://whatwouldai.do/"
+  - url: "https://arstechnica.com/security/2026/08/claude-codex-and-hermes-installed-unowned-code-inside-corporate-networks/"
+    title: "Claude, Codex, and Hermes installed unowned code inside corporate networks"
+    publisher: Ars Technica
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261004080223/https://arstechnica.com/security/2026/08/claude-codex-and-hermes-installed-unowned-code-inside-corporate-networks/"
+  - url: "https://www.schneier.com/blog/archives/2026/09/ai-coding-agents-are-installing-unknown-untrusted-code-on-corporate-networks.html"
+    title: "AI Coding Agents Are Installing Unknown/Untrusted Code on Corporate Networks"
+    publisher: Schneier on Security
+    type: other
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261003235643/https://www.schneier.com/blog/archives/2026/09/ai-coding-agents-are-installing-unknown-untrusted-code-on-corporate-networks.html"
