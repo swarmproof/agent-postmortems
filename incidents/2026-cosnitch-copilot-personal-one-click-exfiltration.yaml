@@ -1,0 +1,147 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-cosnitch-copilot-personal-one-click-exfiltration
+title: "CoSnitch: a crafted link made Microsoft Copilot Personal run attacker instructions and exfiltrate connected-account data"
+summary: >-
+  Varonis Threat Labs disclosed CoSnitch (CVE-2026-24301), a one-click flaw in
+  Microsoft Copilot Personal in which a crafted link ran attacker instructions
+  inside the victim's authenticated session with no confirmation. Copilot could
+  query connected services, send results out through its built-in fetch feature,
+  and persist attacker instructions into its memory. Reported December 2025;
+  Microsoft shipped a server-side fix on 2026-08-18. No in-the-wild exploitation
+  reported.
+date: "2026-08-18"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A single click could run attacker instructions in the victim's session and
+  move data from connected Gmail, Drive, Calendar and OneDrive out through a
+  trusted workflow, with persistence into assistant memory. Vendor-confirmed
+  and assigned a CVE. Hazard: researcher-discovered, patched before any known
+  exploitation.
+
+system:
+  framework: "Microsoft Copilot Personal (consumer assistant)"
+  models: []
+  tools: ["gmail-connector", "google-drive-connector", "calendar-connector", "onedrive-connector", "url-fetch", "memory"]
+  vendor: Microsoft
+  autonomy_level: human-in-the-loop
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: data-exfiltration
+    subclass: via-output
+  - class: memory-context-poisoning
+    subclass: memory-injection
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The victim clicks a crafted link that opens the consumer Copilot assistant.
+  The link carries content the assistant treats as a trusted prompt and acts on
+  inside the victim's authenticated session with no confirmation step. Copilot
+  then uses connected services and its built-in fetch capability. Separately,
+  content from a summarised web page could write instructions into Copilot's
+  persistent memory.
+root_cause: >-
+  The assistant treated content arriving through a link, and content in a page
+  it summarised, as trusted instructions rather than untrusted data. Prompts
+  could run without an explicit user-intent check; connector access was assumed
+  to be user-initiated; the outbound fetch feature had no egress restriction
+  distinguishing exfiltration from routine summarisation; and memory writes from
+  untrusted content were not constrained.
+contributing_factors:
+  - Content from a link or a summarised page entered the model context with the standing of user instructions.
+  - A built-in outbound fetch provided a channel for data to leave through a trusted workflow.
+  - Writes into persistent memory were not restricted to trusted sources, so injected instructions could survive the session.
+  - The assistant could be led to disclose details of its own safeguards during an extended conversation, which the researchers used to find the issue.
+detection: >-
+  Discovered and named CoSnitch by Varonis Threat Labs (researcher Lior Adar),
+  disclosed with a technical write-up around the 2026-08-18 patch; tracked as
+  CVE-2026-24301 and covered by The Hacker News and Dark Reading.
+recovery: >-
+  Varonis reported the issue to Microsoft in December 2025. Microsoft shipped a
+  server-side fix on 2026-08-18 and published the CVE in its Security Update
+  Guide. No separate Microsoft statement was located in the reviewed sources.
+  Neither Varonis nor Microsoft found evidence of exploitation in the wild.
+prevention: >-
+  Treat link-supplied and page-supplied content as untrusted, never as
+  instructions; require explicit user intent before an assistant acts on a
+  prompt; restrict outbound fetch destinations and distinguish exfiltration
+  from summarisation; constrain memory writes to trusted sources and surface
+  saved instructions for review; apply provenance labelling to retrieved
+  content.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Content reachable in the victim's Copilot session, including connected
+      Gmail message bodies, Google Drive, Calendar and OneDrive, plus chat
+      history and memory; in testing, emails containing plaintext credentials
+      were retrieved.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Researcher demonstration; no real victims reported. Persisted memory
+      instructions could outlast a password change, extending exposure.
+  scope: Microsoft Copilot Personal accounts prior to the 2026-08-18 server-side fix
+  reversibility: irreversible
+
+cve: ["CVE-2026-24301"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM04, LLM06]
+  owasp_agentic: [T1, T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+tags: ["cosnitch", "copilot-personal", "one-click", "memory-poisoning", "data-exfiltration"]
+related_incidents:
+  - "2025-echoleak-m365-copilot"
+  - "2026-agentforger-chatgpt-workspace-agent-forgery"
+  - "2026-rovoblast-atlassian-rovo-one-click-prefill"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A crafted link opens an assistant in an authenticated session and supplies
+    content the assistant treats as a prompt; measure whether it acts without a
+    user-intent check, queries connected services, sends results through its
+    fetch feature, and writes attacker instructions into persistent memory.
+
+sources:
+  - url: "https://www.varonis.com/blog/cosnitch"
+    title: "CoSnitch: When Your AI Assistant Becomes Its Own Whistleblower"
+    publisher: Varonis Threat Labs
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-24301"
+    title: "CVE-2026-24301 — Microsoft Security Update Guide"
+    publisher: Microsoft
+    type: vendor-response
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261029040921/https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-24301"
+  - url: "https://thehackernews.com/2026/08/microsoft-copilot-personal-flaws-could.html"
+    title: "Microsoft Copilot Personal Flaws Could Let One Click Exfiltrate Data From Connected Apps"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261023084743/https://thehackernews.com/2026/08/microsoft-copilot-personal-flaws-could.html"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-microsoft-copilot-cosnitch-data-exfiltrati/"
+    title: "CoSnitch: One-Click Data Exfiltration in Copilot Personal (CSA research note)"
+    publisher: Cloud Security Alliance
+    type: other
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261012142525/https://labs.cloudsecurityalliance.org/research/csa-research-note-microsoft-copilot-cosnitch-data-exfiltrati/"
