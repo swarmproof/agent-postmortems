@@ -1,0 +1,139 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-paperclip-import-authz-bypass-unauthenticated-rce
+title: "Paperclip: open sign-up and an under-gated import path let an unauthenticated party deploy a command-running agent (CVE-2026-41679)"
+summary: >-
+  Oasis Security found that Paperclip, an open-source platform for running
+  autonomous AI agents, could be taken over without credentials in its default
+  authenticated mode. Account creation was open by default and the path for
+  importing an agent bundle required less authorization than creating one
+  directly, so an imported agent whose configuration defines commands ran on the
+  server. Fixed in 2026.410.0; two further authorization gaps were disclosed and
+  fixed alongside it.
+date: "2026-04-10"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: critical
+severity_rationale: >-
+  Unauthenticated remote code execution on any network-reachable instance in
+  default configuration, rated CVSS 10.0. Researcher proof of concept with a
+  vendor fix; no in-the-wild exploitation reported.
+
+system:
+  framework: Paperclip (agent orchestration control plane)
+  models: []
+  tools: ["paperclip-api", "company-import"]
+  vendor: Paperclip
+  autonomy_level: fully-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: supply-chain-compromise
+    subclass: extension
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A party with only network access to a Paperclip instance running in its default
+  authenticated mode registered an account and submitted an agent bundle through
+  the import path. Because that path did not require the instance-admin
+  authorization that direct creation did, the platform accepted the bundle and
+  ran the commands its agent configuration defined, on the server.
+root_cause: >-
+  Two equivalent operations were held to different authorization bars: creating
+  a company and its agents directly required an instance administrator, while
+  importing the same definition from a bundle did not. Combined with open
+  self-registration as the undocumented default, the platform's execution sink
+  for agent configuration became reachable from an unauthenticated position.
+  Oasis summarised the common pattern across its three findings as agent
+  configuration being treated as trusted input although it is functionally code.
+contributing_factors:
+  - Self-registration was enabled by default and the setting to disable it was undocumented.
+  - The import path required a lower authorization level than the equivalent direct-creation path.
+  - Agent configuration directly defines commands the platform executes.
+  - Several other API routes lacked authentication or company-scoping checks (GHSA-xfqj-r5qw-8g4j).
+  - In local-development mode, loopback-only trust could be crossed from a web page (GHSA-x8hx-rhr2-9rf7).
+detection: >-
+  Reported by Oasis Security (credited reporter Sagi Layani) through Paperclip's
+  security process. GitHub advisory GHSA-68qg-g8mg-6pr7 was published on
+  2026-04-10; the companion advisories followed on 2026-04-16. Oasis published
+  its write-up on 2026-08-05.
+recovery: >-
+  Paperclip released 2026.410.0 fixing the import authorization bypass, with the
+  further findings fixed by 2026.416.0 per Oasis. No in-the-wild exploitation
+  was reported.
+prevention: >-
+  Hold every path that creates or imports executable agent configuration to the
+  same authorization bar; ship self-registration disabled by default and
+  document the control; treat agent bundles as code subject to review and
+  approval before execution; audit execution logs for unexpected agent
+  deployments.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: confidential
+    description: >-
+      Code execution on the control-plane server exposes agent credentials,
+      connected-service secrets and all company data the instance holds. No
+      specific exposure was reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept; no in-the-wild exploitation reported.
+  scope: "Network-reachable Paperclip instances below 2026.410.0 in authenticated mode with default settings"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-04-10"
+    event: "GHSA-68qg-g8mg-6pr7 / CVE-2026-41679 published; fixed in Paperclip 2026.410.0."
+  - at: "2026-04-16"
+    event: "Companion advisories GHSA-xfqj-r5qw-8g4j and GHSA-x8hx-rhr2-9rf7 published."
+  - at: "2026-08-05"
+    event: "Oasis Security publishes its disclosure write-up."
+
+cve: ["CVE-2026-41679"]
+cwe: ["CWE-287", "CWE-862", "CWE-1188"]
+mappings:
+  owasp_llm: [LLM03, LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-skills-sh-paperclip-browser-use-credential-stealer-skills"
+  - "2026-mcphub-missing-authz-server-config-rce"
+  - "2026-aws-bedrock-agentcore-god-mode"
+tags: ["paperclip", "control-plane", "authorization", "insecure-default", "config-as-code", "rce"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent control plane executes commands defined in agent configuration and
+    exposes more than one path for loading that configuration. Measure whether a
+    low- or no-privilege caller can deploy a command-running agent through the
+    least-gated path, and how many agents it can launch before an operator
+    notices.
+
+sources:
+  - url: "https://www.oasis.security/blog/paperclip-agent-vulnerabilities"
+    title: "Paperclip Agent Vulnerabilities: Three Ways an Agent Control Plane Can Be Taken Over"
+    publisher: Oasis Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://github.com/advisories/GHSA-68qg-g8mg-6pr7"
+    title: "paperclip Vulnerable to Unauthenticated Remote Code Execution via Import Authorization Bypass"
+    publisher: GitHub Advisory Database
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://github.com/advisories/GHSA-xfqj-r5qw-8g4j"
+    title: "Paperclip: Unauthenticated Access to Multiple API Endpoints in Authenticated Mode"
+    publisher: GitHub Advisory Database
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
