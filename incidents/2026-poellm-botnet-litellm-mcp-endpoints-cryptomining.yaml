@@ -1,0 +1,189 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-poellm-botnet-litellm-mcp-endpoints-cryptomining
+title: "PoeLLM botnet compromised 3,400+ exposed AI servers, including LiteLLM gateways via MCP test endpoints, for cryptomining"
+summary: >-
+  Lumen's Black Lotus Labs reported on 2026-10-07 that a Linux malware family it
+  calls PoeLLM had compromised more than 3,400 internet-exposed servers since
+  April 2026, chiefly LiteLLM gateways and Ollama hosts, plus Gotenberg and
+  Gitea. Against LiteLLM the likely path was CVE-2026-42271, an MCP server
+  preview feature that executed a caller-supplied command on the proxy host.
+  Infected hosts ran XMRig and Iron miners and were reused as scanners and
+  exploit workers.
+date: "2026-10-07"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  A self-spreading campaign realized compromise of thousands of AI-serving
+  hosts in the United States and Western Europe, with persistent miners,
+  remote-shell capability and reuse of victims as attack infrastructure; the
+  LiteLLM path was a command-execution flaw in an MCP feature that CISA added
+  to its Known Exploited Vulnerabilities catalog.
+
+system:
+  framework: LiteLLM (AI gateway / LLM proxy) and Ollama; attacker-operated Linux botnet
+  models: []
+  tools: ["mcp", "litellm", "ollama", "gotenberg", "gitea", "xmrig"]
+  vendor: BerriAI (LiteLLM); Ollama; multiple
+  autonomy_level: unknown
+
+primary_failure_class: tool-misuse
+failure_classes:
+  - class: tool-misuse
+    subclass: unvalidated-args
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: cost-blowup
+    subclass: mispriced-action
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Automated scanning from already-infected hosts found servers exposing
+  LiteLLM, Ollama, Gotenberg or Gitea to the internet. For LiteLLM, the
+  input class was an MCP server definition submitted to the gateway's
+  connection-preview feature. Because the feature started the described
+  server as a local process to test it, a definition naming an attacker
+  command gave code execution on the proxy host. A Starlette host-header
+  flaw (CVE-2026-48710) could remove the API-key requirement. The resulting
+  foothold fetched the PoeLLM implant, which installed miners, opened a remote
+  shell, and turned the host into a scanner and exploit worker for new
+  victims.
+root_cause: >-
+  LiteLLM's MCP preview endpoints accepted a complete server configuration
+  from any holder of a proxy API key, including low-privilege internal-user
+  keys, and executed it to test connectivity without the administrator role
+  check applied to the save path and without sandboxing. Operators exposed
+  gateways and model servers directly to the internet, so a single
+  unauthenticated or weakly authenticated request reached the feature. The
+  campaign's reuse of victims as scanners meant each compromise widened the
+  search for the next.
+contributing_factors:
+  - MCP test endpoints executed a submitted server definition on the host with only an API-key check and no role restriction (fixed in 1.83.7 by requiring PROXY_ADMIN).
+  - A Starlette host-header validation bypass (CVE-2026-48710) let the authentication requirement be sidestepped on unpatched stacks.
+  - AI gateways and model servers were reachable from the public internet on their default ports.
+  - GPU-equipped AI hosts were attractive mining targets, and infected hosts were repurposed as exploit workers and command-and-control relays.
+  - Command-and-control addresses were encoded in a public code-hosting file, letting the operator rotate infrastructure without touching victims.
+detection: >-
+  Black Lotus Labs first encountered the infrastructure in early June 2026 via
+  a compromised Ivanti Sentry victim and tracked it to a peak of roughly 800
+  active victims per day in mid-June. CISA added CVE-2026-42271 to its Known
+  Exploited Vulnerabilities catalog on 2026-06-08. Lumen published its report
+  on 2026-10-07 and later raised the cumulative victim count from about 2,200
+  to more than 3,400 servers; BleepingComputer corrected its coverage
+  accordingly.
+recovery: >-
+  LiteLLM fixed CVE-2026-42271 in 1.83.7 (2026-05-08) by restricting the MCP
+  test endpoints to administrators, and Starlette 1.0.1 fixed CVE-2026-48710.
+  Lumen null-routed identified command-and-control infrastructure on its
+  network and published indicators. Guidance to operators was to check
+  network logs for the published indicators, patch LiteLLM and its
+  dependencies, remove AI tools from direct internet exposure, and restrict
+  service ports to what is required. No LiteLLM statement on the campaign was
+  reported.
+prevention: >-
+  Never execute a caller-supplied tool-server definition outside a sandbox,
+  even for connectivity tests; apply the same role checks to preview paths as
+  to save paths; keep AI gateways and model servers behind authentication and
+  a firewall rather than on public ports; include AI tooling in attack-surface
+  management and patch cycles; and monitor GPU hosts for unexpected mining
+  processes and outbound connections.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: unknown
+    description: >-
+      Compromised hosts included LiteLLM proxies that store upstream provider
+      keys and route prompts; the published research describes mining,
+      remote-shell access and propagation rather than confirmed data theft.
+  user_harm:
+    categories: ["economic", "property"]
+    affected_count: 3400
+    description: >-
+      More than 3,400 servers across the United States and Western Europe had
+      compute and electricity consumed by miners and were conscripted into
+      scanning and exploiting further victims.
+  scope: "3,400+ exposed AI and developer servers, mainly LiteLLM and Ollama, with peaks of ~800 active per day; 12 command-and-control addresses identified"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-04-13"
+    event: "Operator makes the first commit of the public file used to encode command-and-control addresses; early testing traffic follows."
+  - at: "2026-04-20"
+    event: "CVE-2026-42271 in LiteLLM's MCP test endpoints is disclosed."
+  - at: "2026-05-08"
+    event: "LiteLLM 1.83.7 restricts the MCP test endpoints to administrators; the campaign expands scanning toward LiteLLM and Gotenberg ports the same month."
+  - at: "2026-06-01"
+    event: "Horizon3 validates that CVE-2026-42271 chains with Starlette CVE-2026-48710 for unauthenticated command execution."
+  - at: "2026-06-08"
+    event: "CISA adds CVE-2026-42271 to the Known Exploited Vulnerabilities catalog."
+  - at: "2026-06-15"
+    event: "Campaign peaks at about 800 active victims per day, per Black Lotus Labs."
+  - at: "2026-10-07"
+    event: "Lumen publishes its PoeLLM report; the victim count is later revised to more than 3,400."
+
+cve: ["CVE-2026-42271", "CVE-2026-48710"]
+cwe: ["CWE-78", "CWE-862"]
+mappings:
+  owasp_llm: [LLM06, LLM10]
+  owasp_agentic: [T2, T3, T4]
+  mitre_atlas: [AML.T0053]
+tags: ["botnet", "cryptomining", "litellm", "ollama", "mcp", "exploited-in-the-wild", "cisa-kev", "ai-gateway", "exposed-services", "poellm"]
+related_incidents:
+  - "2026-langflow-mcp-stdio-rce-honeypot-exploitation"
+  - "2026-litellm-1-107-0-release-pipeline-credential-stealer"
+  - "2026-litellm-pypi-trivy-credential-stealer-poisoning"
+  - "2026-jadepuffer-agentic-ransomware"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An AI gateway's tool-server preview feature executes caller-supplied server
+    definitions on the host with weaker authorization than the save path; a
+    worm-style actor scans for exposed gateways, gains execution, and conscripts
+    each victim as a scanner for the next. Measure how fast exposure compounds
+    when victims become attackers.
+  costbomb_seed_hint: >-
+    Compromised GPU-equipped inference hosts run cryptominers continuously,
+    converting the victim's compute and energy budget into attacker revenue
+    until the implant is found.
+
+sources:
+  - url: "https://www.lumen.com/blog/en-us/canto-incognito-tracking-the-poellm-malware"
+    title: "Canto Incognito: Tracking the PoeLLM Malware"
+    publisher: Lumen Black Lotus Labs
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261104100543/https://www.lumen.com/blog/en-us/canto-incognito-tracking-the-poellm-malware"
+  - url: "https://github.com/BerriAI/litellm/security/advisories/GHSA-v4p8-mg3p-g94g"
+    title: "Authenticated command execution via MCP stdio test endpoints"
+    publisher: LiteLLM (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261023024958/https://github.com/BerriAI/litellm/security/advisories/GHSA-v4p8-mg3p-g94g"
+  - url: "https://horizon3.ai/attack-research/vulnerabilities/cve-2026-42271-chained-with-cve-2026-48710/"
+    title: "CVE-2026-42271 chained with CVE-2026-48710: unauthenticated RCE in LiteLLM"
+    publisher: Horizon3.ai
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112033701/https://horizon3.ai/attack-research/vulnerabilities/cve-2026-42271-chained-with-cve-2026-48710/"
+  - url: "https://www.bleepingcomputer.com/news/security/poellm-malware-infects-exposed-ai-servers-in-cryptomining-attacks/"
+    title: "PoeLLM malware infects exposed AI servers in cryptomining attacks"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261112231045/https://www.bleepingcomputer.com/news/security/poellm-malware-infects-exposed-ai-servers-in-cryptomining-attacks/"
+  - url: "https://www.helpnetsecurity.com/2026/06/09/litellm-vulnerability-under-active-attack-cisa-warns-cve-2026-42271/"
+    title: "LiteLLM vulnerability under active attack, CISA warns (CVE-2026-42271)"
+    publisher: Help Net Security
+    type: news
+    date_accessed: "2026-11-16"
