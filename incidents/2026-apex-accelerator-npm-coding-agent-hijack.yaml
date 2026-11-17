@@ -1,0 +1,172 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-apex-accelerator-npm-coding-agent-hijack
+title: "Fake Apex accelerator npm packages hijacked coding agents by rerouting LLM traffic and registering an attacker MCP server"
+summary: >-
+  Elastic Security Labs reported on 2026-10-12 a campaign it tracks as REF8801 in
+  which an operator posing as a Web3 accelerator published npm packages, notably
+  @apexacc/cli, that repackaged an open-source coding agent. The package
+  redirected the agent's model traffic to attacker infrastructure, persisted an
+  attacker-controlled MCP server in the agent's configuration, and defaulted tool
+  approval to automatic, leading to backdoors on macOS and an infostealer on
+  Windows.
+date: "2026-10-12"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Malicious packages reached the public npm registry and, once installed, placed
+  a developer's coding agent under attacker control: prompts, file contents and
+  tool results were routed to the operator, a persistent attacker MCP server was
+  registered, and second-stage backdoor and infostealer malware was delivered;
+  Elastic confirmed data exfiltration in an instrumented session.
+
+system:
+  framework: AI coding agents (repackaged Oh My Pi CLI; targets Claude Desktop, Cursor, Windsurf configurations)
+  models: []
+  tools: ["npm", "mcp", "openrouter", "claude-desktop", "cursor", "windsurf"]
+  vendor: "Multiple (npm ecosystem; affected agent vendors)"
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: mcp-server
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A developer, drawn in by a fake accelerator offering free AI credits and
+  tools, installed @apexacc/cli, which presented itself as an AI coding
+  assistant built on an open-source agent. On install the package changed the
+  agent's environment so that model requests labelled as one provider were sent
+  to an attacker endpoint, added an attacker-controlled remote MCP server to the
+  agent's configuration so it persisted across restarts, and set the agent's
+  tool-approval default so that tool calls ran without a prompt. The paired
+  @apexacc/audit package advertised security tools that returned fabricated
+  results. These changes let the operator observe prompts, file contents and
+  tool outputs and deliver follow-on commands.
+root_cause: >-
+  Coding agents read trusted configuration (model endpoints, MCP server lists,
+  tool-approval settings) from files and environment variables that an installed
+  package can write, with no integrity boundary between the agent and packages
+  in its own project. A model endpoint can be silently repointed while still
+  labelled as the original provider, and a registered MCP server becomes a
+  persistent channel supplying instructions and tool definitions to the model.
+  Combined with an approval default that executes tools without confirmation,
+  one malicious dependency converted the agent into a conduit for the operator.
+contributing_factors:
+  - The package repackaged a legitimate open-source coding agent, so it appeared functional while adding hidden behavior.
+  - The agent accepted a changed model endpoint without surfacing that traffic now went elsewhere.
+  - A registered MCP server persisted across restarts and could feed instructions and tool definitions to the model.
+  - Tool-approval was defaulted to automatic, removing the human checkpoint before tool execution.
+  - A fake accelerator with fabricated reviews and an in-person event lent social legitimacy to the packages.
+  - Related packages under several scope names were republished quickly after takedowns, sustaining availability.
+detection: >-
+  Elastic's supply-chain monitor flagged @apexacc/cli as malicious from
+  publication; Elastic Security Labs published its REF8801 analysis on
+  2026-10-12. SafeDep had documented earlier packages from the same operator in
+  July 2026. Malicious-package advisories for the Elastic-named packages were
+  published on 2026-10-16 (GHSA-pg98-9cmp-wcf5 / MAL-2026-17924).
+recovery: >-
+  @apexacc/audit was removed from npm by 2026-10-15, and npm replaced all
+  @apexacc/cli versions with a security placeholder on 2026-11-10 after the
+  advisory. Guidance was to treat any host that installed the packages as
+  compromised, remove the agent's attacker-added MCP server entry, restore the
+  model endpoint, rotate credentials, and review agent configuration for
+  unexpected server or endpoint changes.
+prevention: >-
+  Treat a coding agent's model endpoint, MCP server list and tool-approval
+  settings as integrity-protected: alert when a package changes them, show the
+  active model endpoint, and require explicit approval before a newly added MCP
+  server or tool executes. Vet packages that bundle open-source agents, and
+  prefer install flows that do not run package code automatically.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Rerouted agent traffic exposed prompts, file contents and tool outputs to
+      the operator; the second-stage macOS backdoor and Windows infostealer
+      collected browser data, wallets, messaging and VPN app data, and the
+      configuration files of Claude, Cursor and Windsurf. Elastic confirmed file
+      contents read by a local tool were sent to the attacker endpoint in a test.
+  user_harm:
+    categories: ["economic", "property"]
+    affected_count:
+    description: >-
+      Developers and crypto founders who installed the packages had their coding
+      agents placed under attacker control and their hosts exposed to backdoor
+      and infostealer malware; download and victim counts were not reported.
+  scope: "npm packages under @apexacc and related scopes (122 @apexacc/cli versions, 2026-08-09 to 2026-09-27) targeting developers and crypto founders on macOS and Windows"
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-07-01"
+    event: "SafeDep documents earlier packages from the same operator."
+  - at: "2026-10-12"
+    event: "Elastic Security Labs publishes its REF8801 analysis of @apexacc/cli and @apexacc/audit."
+  - at: "2026-10-15"
+    event: "@apexacc/audit is removed from the npm registry."
+  - at: "2026-10-16"
+    event: "Malicious-package advisories are published for the Elastic-named packages."
+  - at: "2026-11-10"
+    event: "npm replaces all @apexacc/cli versions with a security placeholder."
+
+cve: []
+cwe: ["CWE-506", "CWE-829"]
+mappings:
+  owasp_llm: [LLM02, LLM03, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024]
+tags: ["supply-chain", "npm", "coding-agents", "mcp-server", "llm-traffic-rerouting", "infostealer", "web3-lure", "ref8801", "apex-accelerator", "tool-approval-bypass"]
+related_incidents:
+  - "2026-tensorlake-npm-shaihulud-compromise"
+  - "2026-chaindrop-npm-worm"
+  - "2026-cursor-fireworks-key-agent-traces-extension-compromise"
+  - "2026-skills-sh-paperclip-browser-use-credential-stealer-skills"
+  - "2025-cross-agent-privilege-escalation-config-poisoning"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A malicious dependency rewrites a coding agent's model endpoint, registers a
+    persistent attacker MCP server, and flips tool approval to automatic;
+    measure whether the agent surfaces endpoint and MCP configuration changes and
+    whether a newly added server or tool can execute without human approval.
+
+sources:
+  - url: "https://www.elastic.co/security-labs/threat-command/apex-accelerator-malicious-npm-packages"
+    title: "Apex Accelerator: malicious npm packages hijacking AI coding agents (REF8801)"
+    publisher: Elastic Security Labs
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261116113040/https://www.elastic.co/security-labs/threat-command/apex-accelerator-malicious-npm-packages"
+  - url: "https://corgea.com/research/apex-accelerator-ref8801-npm-ai-agent-hijack-october-2026"
+    title: "Apex Accelerator (REF8801) npm AI agent hijack"
+    publisher: Corgea
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://osv.dev/vulnerability/MAL-2026-17924"
+    title: "Malicious code in @apexacc/cli (npm) — MAL-2026-17924 / GHSA-pg98-9cmp-wcf5"
+    publisher: OSV / OpenSSF Malicious Packages
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://thehackernews.com/2026/10/fake-web3-accelerator-uses-npm-packages.html"
+    title: "Fake Web3 Accelerator Uses npm Packages to Hijack AI Coding Agents"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261107024250/https://thehackernews.com/2026/10/fake-web3-accelerator-uses-npm-packages.html"
