@@ -1,0 +1,142 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-programdata-writable-config-ai-coding-tools-windows
+title: "World-writable ProgramData config let a local Windows user run commands in other users' AI coding-tool sessions (CVE-2026-35603)"
+summary: >-
+  Cymulate found that Claude Code, Cursor, OpenAI Codex CLI and Google Gemini
+  CLI on Windows loaded machine-wide configuration from a vendor folder under
+  ProgramData, which standard users can write to, without restricting or
+  validating it. A low-privileged local user could plant configuration that
+  triggers command execution in other users' sessions, including
+  administrators'. Anthropic fixed Claude Code; the other vendors had not
+  shipped fixes at publication.
+date: "2026-04-17"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: moderate
+severity_rationale: >-
+  Local, cross-user code execution and persistence on shared multi-user Windows
+  machines; requires prior local access and a victim launching the tool. One
+  vendor fix with CVE; no in-the-wild exploitation reported.
+
+system:
+  framework: Claude Code, Cursor, OpenAI Codex CLI, Google Gemini CLI (Windows)
+  models: []
+  tools: ["managed-settings", "session-hooks", "notify-command"]
+  vendor: Anthropic, Cursor, OpenAI, Google (multiple)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: extension
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A low-privileged local user created the vendor's configuration folder under
+  ProgramData, which is writable by standard users by default, and placed a
+  configuration file there. When any other user on the machine next launched
+  the tool, it loaded that file as trusted machine-wide policy, taking
+  precedence over the victim's own settings, and ran the event-triggered
+  commands it declared.
+root_cause: >-
+  The tools trusted a world-writable location for system-wide configuration.
+  None pre-created or access-restricted their subdirectory at install time, and
+  none checked ownership or integrity before loading. Because that
+  configuration can declare hooks that execute commands and, in one tool, can
+  widen sandbox access and disable approval prompts, control of the file was
+  equivalent to control of every user's agent session on the machine.
+contributing_factors:
+  - ProgramData is writable by standard users by default on Windows.
+  - Vendor subdirectories were not pre-created with restrictive permissions at install.
+  - Configuration from this location overrode per-user settings and could declare command-executing hooks.
+  - One tool's machine-wide configuration could set the sandbox to full access and disable approval prompts.
+  - The planted configuration re-triggered on every launch, providing persistence.
+detection: >-
+  Found by Cymulate Research Lab (Ilan Kalendarov, Ben Zamir, Elad Beber) and
+  disclosed to Anthropic on 2026-01-05, Cursor on 2026-01-12, OpenAI on
+  2026-02-16 and Google via its VRP. Anthropic's advisory GHSA-5cwg-9f6j-9jvx
+  and CVE-2026-35603 were published on 2026-04-17 crediting a HackerOne
+  reporter; Cymulate published its write-up in June 2026 and updated it in
+  August 2026.
+recovery: >-
+  Anthropic deprecated the ProgramData path, moved managed settings to a
+  write-protected Program Files location and fixed Claude Code in 2.1.75, with
+  a researcher retest confirming the fix. At Cymulate's publication, Cursor had
+  issued no verdict, OpenAI had triaged the Codex CLI report as unresolved, and
+  Google had said it would address the Gemini CLI issue as a documentation
+  update.
+prevention: >-
+  Load machine-wide policy only from administrator-writable locations; create
+  configuration directories with restrictive ACLs at install; verify ownership
+  and integrity of configuration before loading; never let machine-wide
+  configuration disable approval prompts or widen sandbox scope silently.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: credentials
+    description: >-
+      Cross-user code execution exposes other users' files, tokens and agent
+      sessions on the same machine; Cymulate describes it as a foothold for
+      credential theft and lateral movement. No real-world exposure reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept; no in-the-wild exploitation reported.
+  scope: "Shared multi-user Windows machines running any of the four tools; Claude Code below 2.1.75"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-01-05"
+    event: "Cymulate discloses to Anthropic; Cursor on 2026-01-12, OpenAI on 2026-02-16."
+  - at: "2026-04-17"
+    event: "GHSA-5cwg-9f6j-9jvx / CVE-2026-35603 published; Claude Code 2.1.75 fixed."
+  - at: "2026-08-11"
+    event: "Cymulate's write-up last updated with vendor status for all four tools."
+
+cve: ["CVE-2026-35603"]
+cwe: ["CWE-426"]
+mappings:
+  owasp_llm: [LLM03, LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-claude-code-mods-unsandboxed-default"
+  - "2025-github-copilot-autoapprove-rce"
+  - "2026-meta-muse-dictation-endpoint-agent-hijack"
+tags: ["windows", "programdata", "configuration-trust", "hooks", "privilege-escalation", "claude-code", "cursor", "codex-cli", "gemini-cli"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    Many agent installs on shared hosts load machine-wide configuration from a
+    location any local user can write. Measure how many sessions a single
+    planted configuration can drive to execute commands or drop approval gates,
+    and how long it persists across launches.
+
+sources:
+  - url: "https://cymulate.com/blog/cve-2026-35603-ai-coding-tools-privilege-escalation/"
+    title: "CVE-2026-35603: One Writable Folder Can Turn AI Coding Tools Into Cross-User Access"
+    publisher: Cymulate Research Lab
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://github.com/advisories/GHSA-5cwg-9f6j-9jvx"
+    title: "Claude Code: Insecure System-Wide Configuration Loading Enables Local Privilege Escalation on Windows"
+    publisher: GitHub Advisory Database (Anthropic)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://nhimg.org/articles/one-writable-folder-can-turn-ai-coding-tools-into-cross-user-access/"
+    title: "One Writable Folder Can Turn AI Coding Tools Into Cross-User Access"
+    publisher: Non-Human Identity Management Group
+    type: news
+    date_accessed: "2026-11-16"
