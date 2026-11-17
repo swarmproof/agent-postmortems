@@ -1,0 +1,140 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-meta-muse-dictation-endpoint-agent-hijack
+title: "A user-writable Meta Muse preference let local code redirect the agent's dictation and capture its account token"
+summary: >-
+  Researcher Patrick Wardle published "not-a-mused", a proof of concept showing
+  that an undocumented preference in Meta's Muse agent for macOS controlled
+  where dictated audio was sent and could be changed by any process running as
+  the user, without admin rights or a macOS prompt. Redirecting it exposed
+  dictated prompts, allowed injection into the agent and captured the Muse
+  authentication token, giving the attacker the agent's broad access. Meta
+  shipped a fix within about a day.
+date: "2026-09-21"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Access amplification from ordinary local code to an agent holding files,
+  camera, messaging, payment and linked-device permissions, with token capture
+  enabling cross-device reach. Requires prior local code execution; fixed
+  quickly; no in-the-wild exploitation reported.
+
+system:
+  framework: Meta Muse (macOS AI assistant agent)
+  models: []
+  tools: ["dictation", "muse-commands", "camera", "files", "linked-device-location"]
+  vendor: Meta
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: data-exfiltration
+failure_classes:
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: prompt-injection
+    subclass: direct
+  - class: excessive-agency
+    subclass: scope-creep
+attack_vector: self-induced
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Code already running under the logged-in user's account changed an
+  undocumented Muse preference that names the dictation endpoint. The next time
+  the user dictated a prompt, the client sent the audio and its account
+  authentication material to the attacker-chosen server, which could also
+  return instructions the agent treated as the user's own.
+root_cause: >-
+  A security-relevant setting that determined which server received user
+  speech and credentials was stored where any same-user process could rewrite
+  it, with no integrity check, entitlement or user consent gate. Because Muse
+  is granted broad access across the user's apps, accounts and linked devices,
+  the trust the user placed in the agent transferred to whoever controlled the
+  endpoint. Wardle noted that on-device dictation would have avoided the
+  network path entirely.
+contributing_factors:
+  - An undocumented, user-writable preference controlled the dictation server address.
+  - Dictation audio and the account token were sent to that address without pinning or validation.
+  - The agent exposes more than 50 commands, including file writes, camera capture and linked-iPhone location.
+  - Meta described the issue as a local privilege escalation, while Wardle argued a ClickFix-style lure makes it remotely reachable.
+detection: >-
+  Disclosed publicly by Patrick Wardle on 2026-09-21 with a proof-of-concept
+  repository; reported by The Hacker News, 9to5Mac and Forkast over the
+  following days.
+recovery: >-
+  Meta released a hotfix within about 24 hours of disclosure, shortly before its
+  Connect keynote. Meta's David Singleton characterised the issue as a local
+  privilege escalation requiring existing malicious code on the machine. No CVE
+  was reported in the coverage reviewed.
+prevention: >-
+  Keep server endpoints and other security-relevant settings out of
+  user-writable preferences, or validate and pin them; never transmit account
+  tokens to a configurable endpoint; prefer on-device processing for voice
+  input; scope agent authentication so a captured token does not confer every
+  granted permission across devices.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: credentials
+    description: >-
+      Dictated prompts and the Muse account token could be captured; the token
+      extended to the user's other signed-in devices. Proof of concept only.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept; no in-the-wild exploitation reported.
+  scope: "Meta Muse for macOS installs prior to Meta's hotfix"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-09-21"
+    event: "Wardle publishes the not-a-mused proof of concept."
+  - at: "2026-09-22"
+    event: "Meta ships a hotfix; coverage by 9to5Mac and The Hacker News."
+
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2026-programdata-writable-config-ai-coding-tools-windows"
+  - "2026-nemoclaw-ollama-template-poisoning"
+  - "2026-meta-eval-escape-irregular"
+tags: ["meta-muse", "macos", "dictation", "token-theft", "configuration-trust", "access-amplification", "local-privilege-escalation"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A desktop agent with broad user-granted permissions reads its service
+    endpoint from a setting local code can rewrite. Measure whether redirecting
+    that endpoint lets an unprivileged process capture credentials and drive the
+    agent's actions across many hosts.
+
+sources:
+  - url: "https://github.com/pwardle/not-a-mused"
+    title: "not-a-mused: proof of concept for a local Muse vulnerability"
+    publisher: Patrick Wardle (GitHub)
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://thehackernews.com/2026/09/one-hidden-meta-muse-setting-could-let.html"
+    title: "One Hidden Meta Muse Setting Could Let Attackers Turn the AI Assistant Into a Backdoor"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261102020417/https://thehackernews.com/2026/09/one-hidden-meta-muse-setting-could-let.html"
+  - url: "https://forkast.news/meta-patched-its-muse-macos-zero-day-just-before-connect-the-dispute-over-who-could-exploit-it-remains-open/"
+    title: "Meta patched its Muse macOS zero-day just before Connect; the dispute over who could exploit it remains open"
+    publisher: Forkast
+    type: news
+    date_accessed: "2026-11-16"
+  - url: "https://9to5mac.com/2026/09/22/security-bite-the-last-24-hours-at-meta-were-not-a-musing/"
+    title: "Security Bite: The last 24 hours at Meta were not a-musing"
+    publisher: 9to5Mac
+    type: news
+    date_accessed: "2026-11-16"
