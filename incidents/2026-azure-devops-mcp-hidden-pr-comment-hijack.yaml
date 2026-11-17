@@ -153,11 +153,13 @@ sources:
     publisher: Cloud Security Alliance AI Safety Initiative
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117142701/https://labs.cloudsecurityalliance.org/research/csa-research-note-azure-devops-mcp-prompt-injection-20260801/"
   - url: "https://github.com/microsoft/azure-devops-mcp/releases/tag/v2.10.0"
     title: "azure-devops-mcp v2.10.0 release notes"
     publisher: Microsoft (GitHub)
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117143121/https://github.com/microsoft/azure-devops-mcp/releases/tag/v2.10.0"
   - url: "https://thehackernews.com/2026/07/microsoft-azure-devops-mcp-flaw-lets.html"
     title: "Microsoft Azure DevOps MCP Flaw Lets Hidden PR Comments Hijack AI Review Agents"
     publisher: The Hacker News

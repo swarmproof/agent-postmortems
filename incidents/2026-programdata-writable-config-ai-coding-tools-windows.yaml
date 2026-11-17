@@ -130,11 +130,13 @@ sources:
     publisher: Cymulate Research Lab
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260904081501/https://cymulate.com/blog/cve-2026-35603-ai-coding-tools-privilege-escalation/"
   - url: "https://github.com/advisories/GHSA-5cwg-9f6j-9jvx"
     title: "Claude Code: Insecure System-Wide Configuration Loading Enables Local Privilege Escalation on Windows"
     publisher: GitHub Advisory Database (Anthropic)
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117144413/https://github.com/advisories/GHSA-5cwg-9f6j-9jvx"
   - url: "https://nhimg.org/articles/one-writable-folder-can-turn-ai-coding-tools-into-cross-user-access/"
     title: "One Writable Folder Can Turn AI Coding Tools Into Cross-User Access"
     publisher: Non-Human Identity Management Group
