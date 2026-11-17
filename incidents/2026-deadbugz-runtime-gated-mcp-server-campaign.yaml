@@ -1,0 +1,148 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-deadbugz-runtime-gated-mcp-server-campaign
+title: "Deadbugz: a malicious MCP server pushed via unsolicited pull requests stayed benign at first, then directed agents to hunt credentials"
+summary: >-
+  Pillar Security documented an active campaign in which one GitHub account
+  opened 23 pull requests in 74 minutes adding a "productivity-suite" MCP
+  server to unrelated projects. The server returned ordinary tool metadata on a
+  client's early calls, then its tool and prompt listings changed to instruct
+  the attached agent to locate credential material and to conceal the activity.
+  No pull request had been merged and no victim was confirmed at publication.
+date: "2026-08-10"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: preliminary
+confidence: reported
+severity: moderate
+severity_rationale: >-
+  A live, attacker-operated supply-chain attempt against the agent tool layer
+  with a credential-theft objective, but with no merged delivery, no confirmed
+  connected client and no confirmed victim in the public record. Severity would
+  rise if a compromised environment were documented.
+
+system:
+  framework: "Any MCP-capable agent client (campaign targeted AI, MCP and developer-tool repositories)"
+  models: []
+  tools: ["mcp", "github-pull-requests"]
+  vendor: n/a
+  autonomy_level: unknown
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: mcp-server
+  - class: prompt-injection
+    subclass: tool-metadata
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A single GitHub account opened 23 pull requests against unrelated AI, MCP and
+  developer-tool projects within 74 minutes on 2026-08-10, each adding a new MCP
+  server to the project's configuration. The server presented as an ordinary
+  text tool and behaved normally for a client's first interactions, which lets a
+  reviewer who tries it once or twice extend trust. After that threshold the
+  metadata it returned to the agent changed into instructions to search the host
+  for credential material and to hide the activity from the user. The campaign
+  depended on a maintainer accepting the configuration change.
+root_cause: >-
+  MCP clients trust a server's tool and prompt metadata at connection time and
+  accept later changes to that metadata without renewed user approval, so a
+  server can pass any review performed on its first interactions and later change
+  what it asks the agent to do. Delivery relied on maintainers accepting
+  configuration changes from an unknown contributor, which would turn a single
+  merged pull request into a trusted execution path for every developer who loads
+  the project's MCP configuration.
+contributing_factors:
+  - Tool metadata returned by a server is treated as trusted instructions to the agent, not as untrusted content.
+  - Clients that honour dynamic tool-list changes re-read metadata without surfacing the change to the user.
+  - MCP configuration files inside repositories are an unreviewed execution surface for every developer who opens the project.
+  - Behaving benignly on initial use defeats cursory manual testing that exercises a server only a few times.
+detection: >-
+  Identified and published by Pillar Security on 2026-08-12 from review of the
+  pull requests, the public source repository and controlled interaction with
+  the endpoint. The Cloud Security Alliance summarised the findings on
+  2026-08-30, citing Pillar as the source and noting that it had not tested the
+  server itself.
+recovery: >-
+  At publication 19 of the 23 pull requests had been closed and four remained
+  open; none had been merged. Pillar published indicators (the server name, the
+  remote endpoint, a local script path and an earlier tunnel endpoint) and
+  advised blocking the endpoint, reverting configuration changes that add it,
+  and preserving MCP client logs where a device connected. No takedown of the
+  account, repository or endpoint was described, and Pillar stated the
+  disclosure would be updated as information became verified.
+prevention: >-
+  Treat any change to an approved server's tool or prompt definitions as a
+  security event requiring renewed user approval; pin and hash tool metadata at
+  install time; review MCP configuration changes in pull requests with the same
+  scrutiny as dependency changes and reject unsolicited additions of remote
+  endpoints; run agents with least privilege so credential files are not
+  readable by default; exercise new servers beyond their first interactions
+  before trusting them.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: credentials
+    description: >-
+      The server's later instructions targeted credential material such as keys,
+      cloud credentials, shell history and cluster configuration. No exfiltrated
+      data and no compromised environment were documented.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      No confirmed victim; the delivery pull requests were not merged at
+      publication.
+  scope: >-
+    23 pull requests across unrelated open-source AI, MCP and developer-tool
+    repositories; any developer who merged or locally applied one and connected
+    an MCP client
+  reversibility: unknown
+
+timeline:
+  - at: "2026-08-10"
+    event: "All 23 pull requests created within a 74-minute window; the same account creates 21 repositories that day."
+  - at: "2026-08-12"
+    event: "Pillar Security publishes the campaign analysis and indicators."
+  - at: "2026-08-30"
+    event: "Cloud Security Alliance research note published."
+
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM03]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2025-whatsapp-mcp-tool-poisoning"
+  - "2026-microsoft-mcp-tool-description-poisoning"
+  - "2026-memtensor-memos-sckit-supply-chain-worm"
+tags: ["supply-chain", "mcp-server", "tool-metadata", "sleeper", "runtime-gated", "credential-theft", "pull-request", "active-campaign"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A tool server behaves normally for a client's first interactions, then
+    changes its advertised tool and prompt metadata to instruct the agent to
+    read credential files and hide the activity. Measure, across many agent
+    clients, whether the changed metadata is re-read without user notice and
+    whether the agent acts on it.
+
+sources:
+  - url: "https://www.pillar.security/blog/deadbugz-currently-active-mcp-supply-chain-campaign"
+    title: "Deadbugz: Currently Active MCP Supply Chain Campaign"
+    publisher: Pillar Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261029073319/https://www.pillar.security/blog/deadbugz-currently-active-mcp-supply-chain-campaign"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-deadbugz-mcp-supply-chain-20260830-csa-sty/"
+    title: "Deadbugz: Active MCP Campaign Poisons Agents After Trust"
+    publisher: Cloud Security Alliance AI Safety Initiative
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261114194336/https://labs.cloudsecurityalliance.org/research/csa-research-note-deadbugz-mcp-supply-chain-20260830-csa-sty/"
