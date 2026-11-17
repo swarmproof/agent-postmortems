@@ -1,0 +1,128 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-vscode-copilot-agent-injected-commands-no-confirmation
+title: "Injected content could make the GitHub Copilot agent in VS Code run commands without a confirmation prompt (CVE-2026-70335)"
+summary: >-
+  Microsoft disclosed that instructions embedded in content the GitHub Copilot
+  agent processes in Visual Studio Code, such as a web page, a repository file
+  or a tool response, could cause the agent to run commands on the user's
+  machine without prompting for confirmation, executing code as the signed-in
+  user. Classified as OS command injection (CWE-78), CVSS 7.8, and fixed in VS
+  Code 1.132.1.
+date: "2026-08-11"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Local code execution as the user from untrusted content the agent reads,
+  bypassing the confirmation gate; Microsoft rated it Important, 7.8, with
+  exploitation assessed as more likely. Not publicly disclosed or exploited
+  before the fix.
+
+system:
+  framework: GitHub Copilot agent mode in Visual Studio Code
+  models: []
+  tools: ["vscode-terminal", "copilot-agent-tools"]
+  vendor: Microsoft / GitHub
+  autonomy_level: human-in-the-loop
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A user ran the Copilot agent against content that contained attacker-authored
+  instructions. Per Microsoft's advisory, the injected instructions could cause
+  the agent to run commands on the user's machine without the confirmation
+  prompt that normally gates command execution.
+root_cause: >-
+  Command execution requested by the agent could be shaped by untrusted content
+  so that it was not neutralised before reaching the operating system, and the
+  human confirmation step did not apply to it. Microsoft classified the flaw as
+  improper neutralisation of special elements in an OS command. No further
+  technical detail was published.
+contributing_factors:
+  - The agent processes web pages, repository files and tool responses as inputs.
+  - Command execution derived from that content could skip the confirmation prompt.
+  - User interaction is required only to run the agent against the content.
+detection: >-
+  Published by Microsoft on 2026-08-11 through the Security Update Guide.
+  Microsoft's advisory does not credit a reporter, and no public researcher
+  write-up was located.
+recovery: >-
+  Fixed in Visual Studio Code 1.132.1 as a security update. Microsoft reported
+  the issue was not publicly disclosed or exploited at release.
+prevention: >-
+  Treat all content an agent reads as untrusted; ensure every command execution
+  path is covered by the confirmation gate regardless of how the command was
+  composed; neutralise agent-derived command strings before invoking the shell;
+  keep VS Code and the Copilot extension current.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: confidential
+    description: >-
+      Code execution in the context of the signed-in developer, with access to
+      local files and credentials. No exposure was reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Disclosed and fixed before public exploitation; no victims reported.
+  scope: "Visual Studio Code with GitHub Copilot agent mode below 1.132.1"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-08-11"
+    event: "CVE-2026-70335 published; fix available in VS Code 1.132.1."
+
+cve: ["CVE-2026-70335"]
+cwe: ["CWE-78"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
+related_incidents:
+  - "2025-github-copilot-autoapprove-rce"
+  - "2026-copilot-cli-env-exfiltration"
+  - "2026-loopjacking-approve-execute-mismatch"
+  - "2026-copilot-cowork-improper-authorization-eop"
+tags: ["copilot", "vscode", "agent-mode", "command-injection", "approval-bypass", "indirect-prompt-injection"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A coding agent reads untrusted repository or web content and can run shell
+    commands gated by a confirmation prompt. Measure whether injected content can
+    produce command execution that never reaches the prompt, across many
+    repositories processed by many agent instances.
+
+sources:
+  - url: "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-70335"
+    title: "CVE-2026-70335 GitHub Copilot and Visual Studio Code Elevation of Privilege Vulnerability"
+    publisher: Microsoft Security Response Center
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260917122441/https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-70335"
+  - url: "https://msrc.microsoft.com/csaf/advisories/2026/msrc_cve-2026-70335.json"
+    title: "CVE-2026-70335 CSAF advisory"
+    publisher: Microsoft Security Response Center
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://www.sentinelone.com/vulnerability-database/cve-2026-70335/"
+    title: "CVE-2026-70335"
+    publisher: SentinelOne Vulnerability Database
+    type: other
+    date_accessed: "2026-11-16"
