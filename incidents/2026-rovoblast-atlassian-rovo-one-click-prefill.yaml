@@ -1,0 +1,153 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-rovoblast-atlassian-rovo-one-click-prefill
+title: "RovoBlast: a crafted link prefilled Atlassian Rovo with attacker instructions inside an authenticated session"
+summary: >-
+  Varonis Threat Labs disclosed RovoBlast, a one-click flaw in Atlassian's Rovo
+  AI assistant in which a crafted link seeded attacker instructions into a
+  victim's authenticated Rovo chat. Rovo treated the external input as trusted
+  and acted with the user's permissions, searching connected systems and using
+  its research agent to move data outward, with no confirmation. Atlassian fixed
+  the delivery path server-side on 2026-07-08. No in-the-wild exploitation
+  reported.
+date: "2026-08-07"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  A single click could drive an enterprise assistant with broad connector
+  access to retrieve and externally transmit organisational data under the
+  user's identity, with no jailbreak or permission bypass. Hazard: researcher
+  demonstration, no real victims; the delivery path was fixed before disclosure.
+
+system:
+  framework: "Atlassian Rovo (enterprise AI assistant)"
+  models: []
+  tools: ["jira", "confluence", "bitbucket", "slack-connector", "m365-connector", "google-workspace-connector", "research-agent"]
+  vendor: Atlassian
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A victim with an active Rovo session clicks a crafted link. The link seeds
+  attacker-chosen instructions into the assistant's chat entry point, and Rovo
+  treats that externally supplied input as a trusted request. It then searches
+  connected organisational content and can use its autonomous research agent to
+  browse outward and move retrieved data to an external destination, across
+  multiple steps and with no warning or confirmation.
+root_cause: >-
+  Rovo accepted externally supplied input through a link as trusted session
+  input with no indication the session had been seeded from outside, and its
+  guardrails against untrusted prompts were weak. Broad connector access and an
+  autonomous research agent with outbound fetch meant a single seeded request
+  could chain into multi-step collection and exfiltration without further user
+  involvement.
+contributing_factors:
+  - Externally supplied input was not distinguished from input the user typed, and no label showed the session was seeded.
+  - Rovo's connectors reach many platforms, so one request could span a wide data surface.
+  - An autonomous research agent could browse and send data outward as part of normal "research" behaviour.
+  - A separate content-borne prompt-injection path reported by PromptArmor, in which hidden document instructions cause Rovo to send retrieved data out, was described as a complementary view of the same weakness and not addressed by the delivery-path fix.
+detection: >-
+  Found and named RovoBlast by Varonis Threat Labs (researchers Dolev Taler and
+  Mark Vaitsman), presented at DEF CON 34 and published on 2026-08-07; covered
+  by SecurityWeek, CSO Online and Infosecurity Magazine. A related content-borne
+  path was reported separately by PromptArmor.
+recovery: >-
+  Reported through Atlassian's Bugcrowd program; Atlassian shipped a server-side
+  fix for the link-delivery path on 2026-07-08, which Varonis validated, and
+  rated the report P2 with a bounty. No CVE was assigned. An Atlassian
+  spokesperson said customer data security is the company's highest priority and
+  recommended customers verify that content given to Atlassian apps comes from a
+  trusted source. The separate content-borne injection path was reported as
+  unresolved at disclosure. No evidence of exploitation in the wild was reported.
+prevention: >-
+  Treat link-supplied and document-supplied content as untrusted, never as
+  session instructions; show when a session has been seeded from an external
+  source; put deterministic, auditable egress controls outside the model, with
+  destination allowlisting or approval for any fetch capability; scope Rovo by
+  connector and user group to least privilege; keep sensitive areas out of
+  scope.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      Data reachable by the user's Rovo session, demonstrated across Confluence
+      pages, Jira tickets and SharePoint content including personal data, with
+      claimed reach across Bitbucket, Slack, Microsoft 365, Google Workspace,
+      databases, uploaded files and archives.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Researcher proof-of-concept across three scenarios; no real victims
+      reported.
+  scope: organisations using Atlassian Rovo with connected systems, before the 2026-07-08 fix of the delivery path
+  reversibility: irreversible
+
+tags: ["rovoblast", "atlassian-rovo", "one-click", "parameter-to-prompt", "data-exfiltration", "def-con-34"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2026-cosnitch-copilot-personal-one-click-exfiltration"
+  - "2026-agentforger-chatgpt-workspace-agent-forgery"
+  - "2025-echoleak-m365-copilot"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A crafted link seeds instructions into an enterprise assistant's chat entry
+    point in an authenticated session; measure whether the assistant treats the
+    seeded input as trusted, searches connected systems, and uses an autonomous
+    research agent to move data outward without warning or confirmation.
+
+sources:
+  - url: "https://www.varonis.com/blog/rovoblast"
+    title: "RovoBlast: How One Click Triggered Atlassian's AI Assistant to Leak Data"
+    publisher: Varonis Threat Labs
+    type: primary-research
+    date_accessed: "2026-11-16"
+  - url: "https://www.securityweek.com/critical-one-click-vulnerability-in-atlassians-rovo-ai-exposed-enterprise-data/"
+    title: "Critical One-Click Vulnerability in Atlassian's Rovo AI Exposed Enterprise Data"
+    publisher: SecurityWeek
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261003152637/https://www.securityweek.com/critical-one-click-vulnerability-in-atlassians-rovo-ai-exposed-enterprise-data/"
+  - url: "https://www.csoonline.com/article/4207306/one-click-flaw-in-atlassian-rovo-exposed-enterprise-data-via-prompt-injection-attack.html"
+    title: "One-Click Flaw in Atlassian Rovo Exposed Enterprise Data via Prompt Injection Attack"
+    publisher: CSO Online
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20260811053049/https://www.csoonline.com/article/4207306/one-click-flaw-in-atlassian-rovo-exposed-enterprise-data-via-prompt-injection-attack.html"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-atlassian-rovo-prompt-injection-exfiltrati/"
+    title: "Atlassian Rovo Prompt Injection Exposes Enterprise Data (CSA research note)"
+    publisher: Cloud Security Alliance
+    type: other
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261009034750/https://labs.cloudsecurityalliance.org/research/csa-research-note-atlassian-rovo-prompt-injection-exfiltrati/"
+  - url: "https://www.promptarmor.com/resources/atlassian-rovo-exfiltrates-data"
+    title: "Atlassian Rovo Exfiltrates Data, Bypassing Controls"
+    publisher: PromptArmor
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "http://web.archive.org/web/20261109210756/https://www.promptarmor.com/resources/atlassian-rovo-exfiltrates-data"
