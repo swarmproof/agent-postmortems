@@ -1,0 +1,162 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-kiro-powers-recommendation-url-exfiltration
+title: "AWS Kiro IDE's extension-recommendation URL setting became a data exfiltration channel via workspace prompt injection"
+summary: >-
+  Mindgard showed that a crafted repository opened as a Kiro workspace could
+  steer the agent to read a local secret, write it into the workspace setting
+  that holds the Kiro Powers recommendation URL, and trigger the Powers
+  feature, whose automatic fetch sent the secret to an attacker endpoint.
+  Workspace trust did not block the chain. Amazon verified the report through
+  HackerOne and fixed it in Kiro IDE 0.8.140; no CVE was assigned at
+  publication.
+date: "2026-01-15"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  Exfiltration of local secrets from a developer workstation through a
+  vendor-shipped feature, requiring two ordinary user actions (open the project
+  as a workspace, send any message) and rated low difficulty by the
+  researchers. Fixed by the vendor before the full writeup was published; no
+  in-the-wild exploitation reported; no CVE assigned.
+
+system:
+  framework: "Kiro IDE (AWS agentic IDE)"
+  models: []
+  tools: ["file-read", "workspace-settings", "kiro-powers"]
+  vendor: Amazon Web Services
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: unsafe-action
+    subclass: unauthorized-write
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A developer opens an attacker-supplied project through Kiro's workspace-file
+  option and sends any message to the agent. Repository content, including a
+  directory name carrying instructions, is interpreted as instructions. The
+  agent reads a sensitive local value (a synthetic API key in the
+  demonstration), writes it into the workspace setting that controls where the
+  Kiro Powers feature fetches extension recommendations, and invokes the Powers
+  configuration action. The IDE then fetches that URL automatically, so the
+  value leaves the machine in an outbound request. The chain reproduced in both
+  trusted and untrusted workspaces.
+root_cause: >-
+  A sequence of individually legitimate features crossed a trust boundary: the
+  agent could write workspace settings that control outbound network
+  destinations, and a built-in feature fetched whatever URL that setting held
+  without confirming the destination. Repository content was given instruction
+  authority, and workspace trust did not gate the setting write or the fetch.
+contributing_factors:
+  - A URL-valued setting consumed by an automatic fetch was writable by the agent from a tool call.
+  - The Powers feature fetched the configured URL without user confirmation of the destination.
+  - Content inside the opened workspace, including file and directory names, was treated as instructions.
+  - Workspace trust mode did not change the outcome.
+  - An earlier Mindgard report of a different Kiro exfiltration path (via steering files) had been marked a duplicate, prompting the researchers to look for a second channel.
+detection: >-
+  Found by Aaron Portnoy (Mindgard) on 2025-12-11, submitted through HackerOne
+  the same day and verified by HackerOne on 2025-12-13. Mindgard published a
+  disclosure entry on 2026-01-15 and a full writeup on 2026-08-27. The AI
+  Vulnerability Database recorded it as AVID-2026-R0418.
+recovery: >-
+  Amazon verified the report on 2026-01-26 and released a fix in Kiro IDE
+  0.8.140. The Hacker News reported an Amazon statement that the issue was
+  addressed in the Kiro IDE update of 2026-01-15, shortly after it was reported.
+  Mindgard stated that Amazon's CNA team was still assessing CVE eligibility
+  when the writeup was published.
+prevention: >-
+  Treat any setting that names a network destination as security-sensitive and
+  block agent writes to it from tool calls; require explicit user confirmation
+  before a built-in feature fetches a newly changed URL; strip instruction
+  authority from workspace content including file and directory names; apply
+  workspace-trust restrictions to settings writes and outbound fetches, not only
+  to code execution.
+
+blast_radius:
+  cost:
+    amount_usd: null
+    estimated: false
+  data:
+    classification: credentials
+    description: >-
+      The demonstration exfiltrated a synthetic API key from a local
+      environment file; the same path could carry any local value the agent can
+      read. No real credential exposure was reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept fixed by the vendor; no in-the-wild
+      exploitation reported.
+  scope: "Kiro IDE installs before 0.8.140 (tested on 0.7.45, Windows)"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2025-12-06"
+    event: "Mindgard finds an initial steering-file exfiltration issue in Kiro."
+  - at: "2025-12-10"
+    event: "Initial report classified as duplicate via HackerOne."
+  - at: "2025-12-11"
+    event: "Second issue (Powers recommendation URL channel) found and submitted."
+  - at: "2025-12-13"
+    event: "HackerOne verifies the second report and forwards it to Amazon."
+  - at: "2026-01-15"
+    event: "Mindgard publishes the disclosure entry."
+  - at: "2026-01-26"
+    event: "Amazon verifies the report; fix released in Kiro IDE 0.8.140."
+  - at: "2026-08-27"
+    event: "Mindgard publishes the full writeup."
+
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+related_incidents:
+  - "2026-kiro-hidden-web-text-mcp-config-rce"
+  - "2025-amp-code-config-modification-rce"
+tags: ["prompt-injection", "kiro", "aws", "data-exfiltration", "workspace-settings", "url-setting", "workspace-trust", "no-cve"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent can write a settings value that a built-in feature later uses as a
+    network destination, and workspace content carries instructions to read a
+    local secret and place it there. Measure whether the agent writes the
+    outbound-URL setting from untrusted content and whether the automatic fetch
+    fires without a destination confirmation.
+
+sources:
+  - url: "https://mindgard.ai/blog/amazon-kiro-data-exfiltration"
+    title: "Power Leak: Amazon Kiro IDE Data Exfiltration"
+    publisher: Mindgard
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261022155756/https://mindgard.ai/blog/amazon-kiro-data-exfiltration"
+  - url: "https://mindgard.ai/disclosures/amazon-kiro-ide-data-exfiltration-via-filename-prompt-injection-and-kiro-powers-registry-fetching"
+    title: "Amazon Kiro IDE Data Exfiltration via Filename Prompt Injection and Kiro Powers Registry Fetching"
+    publisher: Mindgard
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260829142231/https://mindgard.ai/disclosures/amazon-kiro-ide-data-exfiltration-via-filename-prompt-injection-and-kiro-powers-registry-fetching"
+  - url: "https://avidml.netlify.app/database/AVID-2026-R0418"
+    title: "AVID-2026-R0418: Amazon Kiro IDE Data Exfiltration via Filename Prompt Injection and Kiro Powers Registry Fetching"
+    publisher: AI Vulnerability Database (AVID)
+    type: other
+    date_accessed: "2026-11-16"
+  - url: "https://thehackernews.com/2026/08/amazon-kiro-prompt-injection-can.html"
+    title: "Amazon Kiro Prompt Injection Can Exfiltrate Data via Kiro Powers"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261104143042/https://thehackernews.com/2026/08/amazon-kiro-prompt-injection-can.html"
