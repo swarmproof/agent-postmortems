@@ -1,0 +1,167 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-plugin4shell-coding-agent-plugin-pin-bypass
+title: "Plugin4Shell: coding agents' plugin hash pinning could be bypassed by a repository branch named after the pinned commit (CVE-2026-86063)"
+summary: >-
+  Air Security showed that Claude Code, OpenAI Codex, GitHub Copilot and Gemini
+  CLI checked out pinned plugin commits without verifying the resulting commit
+  matched the pin. A plugin repository owner could name a branch after the pinned
+  hash so the checkout resolved to attacker-chosen code, and background
+  auto-update delivered it to installed plugins. Anthropic, OpenAI and Microsoft
+  shipped fixes; Google said the deprecated Gemini CLI would not be fixed.
+date: "2026-09-17"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Zero-click code execution on developer machines via the plugin update path of
+  four widely installed coding agents, confirmed by a vendor CVE (CVE-2026-86063,
+  rated high). Researcher demonstration under coordinated disclosure; no
+  in-the-wild exploitation reported. One affected product remains unfixed because
+  it is deprecated.
+
+system:
+  framework: "Plugin subsystems of Claude Code, OpenAI Codex, GitHub Copilot (VS Code), Gemini CLI"
+  models: []
+  tools: ["git", "plugin-marketplace", "auto-update"]
+  vendor: "Multiple (Anthropic, OpenAI, Microsoft/GitHub, Google)"
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: extension
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A marketplace pins a reviewed plugin to a specific commit hash. An attacker who
+  controls the plugin's source repository creates a branch whose name is that
+  hash and makes it the default. When the agent fetches and checks out the pin,
+  git resolves the ambiguous name to the branch rather than the commit, so the
+  agent installs attacker-chosen code. Because the same checkout runs again
+  during background auto-update, which is on by default in Claude Code and
+  Codex, a re-pin pushes the substituted code to already-installed plugins with
+  no user action. A Gemini CLI variant discarded the correctly fetched commit by
+  checking out a name that could also resolve to a branch. Hosts that accept
+  hash-shaped branch names, such as Bitbucket and self-hosted git, are exposed;
+  the researchers report GitHub rejects such names.
+root_cause: >-
+  The agents treated a pinned commit hash as a guarantee of content but never
+  verified that the commit actually checked out equalled the pin. Trust was
+  placed in a git name-resolution step that prefers branches over commits when a
+  name is ambiguous, and the auto-update path re-ran that step unattended, so a
+  single repository-side change could replace reviewed plugin code across all
+  installs without a marketplace compromise or a user prompt.
+contributing_factors:
+  - Plugin installation and update checked out a pinned reference without comparing the resulting commit to the pinned hash.
+  - Background auto-update was enabled by default, re-running the vulnerable checkout without user involvement.
+  - The plugin trust model assumed the marketplace pin, not the plugin repository owner, controlled what code ran.
+  - Several git hosting services permit branch names that look like commit hashes.
+detection: >-
+  Found by Air Security's research lab in May 2026 with a working proof of
+  concept against all four agents (researchers Or Nevo, Dor Granat and Niv
+  Hoffman), disclosed to the vendors in June 2026 and published on 2026-09-17.
+  Independent coverage followed from SecurityWeek and The Hacker News.
+recovery: >-
+  Anthropic confirmed a fix in Claude Code 2.1.179 on 2026-06-17 and later
+  published CVE-2026-86063 (GitHub advisory GHSA-pq7j-f95f-qfcv, affected
+  versions below 2.1.179). OpenAI's fix was verified in Codex 0.146.0 on
+  2026-08-12. Microsoft confirmed a fix in VS Code 1.136.0 on 2026-09-02. Google
+  stated on 2026-08-04 that no fix would ship because Gemini CLI is deprecated,
+  and advised migration to Antigravity.
+prevention: >-
+  Verify after checkout that the resolved commit equals the pinned hash and fail
+  closed on mismatch; resolve pins by commit object rather than by name; treat
+  plugin auto-update as a security-relevant action that re-validates integrity;
+  for operators, pin plugins through a marketplace or filter that validates
+  content independently of the source repository, and disable background plugin
+  updates where that validation is absent.
+
+blast_radius:
+  cost:
+    amount_usd: null
+    estimated: false
+  data:
+    classification: unknown
+    description: >-
+      The demonstrated effect is arbitrary code execution with the developer's
+      privileges on any machine that installs or auto-updates an affected plugin;
+      the proof of concept did not exfiltrate specific data.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept under coordinated disclosure; no in-the-wild
+      exploitation reported.
+  scope: >-
+    installs of Claude Code, OpenAI Codex, GitHub Copilot and Gemini CLI that
+    load plugins from repositories on hosts permitting hash-shaped branch names;
+    the researchers describe millions of affected agents without a precise count
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-05-01"
+    event: "Air Security research lab finds the issue and builds a proof of concept against all four agents (month-level date per the disclosure)."
+  - at: "2026-06-17"
+    event: "Anthropic confirms the fix in Claude Code 2.1.179."
+  - at: "2026-08-04"
+    event: "Google states Gemini CLI is deprecated and will not be fixed."
+  - at: "2026-08-12"
+    event: "Codex 0.146.0 verified fixed."
+  - at: "2026-09-02"
+    event: "Microsoft confirms the Copilot fix in VS Code 1.136.0."
+  - at: "2026-09-17"
+    event: "Air Security publishes the Plugin4Shell disclosure."
+  - at: "2026-10-15"
+    event: "GitHub advisory GHSA-pq7j-f95f-qfcv published for CVE-2026-86063 (Claude Code below 2.1.179)."
+
+cve: ["CVE-2026-86063"]
+mappings:
+  owasp_llm: [LLM03, LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-gitspawn-git-config-coding-agent-rce"
+  - "2026-claude-code-mods-unsandboxed-default"
+  - "2025-amazon-q-wiper-supply-chain"
+tags: ["supply-chain", "plugins", "hash-pinning", "auto-update", "git", "claude-code", "codex", "copilot", "gemini-cli", "zero-click", "cve"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent installs and auto-updates extensions pinned to a commit hash, but
+    resolves the pin by name without checking the resulting commit; a repository
+    owner publishes a branch named after the pin. Measure, across many installs,
+    whether the substituted code is executed without any user prompt and how fast
+    the background update path propagates it.
+
+sources:
+  - url: "https://www.air.security/blog-posts/plugin4shell"
+    title: "Plugin4Shell - Zero Click RCE Vulnerability found in top 4 most popular coding agents, millions of agents affected"
+    publisher: Air Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261111132236/https://www.air.security/blog-posts/plugin4shell"
+  - url: "https://github.com/advisories/GHSA-pq7j-f95f-qfcv"
+    title: "Claude Code: Plugin Hash Pin Bypass Allows Bypass of Hash Pinning (CVE-2026-86063)"
+    publisher: GitHub Advisory Database
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261020075336/https://github.com/advisories/GHSA-pq7j-f95f-qfcv"
+  - url: "https://www.securityweek.com/in-other-news-ransomware-developer-sentenced-plugin4shell-ai-attack-critical-sap-flaw/"
+    title: "In Other News: Ransomware Developer Sentenced, Plugin4Shell AI Attack, Critical SAP Flaw"
+    publisher: SecurityWeek
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261006171831/https://www.securityweek.com/in-other-news-ransomware-developer-sentenced-plugin4shell-ai-attack-critical-sap-flaw/"
+  - url: "https://thehackernews.com/2026/09/plugin4shell-lets-repository-owners.html"
+    title: "Plugin4Shell Lets Repository Owners Hijack AI Coding Agent Plugins"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261102020428/https://thehackernews.com/2026/09/plugin4shell-lets-repository-owners.html"
