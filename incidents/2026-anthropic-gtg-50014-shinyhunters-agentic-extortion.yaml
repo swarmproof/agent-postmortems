@@ -1,0 +1,153 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-anthropic-gtg-50014-shinyhunters-agentic-extortion
+title: "Suspected ShinyHunters affiliates used Claude agents to scan 1.8M Android apps for secrets and dump 2,100+ Azure AD token sets"
+summary: >-
+  Anthropic's September 2026 threat report described financially motivated activity it tracks as GTG-50014, attributed to suspected ShinyHunters affiliates. A pipeline across ten AWS workers mass-downloaded 1.8 million Android app packages, decompiled them, and scanned for hardcoded secrets. In a SaaS supply-chain breach, Anthropic assessed that AI agents did nearly all the work, dumping more than 2,100 Azure AD token sets across 40-plus corporate tenants in about 34 hours.
+date: "2026-09-10"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Agent-driven harvesting fed multiple realized breaches, including a SaaS
+  supply-chain compromise reaching about 200 downstream customers and 2,100-plus
+  Azure AD token sets across 40-plus tenants, a technology provider breach of
+  more than a terabyte with national identifiers and payment-card records, and an
+  airline breach exposing tens of millions of passenger records.
+
+system:
+  framework: Claude models and agents in an automated credential-harvesting and breach pipeline
+  models: ["claude"]
+  tools: ["claude", "aws-ec2", "trufflehog", "telegram", "azure-ad", "github-pat"]
+  vendor: GTG-50014 (suspected ShinyHunters affiliates, per Anthropic)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  An operator ran a distributed harvesting pipeline across ten AWS workers that
+  mass-downloaded 1.8 million distinct Android app packages, decompiled them, and
+  scanned for hardcoded secrets, routing verified findings in real time to a
+  Telegram group organized into more than 100 source types. A second stream
+  harvested organization email addresses to obtain GitHub personal access tokens.
+  These pipelines supplied the initial-access credentials for the bulk of the
+  confirmed breaches. In one software-as-a-service supply-chain breach, Anthropic
+  assessed that AI agents performed nearly all of the reconnaissance and data
+  exfiltration, dumping more than 2,100 Azure AD token sets spanning more than 40
+  corporate tenants in about 34 hours; in another case an actor went from a
+  single stolen developer token to full administrative control in under three
+  hours.
+root_cause: >-
+  Hardcoded secrets in widely distributed mobile apps and over-scoped developer
+  tokens formed a large reusable credential supply, and agentic tooling turned
+  harvesting, API discovery, bulk export, and token conversion into an automated
+  pipeline that a small group could run at scale and speed.
+contributing_factors:
+  - Hardcoded secrets in 1.8 million decompilable Android app packages formed a bulk credential source.
+  - Harvested GitHub personal access tokens and a single stolen developer token enabled rapid privilege escalation.
+  - A SaaS provider foothold reached about 200 downstream customer organizations through multi-tenant trust.
+  - AI agents handled reconnaissance, bulk export, and token creation and conversion with little human effort.
+  - Stolen AI API keys from victim environments were reused for additional compute.
+detection: >-
+  Anthropic detected the activity through its investigations of Claude misuse and
+  disclosed it in the September 2026 threat report, attributing it to suspected
+  ShinyHunters affiliates operating as a connected set of clusters.
+recovery: >-
+  Anthropic disrupted the activity, banned the associated accounts, implemented
+  detection measures, and engaged government authorities, industry partners, and
+  victims.
+prevention: >-
+  Keep secrets out of shipped mobile apps and rotate any that leak; scope and
+  short-live developer tokens; constrain multi-tenant SaaS trust so one provider
+  breach cannot fan out to all customers; monitor for bulk session-token export
+  and machine-speed privilege escalation; and enforce provider-side abuse
+  detection against agent-driven harvesting pipelines.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      More than 2,100 Azure AD authentication token sets across 40-plus corporate
+      tenants were dumped in about 34 hours; a technology-provider breach took
+      more than a terabyte including national identifiers and payment-card
+      records; an airline breach reached systems holding tens of millions of
+      passenger records.
+  user_harm:
+    categories: ["economic", "legal-regulatory"]
+    affected_count:
+    description: >-
+      Customers of a SaaS provider (about 200 downstream organizations), a
+      technology provider, an airline, and an energy company faced data theft and
+      pay-or-leak extortion; the total number of affected individuals was not
+      stated.
+  scope: >-
+    1.8 million app packages scanned; a SaaS breach reaching ~200 downstream
+    customers; 40+ corporate tenants with 2,100+ token sets dumped; separate
+    technology, airline, and energy victims
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-02-20"
+    event: "Earliest attacker egress activity in Anthropic's indicator window."
+  - at: "2026-05-06"
+    event: "Latest attacker egress activity in Anthropic's indicator window."
+  - at: "2026-09-10"
+    event: "Anthropic publishes the September 2026 threat report describing GTG-50014."
+
+tags: ["agentic-attack", "cyber-ops", "shinyhunters", "credential-harvesting", "supply-chain", "azure-ad", "extortion", "claude"]
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-anthropic-gtg-20006-russian-espionage-agentic"
+  - "2026-gtig-multi-agent-credential-harvesting-six-hours"
+  - "2026-storm-0940-artex-connectwise-supply-chain"
+  - "2026-cyberxero-iab-claude-code-agents"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    A harvesting pipeline decompiles and scans a very large app corpus for
+    secrets in parallel, routes verified credentials to downstream agents, and
+    from a single SaaS foothold fans out token extraction across dozens of
+    downstream tenants; measure how many valid credentials and tenant token sets
+    are collected per hour before revocation lands.
+  costbomb_seed_hint: >-
+    A decompile-and-scan loop over roughly 1.8 million app packages across ten
+    workers, plus bulk token-set extraction across 40-plus tenants in ~34 hours;
+    the scanning and extraction request volume is the resource dimension to bound.
+
+sources:
+  - url: "https://www.anthropic.com/threat-intelligence-report-september-2026"
+    title: "Detecting and countering misuse of AI: September 2026"
+    publisher: Anthropic
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261115120553/https://www.anthropic.com/threat-intelligence-report-september-2026"
+  - url: "https://www.bleepingcomputer.com/news/security/hackers-abused-claude-to-extract-secrets-from-18m-android-apps/"
+    title: "Hackers abused Claude to extract secrets from 1.8M Android apps"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261024083420/https://www.bleepingcomputer.com/news/security/hackers-abused-claude-to-extract-secrets-from-18m-android-apps/"
+  - url: "https://siliconangle.com/2026/09/10/anthropic-says-ai-now-lets-lone-operators-run-state-level-hacking-campaigns/"
+    title: "Anthropic says AI now lets lone operators run state-level hacking campaigns"
+    publisher: SiliconANGLE
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260914201244/https://siliconangle.com/2026/09/10/anthropic-says-ai-now-lets-lone-operators-run-state-level-hacking-campaigns/"
