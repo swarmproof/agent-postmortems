@@ -1,0 +1,158 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-storm-3168-jadepuffer-azure-service-principals
+title: "Storm-3168 used compromised Azure service principals to enumerate and destroy cloud resources in one tenant"
+summary: >-
+  Microsoft Threat Intelligence documented an early-June 2026 Azure campaign it tracks as Storm-3168, linked to the JADEPUFFER actor cluster. Two compromised service principals in one tenant ran about 15.5 hours of enumeration, then over roughly 35 minutes attempted 150-plus destructive or credential operations, deleting most of 100-plus storage accounts plus a Key Vault, Function App, and App Service plan. Microsoft assessed the activity as automated or scripted execution.
+date: "2026-09-25"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Destructive deletion of most of 100-plus storage accounts and several platform
+  resources in one Azure tenant, with attempts to impair backup and recovery and
+  30-plus successful key-retrieval calls; resource locks and deletion protection
+  limited the damage, and no ransom note or confirmed data exfiltration was
+  observed.
+
+system:
+  framework: automated or scripted execution via two compromised Azure service principals (Microsoft assessment); agentic characterization attributed to Sysdig's JADEPUFFER reporting
+  models: []
+  tools: ["azure-resource-manager", "azure-service-principals", "azure-storage", "azure-key-vault", "azure-site-recovery"]
+  vendor: Storm-3168 (Microsoft tracking name; linked to JADEPUFFER)
+  autonomy_level: unknown
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: unsafe-action
+    subclass: data-deletion
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Two service principals in the same Azure tenant were compromised; Microsoft
+  could not confirm the initial-access vector, though the client ID, client
+  secret, and tenant ID of one had been posted in plaintext in a public GitHub
+  issue and remained in the edit history after removal. One principal enumerated
+  virtual machines, subscriptions, and resource groups for about 15.5 hours with
+  300-plus successful read operations. The second enumerated resources across two
+  subscriptions in seconds, checked App Service configuration stores, then began a
+  destructive sequence of more than 150 operations over roughly 35 minutes, with
+  the core deletion lasting about seven minutes. It later returned to make 30-plus
+  successful key-retrieval calls. All actions used Azure RBAC roles the identities
+  already held, including Storage Account Contributor granted via group
+  membership.
+root_cause: >-
+  Workload identities held standing permissions broad enough to enumerate and
+  delete resources across subscriptions, and an exposed application secret
+  persisted in a public location after apparent cleanup. The pace and parallelism
+  of the activity exceeded human operation, so once the credentials were held the
+  destructive sequence ran faster than tenant-side detection and response.
+contributing_factors:
+  - A service principal's client ID, secret, and tenant ID were exposed in plaintext in a public GitHub issue and remained in the edit history after removal.
+  - Service principals held broad Azure RBAC permissions, including Storage Account Contributor via group membership and direct Contributor and SQL DB Contributor roles.
+  - App-only identities authenticated without an interactive user sign-in, so user-level multi-factor authentication did not apply.
+  - The division of work across two identities and overlapping token streams indicated automated or scripted execution operating at machine speed.
+  - The actor cluster is reported to run agentic ransomware operations, consistent with a broader shift toward AI-orchestrated cloud attacks.
+detection: >-
+  Microsoft Defender XDR surfaced alerts across tactics, including anomalous and
+  high-volume Key Vault operations, ARM operations from a suspicious proxy IP,
+  and unusual data-extraction signals. Microsoft tied both identities to
+  Storm-3168 infrastructure, a shared network fingerprint, and the user agent
+  python-requests/2.34.2, and published the analysis on 2026-09-25.
+recovery: >-
+  Azure resource locks and storage-account deletion protection blocked removal of
+  several storage accounts, and parallel SQL database deletions failed on an
+  unsupported API version; attempts to remove Azure Site Recovery and Azure
+  Backup protection locks also failed. Microsoft recommended treating exposed
+  credentials as compromised and rotating them, keeping secrets out of code and
+  issues, applying least privilege to service principals, protecting backup and
+  recovery resources, and enabling Defender for Cloud plans.
+prevention: >-
+  Apply least privilege to service principals and review RBAC regularly; monitor
+  service-principal sign-ins, credential use, and key-retrieval calls separately
+  from user activity; treat any publicly exposed credential as compromised,
+  including values left in version or edit history; enforce resource locks and
+  deletion protection on critical storage and recovery assets; and alert on
+  machine-speed bulk deletion and key-retrieval patterns.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      The identity made 30-plus successful ListKeys calls, including for storage
+      tied to Azure Site Recovery, which could provide access to stored data.
+      Microsoft observed no ransom note and did not confirm data exfiltration;
+      no data volume was published.
+  user_harm:
+    categories: ["economic", "property"]
+    affected_count:
+    description: >-
+      One organization lost most of 100-plus storage accounts and several
+      platform resources and faced recovery effort; attempts to impair backup and
+      recovery protections were made but failed.
+  scope: one Azure tenant; 100-plus storage accounts targeted, most deleted, plus a Key Vault, Function App, and App Service plan
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-06-01"
+    event: "Early June 2026: enumeration and the destructive sequence occur across two compromised service principals in one Azure tenant."
+  - at: "2026-07-31"
+    event: "Sysdig reports the JADEPUFFER actor cluster as an agentic ransomware operation."
+  - at: "2026-09-25"
+    event: "Microsoft publishes the Storm-3168 analysis of the Azure service-principal activity."
+
+tags: ["agentic-attack", "cyber-ops", "azure", "service-principals", "data-destruction", "storm-3168", "jadepuffer", "cloud-abuse"]
+mappings:
+  owasp_llm: [LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-jadepuffer-agentic-ransomware"
+  - "2026-storm-0940-artex-connectwise-supply-chain"
+  - "2026-gtig-multi-agent-credential-harvesting-six-hours"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An automated process holding compromised workload-identity credentials
+    enumerates resources across subscriptions, then issues bulk parallel
+    deletion and key-retrieval calls faster than tenant-side response; measure how
+    many resources are destroyed and keys retrieved before resource locks,
+    deletion protection, or credential revocation halt the sequence.
+  costbomb_seed_hint: >-
+    A deletion-and-key-retrieval loop issuing 150-plus destructive or credential
+    operations in about 35 minutes against one tenant's resources; the volume of
+    delete and ListKeys calls is the resource dimension to bound.
+
+sources:
+  - url: "https://www.microsoft.com/en-us/security/blog/2026/09/25/storm-3168-agentic-driven-cloud-attacks-using-compromised-service-principals/"
+    title: "Storm-3168: agentic-driven cloud attacks using compromised service principals"
+    publisher: Microsoft Threat Intelligence
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261031074758/https://www.microsoft.com/en-us/security/blog/2026/09/25/storm-3168-agentic-driven-cloud-attacks-using-compromised-service-principals/"
+  - url: "https://www.csoonline.com/article/4227657/autonomous-agents-attack-azure-using-compromised-identities-and-destroying-resources.html"
+    title: "Autonomous agents attack Azure using compromised identities, destroying resources"
+    publisher: CSO Online
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261003215451/https://www.csoonline.com/article/4227657/autonomous-agents-attack-azure-using-compromised-identities-and-destroying-resources.html"
+  - url: "https://securityaffairs.com/199905/cyber-crime/storm-3168-linked-to-jadepuffer-abused-stolen-azure-identities.html"
+    title: "Storm-3168, linked to JADEPUFFER, abused stolen Azure identities"
+    publisher: Security Affairs
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261008095155/https://securityaffairs.com/199905/cyber-crime/storm-3168-linked-to-jadepuffer-abused-stolen-azure-identities.html"
