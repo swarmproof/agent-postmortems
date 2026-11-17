@@ -4978,14 +4978,16 @@
           "title": "Apex Accelerator (REF8801) npm AI agent hijack",
           "publisher": "Corgea",
           "type": "primary-research",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117142939/https://corgea.com/research/apex-accelerator-ref8801-npm-ai-agent-hijack-october-2026"
         },
         {
           "url": "https://osv.dev/vulnerability/MAL-2026-17924",
           "title": "Malicious code in @apexacc/cli (npm) — MAL-2026-17924 / GHSA-pg98-9cmp-wcf5",
           "publisher": "OSV / OpenSSF Malicious Packages",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143055/https://osv.dev/vulnerability/MAL-2026-17924"
         },
         {
           "url": "https://thehackernews.com/2026/10/fake-web3-accelerator-uses-npm-packages.html",
@@ -9095,7 +9097,8 @@
           "title": "CVE-2026-69253 — flowise-components",
           "publisher": "GitLab Advisory Database",
           "type": "other",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143421/https://advisories.gitlab.com/npm/flowise-components/CVE-2026-69253/"
         },
         {
           "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-69253",
@@ -9687,7 +9690,8 @@
           "title": "GitSpawn: How a Git Config File Hijacks AI Coding Agents",
           "publisher": "Cloud Security Alliance AI Safety Initiative",
           "type": "news",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143514/https://labs.cloudsecurityalliance.org/research/csa-research-note-gitspawn-ai-coding-agent-rce-20260903-csa/"
         }
       ]
     },
@@ -10962,7 +10966,8 @@
           "title": "Insufficient access control restrictions in the file write tool in Amazon Kiro IDE (CVE-2026-10591)",
           "publisher": "GitHub Advisory Database",
           "type": "other",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143606/https://github.com/advisories/GHSA-83m8-c7v3-rw3w"
         },
         {
           "url": "https://cybersecuritynews.com/aws-kiro-remote-code-execution/",
@@ -11301,7 +11306,8 @@
           "title": "Authenticated RCE via MCP Stdio transport allows any user to execute arbitrary OS commands on the server",
           "publisher": "Langflow (GitHub Security Advisory)",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143739/https://github.com/langflow-ai/langflow/security/advisories/GHSA-7w94-79vh-5mr2"
         },
         {
           "url": "https://github.com/advisories/GHSA-w794-rj3p-xv45",
@@ -12093,14 +12099,16 @@
           "title": "Authenticated non-admin user achieves RCE via POST /api/servers (missing authorization)",
           "publisher": "samanhappy/mcphub (GitHub)",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143906/https://github.com/samanhappy/mcphub/security/advisories/GHSA-mx89-jjx9-gjr8"
         },
         {
           "url": "https://radar.offseq.com/threat/cve-2026-79748-cwe-862-missing-authorization-in-samanhappy-mcphub-8f25b143245cf1fc",
           "title": "CVE-2026-79748: CWE-862 Missing Authorization in samanhappy mcphub",
           "publisher": "OffSeq Radar",
           "type": "other",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143931/https://radar.offseq.com/threat/cve-2026-79748-cwe-862-missing-authorization-in-samanhappy-mcphub-8f25b143245cf1fc"
         },
         {
           "url": "https://github.com/samanhappy/mcphub/releases/tag/v0.12.15",
@@ -12115,7 +12123,8 @@
           "title": "CVE-2026-79748 Detail",
           "publisher": "NIST NVD",
           "type": "other",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117143954/https://nvd.nist.gov/vuln/detail/cve-2026-79748"
         }
       ]
     },
@@ -19714,7 +19723,8 @@
           "title": "CVE-2026-70335 CSAF advisory",
           "publisher": "Microsoft Security Response Center",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117164007/https://msrc.microsoft.com/csaf/advisories/2026/msrc_cve-2026-70335.json"
         },
         {
           "url": "https://www.sentinelone.com/vulnerability-database/cve-2026-70335/",
@@ -20174,7 +20184,8 @@
           "title": "ARTEX goes from pentesting tool to attacker staple in three months",
           "publisher": "Help Net Security",
           "type": "news",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261117164028/https://www.helpnetsecurity.com/2026/11/09/artex-goes-from-pentesting-tool-to-attacker-staple-in-three-months/"
         },
         {
           "url": "https://incidentdatabase.ai/cite/1810/",

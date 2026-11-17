@@ -159,11 +159,13 @@ sources:
     publisher: Corgea
     type: primary-research
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117142939/https://corgea.com/research/apex-accelerator-ref8801-npm-ai-agent-hijack-october-2026"
   - url: "https://osv.dev/vulnerability/MAL-2026-17924"
     title: "Malicious code in @apexacc/cli (npm) — MAL-2026-17924 / GHSA-pg98-9cmp-wcf5"
     publisher: OSV / OpenSSF Malicious Packages
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117143055/https://osv.dev/vulnerability/MAL-2026-17924"
   - url: "https://thehackernews.com/2026/10/fake-web3-accelerator-uses-npm-packages.html"
     title: "Fake Web3 Accelerator Uses npm Packages to Hijack AI Coding Agents"
     publisher: The Hacker News

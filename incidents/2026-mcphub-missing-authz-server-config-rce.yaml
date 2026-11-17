@@ -122,11 +122,13 @@ sources:
     publisher: samanhappy/mcphub (GitHub)
     type: vendor-disclosure
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117143906/https://github.com/samanhappy/mcphub/security/advisories/GHSA-mx89-jjx9-gjr8"
   - url: "https://radar.offseq.com/threat/cve-2026-79748-cwe-862-missing-authorization-in-samanhappy-mcphub-8f25b143245cf1fc"
     title: "CVE-2026-79748: CWE-862 Missing Authorization in samanhappy mcphub"
     publisher: OffSeq Radar
     type: other
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117143931/https://radar.offseq.com/threat/cve-2026-79748-cwe-862-missing-authorization-in-samanhappy-mcphub-8f25b143245cf1fc"
   - url: "https://github.com/samanhappy/mcphub/releases/tag/v0.12.15"
     title: "MCPHub v0.12.15 release"
     publisher: samanhappy/mcphub (GitHub)
@@ -138,3 +140,4 @@ sources:
     publisher: NIST NVD
     type: other
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117143954/https://nvd.nist.gov/vuln/detail/cve-2026-79748"

@@ -175,6 +175,7 @@ sources:
     publisher: Help Net Security
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117164028/https://www.helpnetsecurity.com/2026/11/09/artex-goes-from-pentesting-tool-to-attacker-staple-in-three-months/"
   - url: "https://incidentdatabase.ai/cite/1810/"
     title: "Incident 1810: ARTEX Security Testing Agent Reportedly Accessed WorkOS's Internal Sales Tool Without Authorization and Retrieved Customer Data"
     publisher: AI Incident Database

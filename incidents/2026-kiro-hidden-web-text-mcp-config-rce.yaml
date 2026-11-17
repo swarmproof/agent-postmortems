@@ -161,6 +161,7 @@ sources:
     publisher: GitHub Advisory Database
     type: other
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261117143606/https://github.com/advisories/GHSA-83m8-c7v3-rw3w"
   - url: "https://cybersecuritynews.com/aws-kiro-remote-code-execution/"
     title: "AWS Kiro Vulnerability Allows Remote Code Execution via Hidden Web Text"
     publisher: Cyber Security News
