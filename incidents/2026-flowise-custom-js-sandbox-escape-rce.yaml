@@ -1,0 +1,140 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-flowise-custom-js-sandbox-escape-rce
+title: "Flowise custom-JavaScript sandbox escape let an authenticated user execute code as the server process (CVE-2026-69253)"
+summary: >-
+  elttam researchers found that Flowise, a low-code platform for building LLM
+  agents and workflows, let an ordinary authenticated user break out of the
+  in-process JavaScript sandbox behind its custom-function and custom-tool nodes
+  and run code as the Flowise server process. The advisory states the escape was
+  specific to Flowise rather than a bug in the vm2 library alone. Fixed in
+  Flowise 3.1.3.
+date: "2026-08-04"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Remote code execution on the agent host from an authenticated, non-privileged
+  account, rated CVSS 4.0 9.0 by the GitHub advisory. Researcher proof of concept
+  with a vendor fix; no in-the-wild exploitation reported.
+
+system:
+  framework: Flowise (custom-function and custom-tool nodes on a vm2-based sandbox)
+  models: []
+  tools: ["flowise-custom-function", "flowise-custom-tool", "vm2-sandbox"]
+  vendor: FlowiseAI
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: tool-misuse
+failure_classes:
+  - class: tool-misuse
+    subclass: unvalidated-args
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  An authenticated Flowise user supplied a node configuration value through the
+  platform's API. The platform treated that value as part of the code it handed
+  to the sandbox rather than as data, and the in-process sandbox did not contain
+  what the resulting code could reach, so it executed on the host with the
+  privileges of the Flowise process.
+root_cause: >-
+  Flowise ran user-authored JavaScript in vm2, which executes inside the same
+  Node.js process as the host application and whose maintainers had deprecated
+  it as unsuitable for production. Configuration values were composed into
+  executable code instead of being passed as data, and the set of modules
+  exposed to sandboxed code widened what an escape could reach. The original
+  report was closed on the understanding that it concerned an outdated vm2
+  version; the published advisory notes that patching vm2 alone would not have
+  resolved it.
+contributing_factors:
+  - The sandbox ran in-process (vm2) rather than in a process-isolated runtime.
+  - User-influenced configuration was inserted into code executed by the sandbox.
+  - The dependency allowlist available to sandboxed code was broader than needed.
+  - The initial report was closed as a known vm2 issue, delaying the fix.
+detection: >-
+  Reported to FlowiseAI by elttam researchers Luke Jahnke and Alex Brown on
+  2026-04-11. The GitHub security advisory GHSA-wg86-r78f-74mp and NVD record
+  were published on 2026-08-04, alongside an independent technical analysis.
+recovery: >-
+  FlowiseAI released Flowise 3.1.3 with a fix commit referenced by the advisory.
+  Third-party analysis describes the fix as passing the affected value to the
+  sandbox as data rather than code and adding stricter validation. No in-the-wild
+  exploitation was reported.
+prevention: >-
+  Execute untrusted agent code in a process-isolated runtime rather than an
+  in-process sandbox; pass configuration into sandboxes as data, never by
+  composing source; minimise and audit the dependency allowlist exposed to
+  sandboxed code; treat node and tool configuration as code subject to review.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: confidential
+    description: >-
+      Code execution as the Flowise process user exposes whatever that process
+      can reach, including stored model credentials and connected-service
+      secrets. No specific exposure was reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher proof of concept; no in-the-wild exploitation reported.
+  scope: "Flowise and flowise-components deployments at or below 3.1.2 with authenticated users"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-04-11"
+    event: "elttam discloses the sandbox escape to FlowiseAI."
+  - at: "2026-08-04"
+    event: "GHSA-wg86-r78f-74mp and CVE-2026-69253 published; fixed in Flowise 3.1.3."
+
+cve: ["CVE-2026-69253"]
+cwe: ["CWE-95"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0053]
+related_incidents:
+  - "2026-dialogflow-cx-rogue-agent"
+  - "2026-mcphub-missing-authz-server-config-rce"
+  - "2026-paperclip-import-authz-bypass-unauthenticated-rce"
+tags: ["flowise", "sandbox-escape", "vm2", "code-injection", "low-code", "rce"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent platform executes user-authored tool code in an in-process sandbox
+    and composes configuration values into that code. Measure whether a
+    low-privilege account can reach the host filesystem or process through the
+    sandbox boundary across many concurrent agent flows.
+
+sources:
+  - url: "https://github.com/FlowiseAI/Flowise/security/advisories/GHSA-wg86-r78f-74mp"
+    title: "Flowise Sandbox Escape to RCE (GHSA-wg86-r78f-74mp)"
+    publisher: FlowiseAI / elttam
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://advisories.gitlab.com/npm/flowise-components/CVE-2026-69253/"
+    title: "CVE-2026-69253 — flowise-components"
+    publisher: GitLab Advisory Database
+    type: other
+    date_accessed: "2026-11-16"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-69253"
+    title: "CVE-2026-69253 Detail"
+    publisher: NIST NVD
+    type: other
+    date_accessed: "2026-11-16"
+  - url: "https://securelayer7.net/lab/cve-2026-69253-flowise-vm2-sandbox-escape-rce-moment-locale"
+    title: "CVE-2026-69253: Flowise vm2 Sandbox Escape to RCE"
+    publisher: SecureLayer7
+    type: primary-research
+    date_accessed: "2026-11-16"
