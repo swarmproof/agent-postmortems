@@ -1,0 +1,151 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-sharedroot-claude-cowork-sandbox-escape
+title: "SharedRoot: Claude Cowork's local agent VM could be escaped to read and write host Mac files, including credentials"
+summary: >-
+  Accomplish AI disclosed SharedRoot, a chain in which the agent session inside
+  Claude Cowork's local Linux VM escalated within the guest and, because the
+  host filesystem was mounted into the VM with write access, reached files across
+  the host Mac without a permission prompt. Reachable data included SSH keys and
+  cloud credentials. Anthropic classed the report informative; Cowork's default
+  shifted to cloud execution, which the researcher says the local escape does not
+  reach.
+date: "2026-07-23"
+last_updated: "2026-11-16"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  A demonstrated sandbox escape from an agent runtime to arbitrary read and
+  write of host files, including credentials, with no user prompt, affecting a
+  local-execution mode reportedly used by roughly 500,000 macOS users before the
+  default changed. Researcher demonstration; no in-the-wild exploitation
+  reported, and the local mode remained available at disclosure.
+
+system:
+  framework: "Claude Cowork (local VM execution mode)"
+  models: []
+  tools: ["local-vm", "host-filesystem-mount"]
+  vendor: Anthropic
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: unsafe-action
+    subclass: cross-domain-action
+attack_vector: self-induced
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  An agent session running inside Cowork's local Linux VM gained elevated
+  privilege within the guest by combining guest configuration that the session
+  was permitted to use with a known Linux kernel privilege-escalation bug
+  (CVE-2026-46331) that the guest exposed. Because Cowork mounted the host Mac's
+  filesystem into the VM with write access, guest-level escalation turned into
+  read and write access to files across the host, reaching data well beyond the
+  folder the user had connected and without any permission prompt. The researcher
+  frames the kernel bug as replaceable and the host-access outcome as the result
+  of the surrounding design choices.
+root_cause: >-
+  The containment boundary did not hold once the in-VM session was elevated,
+  because the host filesystem was shared into the guest with write access rather
+  than scoped to what the task needed. The guest also permitted the configuration
+  and on-demand kernel features that enabled in-guest escalation, so a single
+  kernel bug of that class was sufficient to cross from the agent's VM to the
+  host. The researcher identifies four independent design choices, any one of
+  which would have broken the chain and would also blunt future kernel bugs of
+  the same kind.
+contributing_factors:
+  - The host filesystem was mounted into the agent VM with broad write access rather than a narrow, task-scoped mount.
+  - The guest permitted configuration and on-demand kernel features that enabled in-guest privilege escalation.
+  - A root-owned helper run by the host-side daemon could be influenced from the escalated guest session.
+  - Containment relied on the guest kernel's integrity, so a single kernel bug of this class crossed the boundary.
+detection: >-
+  Found and published by Oren Yomtov, Principal Security Researcher at Accomplish
+  AI, on 2026-07-23. The Cloud Security Alliance published a research note on
+  2026-07-24 and The Next Web and The Hacker News covered the disclosure.
+recovery: >-
+  Anthropic classified the report as informative, citing that the underlying CVE
+  fell within the bug-bounty program's recent-publication window and that the
+  proposed changes were defense-in-depth rather than a standalone vulnerability,
+  per the Cloud Security Alliance note; the researcher reports no fix was issued
+  for the local execution mode. Cowork's default now routes agent execution to
+  the cloud instead of a local VM, and the researcher states the local escape
+  path does not appear to apply to the cloud mode. The underlying kernel bug was
+  fixed upstream in Linux v7.1-rc7.
+prevention: >-
+  Scope any host filesystem shared into an agent VM to the minimum the task needs
+  and prefer read-only mounts; disable guest configuration and on-demand kernel
+  features that enable in-guest privilege escalation; run host-side helpers so an
+  escalated guest cannot influence them; treat containment as defense-in-depth
+  with several independent barriers rather than a single kernel boundary.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: credentials
+    description: >-
+      The escape reached arbitrary host files the logged-in user could access,
+      including SSH keys and cloud credentials. No specific data exposure was
+      reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Researcher demonstration; no in-the-wild exploitation reported.
+  scope: >-
+    Claude Cowork local-execution mode on macOS, reportedly about 500,000 users
+    before the default shifted to cloud execution
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-06-01"
+    event: "The underlying Linux kernel bug (CVE-2026-46331) is publicly disclosed (mid-June)."
+  - at: "2026-07-23"
+    event: "Accomplish AI publishes the SharedRoot chain."
+  - at: "2026-07-24"
+    event: "Cloud Security Alliance research note published."
+
+cve: ["CVE-2026-46331"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-deepseek-harness-sandbox-self-disable"
+  - "2026-claude-code-mods-unsandboxed-default"
+  - "2026-nemoclaw-ollama-template-poisoning"
+tags: ["sandbox-escape", "claude-cowork", "anthropic", "vm-escape", "host-mount", "credentials", "macos", "defense-in-depth", "cve"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent runtime confines work to a local VM but mounts the host filesystem
+    into it with write access. Measure whether in-guest privilege escalation
+    turns into arbitrary read and write of host files beyond the connected
+    folder, and whether any single design barrier would have stopped the crossing.
+
+sources:
+  - url: "https://www.accomplish.ai/blog/sharedroot-escaping-claude-cowork-sandbox/"
+    title: "SharedRoot: Escaping the Claude Cowork Sandbox"
+    publisher: Accomplish AI
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261026033236/https://accomplish.ai/blog/sharedroot-escaping-claude-cowork-sandbox/"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-claude-cowork-sharedroot-sandbox-escape-20/"
+    title: "SharedRoot: A Sandbox Escape in Claude Cowork's VM"
+    publisher: Cloud Security Alliance AI Safety Initiative
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261028132536/https://labs.cloudsecurityalliance.org/research/csa-research-note-claude-cowork-sharedroot-sandbox-escape-20/"
+  - url: "https://thenextweb.com/news/claude-cowork-sandbox-escape-mac-files-sharedroot"
+    title: "Anthropic's Claude Cowork could escape its local VM and read credentials on a Mac"
+    publisher: The Next Web
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20260827054759/https://thenextweb.com/news/claude-cowork-sandbox-escape-mac-files-sharedroot"
