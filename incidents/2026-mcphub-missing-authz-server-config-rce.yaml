@@ -1,0 +1,139 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-mcphub-missing-authz-server-config-rce
+title: "MCPHub let any authenticated user define an MCP server launch command that the hub then executed as its OS user (CVE-2026-79748)"
+summary: >-
+  MCPHub, a hub that hosts and proxies Model Context Protocol servers for AI
+  agents, allowed any logged-in non-admin user to create or overwrite a server
+  configuration, after which the hub launched the configured process. No
+  admin check or command allowlist applied, so a low-privilege user could run
+  arbitrary programs as the hub's OS user, often root in the published
+  container image, and could overwrite admin-owned server definitions. Fixed in
+  0.12.15.
+date: "2026-08-23"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Code execution as the hub's OS user from any authenticated account, with
+  scope change across tenants, rated CVSS 9.9. Disclosed via GitHub advisory
+  with a vendor fix; no in-the-wild exploitation reported.
+
+system:
+  framework: MCPHub (MCP server hub and proxy)
+  models: []
+  tools: ["mcphub-api", "stdio-mcp-transport"]
+  vendor: samanhappy (open source)
+  autonomy_level: unknown
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: tool-misuse
+    subclass: unvalidated-args
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A user with an ordinary authenticated MCPHub account submitted a new or
+  modified MCP server definition. The hub accepted it without checking whether
+  the caller was an administrator or owned the server, and immediately launched
+  the process the definition named, with the hub's own OS privileges.
+root_cause: >-
+  Authentication was enforced, but authorization was not: the server-management
+  endpoints had no admin or ownership gate, and the command and argument fields
+  of a server definition were accepted as-is. Because hosting an MCP server means
+  spawning a process, write access to server definitions was equivalent to
+  arbitrary command execution. Read paths did filter by owner, showing
+  non-admin users were an intended audience and that the write-side check was
+  missing rather than misconfigured.
+contributing_factors:
+  - No admin or ownership check on server create and update endpoints.
+  - No allowlist or sanitisation of the launch command and arguments in a server definition.
+  - The published container image and common deployments run the hub as root.
+  - A non-admin user could overwrite an admin-owned, already-trusted server definition.
+detection: >-
+  Reported through GitHub's advisory process (credited reporter: GitHub user
+  offset). GHSA-mx89-jjx9-gjr8 was published on 2026-08-23 and CVE-2026-79748 on
+  2026-08-31.
+recovery: >-
+  Fixed in MCPHub 0.12.15 (pull request 770). Until upgrade, the advisory advised
+  restricting MCPHub access to trusted users. No in-the-wild exploitation was
+  reported.
+prevention: >-
+  Gate any operation that defines a process to launch behind administrator
+  authorization and ownership checks; allowlist launch commands or run MCP
+  servers in isolated containers; do not run hubs as root; audit server
+  definition changes.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    classification: credentials
+    description: >-
+      Code execution as the hub's OS user exposes every hosted MCP server's
+      configuration and credentials, including those belonging to other users
+      of the hub. No specific exposure was reported.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Disclosed vulnerability with a fix; no in-the-wild exploitation reported.
+  scope: "MCPHub deployments at or below 0.12.14 with more than one user"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-08-23"
+    event: "GHSA-mx89-jjx9-gjr8 published; fix released in MCPHub 0.12.15."
+  - at: "2026-08-31"
+    event: "CVE-2026-79748 published."
+
+cve: ["CVE-2026-79748"]
+cwe: ["CWE-862"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0053]
+related_incidents:
+  - "2025-framelink-figma-mcp-rce"
+  - "2026-microsoft-mcp-tool-description-poisoning"
+  - "2026-paperclip-import-authz-bypass-unauthenticated-rce"
+  - "2026-flowise-custom-js-sandbox-escape-rce"
+tags: ["mcp", "mcphub", "authorization", "multi-tenant", "rce", "process-spawn"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A shared hub launches a process for every MCP server definition it holds and
+    lets any authenticated user write definitions. Measure whether a low-privilege
+    account can spawn arbitrary processes, overwrite other users' trusted servers,
+    and how the blast radius grows with the number of agents connected to the hub.
+
+sources:
+  - url: "https://github.com/samanhappy/mcphub/security/advisories/GHSA-mx89-jjx9-gjr8"
+    title: "Authenticated non-admin user achieves RCE via POST /api/servers (missing authorization)"
+    publisher: samanhappy/mcphub (GitHub)
+    type: vendor-disclosure
+    date_accessed: "2026-11-16"
+  - url: "https://radar.offseq.com/threat/cve-2026-79748-cwe-862-missing-authorization-in-samanhappy-mcphub-8f25b143245cf1fc"
+    title: "CVE-2026-79748: CWE-862 Missing Authorization in samanhappy mcphub"
+    publisher: OffSeq Radar
+    type: other
+    date_accessed: "2026-11-16"
+  - url: "https://github.com/samanhappy/mcphub/releases/tag/v0.12.15"
+    title: "MCPHub v0.12.15 release"
+    publisher: samanhappy/mcphub (GitHub)
+    type: vendor-response
+    date_accessed: "2026-11-16"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-79748"
+    title: "CVE-2026-79748 Detail"
+    publisher: NIST NVD
+    type: other
+    date_accessed: "2026-11-16"
