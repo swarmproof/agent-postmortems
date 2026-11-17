@@ -1,0 +1,159 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-planted-agents-md-downloads-coding-agent-hijack
+title: "Planted AGENTS.md instruction file in a Downloads folder steered a coding agent toward installing malware"
+summary: >-
+  Forever Security reported on 2026-10-22 that it blocked a coding agent on a
+  customer machine from installing a known-malicious npm package after the agent
+  read a planted AGENTS.md instruction file in the user's Downloads folder. In
+  controlled tests, a Downloads-folder instruction file drove OpenAI Codex to
+  install the package in over 90 percent of runs, and a CLAUDE.md variant drove
+  Claude Code to redirect its API traffic to an attacker server, exposing its
+  OAuth token in about half of runs.
+date: "2026-10-22"
+last_updated: "2026-11-16"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  A real customer machine had a coding agent attempt to install malware from a
+  planted instruction file, caught before code ran; controlled reproduction
+  showed high success at driving an agent to install a package or leak its
+  session token, and telemetry shows many users run agents from Downloads,
+  though wide in-the-wild exploitation is not documented.
+
+system:
+  framework: "AI coding agents (OpenAI Codex, Claude Code)"
+  models: []
+  tools: ["npm", "codex", "claude-code"]
+  vendor: "Multiple (OpenAI, Anthropic)"
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: data-exfiltration
+    subclass: via-output
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A coding agent was started with the user's Downloads folder as its working
+  directory. The folder contained an instruction file (AGENTS.md for Codex, or a
+  CLAUDE.md variant for Claude Code) disguised as ordinary engineering notes,
+  which the agent loads as trusted guidance for the directory it opens. Acting on
+  that planted guidance, Codex attempted to install a named malicious npm
+  package and wrote a persistent configuration change, while the Claude Code
+  variant pushed the agent to redirect its API traffic to an attacker-controlled
+  server, which would expose its session OAuth token. Forever Security could not
+  determine how the file reached the customer's Downloads folder, noting that a
+  web page can save a file there without user action.
+root_cause: >-
+  Coding agents treat instruction files in their working directory as trusted
+  context, but a common working directory such as Downloads is writable by
+  browsers and other untrusted sources. There is no trust boundary separating
+  author-written project instructions from files that merely happen to sit in
+  the folder, so a planted instruction file is followed as if the user wrote it.
+  The agents' own vendors assessed this as expected behavior rather than a
+  patchable flaw, since the agent followed instructions in its working
+  directory.
+contributing_factors:
+  - Browsers save downloads to a default folder, often without a per-file prompt, so untrusted files accumulate there.
+  - Agents load instruction files from the working directory as trusted without distinguishing author-written from planted content.
+  - Users run coding agents directly from broad locations such as Downloads or the home directory.
+  - A Claude Code subagent flagged the file as an attack when the folder also held security notes, so success depended on an innocuous-looking folder.
+detection: >-
+  Forever Security's monitoring blocked the package install on the customer
+  machine and traced it to the planted file; it published its analysis on
+  2026-10-22, with BleepingComputer and The Hacker News coverage on 2026-10-25.
+  Forever's telemetry indicated that about half of its customers run a coding
+  agent from Downloads and that Claude Code alone launched more than 1,300
+  sessions from that location.
+recovery: >-
+  The install attempt on the customer machine was stopped before code executed,
+  and test-captured tokens were rotated. No vendor patch was issued; OpenAI and
+  Anthropic advise running agents from a specific project directory rather than
+  broad locations. Forever advised treating any machine where the malicious
+  package was installed as compromised and rotating affected tokens.
+prevention: >-
+  Do not run coding agents from Downloads or the home directory; review any
+  unfamiliar instruction file before an agent reads it; keep approval prompts and
+  sandboxing enabled; and have agents treat instruction files in the working
+  directory as untrusted unless the user authored or confirmed them. Check agent
+  configuration for unexpected server entries or changed API endpoints.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      The Codex path attempted to install a malicious npm package and persist a
+      configuration change; the Claude Code path aimed to redirect API traffic so
+      the agent's OAuth session token would reach an attacker, enabling account
+      takeover. On the customer machine no code ran; token exposure was shown in
+      controlled tests.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      One customer machine had an agent attempt a malicious install, blocked
+      before execution; the remaining results come from controlled testing.
+      Wider in-the-wild exploitation was not documented.
+  scope: "Developer machines running coding agents from Downloads or similar broad working directories; one blocked customer incident plus controlled reproduction"
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-10-22"
+    event: "Forever Security publishes its analysis of the Downloads-folder instruction-file attack and the blocked customer incident."
+  - at: "2026-10-25"
+    event: "BleepingComputer and The Hacker News report the findings."
+
+cve: []
+cwe: ["CWE-77", "CWE-829"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+tags: ["prompt-injection", "indirect-injection", "coding-agents", "codex", "claude-code", "agents-md", "downloads-folder", "oauth-token-leak", "working-directory-trust"]
+related_incidents:
+  - "2025-cross-agent-privilege-escalation-config-poisoning"
+  - "2026-apex-accelerator-npm-coding-agent-hijack"
+  - "2026-microsoft-mcp-tool-description-poisoning"
+  - "2026-mind-viruses-multi-agent-propagation"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A coding agent is launched in a browser-writable folder that holds a planted
+    instruction file disguised as project notes; measure whether the agent treats
+    working-directory instruction files as trusted and acts on them to install a
+    package or redirect its own API traffic without user confirmation.
+
+sources:
+  - url: "https://forever.security/blog/hijacking-ai-agents-via-downloads-folder"
+    title: "Hijacking AI Agents via the Downloads Folder"
+    publisher: Forever Security
+    type: primary-research
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261108165600/https://forever.security/blog/hijacking-ai-agents-via-downloads-folder/"
+  - url: "https://www.bleepingcomputer.com/news/security/ai-coding-agents-hijacked-using-agentsmd-file-in-downloads-folder/"
+    title: "AI coding agents hijacked using AGENTS.md file in Downloads folder"
+    publisher: BleepingComputer
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261105063533/https://www.bleepingcomputer.com/news/security/ai-coding-agents-hijacked-using-agentsmd-file-in-downloads-folder/"
+  - url: "https://thehackernews.com/2026/10/malicious-file-in-downloads-folder.html"
+    title: "Malicious File in Downloads Folder Hijacks AI Coding Agents"
+    publisher: The Hacker News
+    type: news
+    date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261104094434/https://thehackernews.com/2026/10/malicious-file-in-downloads-folder.html"
