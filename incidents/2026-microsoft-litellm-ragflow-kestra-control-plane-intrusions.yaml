@@ -1,0 +1,188 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-microsoft-litellm-ragflow-kestra-control-plane-intrusions
+title: "Microsoft documented intrusions into exposed LiteLLM, RAGFlow and Kestra control planes for credential theft and cryptomining"
+summary: >-
+  Microsoft Security Research reported on 2026-08-26 three intrusions into
+  exposed AI infrastructure: a LiteLLM gateway (likely via the CVE-2026-42271
+  MCP test-endpoint command execution, with Starlette CVE-2026-48710 weakening
+  authentication), a RAGFlow deployment (entry vector unconfirmed) and a Kestra
+  orchestrator (likely via CVE-2026-49869). Attackers harvested provider and
+  master keys, hooked RAGFlow's model-configuration flow to capture new
+  credentials, and ran cryptominers.
+date: "2026-08-26"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Realized compromise of three classes of AI control plane with theft of
+  model-provider credentials, durable persistence (SSH keys, cron entries,
+  startup hooks, immutable file attributes) and compute monetisation; the
+  Kestra flaw was later added to the CISA KEV catalog and the LiteLLM chain had
+  already been. Microsoft did not publish victim counts, dates or losses.
+
+system:
+  framework: LiteLLM proxy (AI gateway), RAGFlow (retrieval-augmented generation platform) and Kestra (workflow orchestration)
+  models: []
+  tools: ["litellm", "mcp", "ragflow", "kestra", "docker-socket", "postgresql", "xmrig"]
+  vendor: BerriAI (LiteLLM); InfiniFlow (RAGFlow); Kestra
+  autonomy_level: unknown
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: tool-misuse
+    subclass: unvalidated-args
+  - class: data-exfiltration
+    subclass: via-tool
+  - class: cost-blowup
+    subclass: mispriced-action
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Internet-exposed deployments of three AI control-plane components. For
+  LiteLLM, Microsoft assessed that attackers likely reached an exposed gateway
+  and used the authenticated MCP stdio test-endpoint command execution
+  (CVE-2026-42271), with the Starlette host-header validation bypass
+  (CVE-2026-48710) able to weaken the authentication boundary in affected
+  configurations, to run commands in the gateway process context. For RAGFlow,
+  probing consistent with server-side request forgery preceded code execution
+  by several days; Microsoft listed several RAGFlow template-injection,
+  path-traversal and sandbox-bypass CVEs as possibilities but did not attribute
+  the intrusion to a specific one. For Kestra, Microsoft assessed with high
+  confidence that the CVE-2026-49869 authentication bypass allowed a malicious
+  workflow to be defined and run through the process runner.
+root_cause: >-
+  Gateways, retrieval platforms and orchestrators concentrate credentials, data
+  access and execution privilege in one process, and each was reachable from
+  the internet with an authentication boundary that could be bypassed or that
+  sat in front of a command-execution feature. Once inside, the control plane's
+  own capabilities, the gateway's environment and database, RAGFlow's
+  model-configuration path and Kestra's script runner and mounted Docker
+  socket, provided the data and compute the attackers sought.
+contributing_factors:
+  - Upstream provider keys, master keys and database connection strings were held in the gateway process environment, exposed wholesale once commands ran as that process.
+  - RAGFlow's application startup path could be modified so that a hidden hook loaded with the service and wrapped the tenant model-configuration flow, capturing new provider keys as administrators entered them.
+  - The Kestra worker had the Docker socket mounted, letting a workflow enumerate other containers and their environment variables.
+  - Several payloads showed structured coding characteristics that Microsoft described as often associated with assisted or generated code, an observation about tooling rather than attribution.
+  - Shared attacker infrastructure appeared across multiple AI workloads, though Microsoft did not attribute the activity to a named group.
+detection: >-
+  Microsoft Security Research (Yash Gund and Sumith Maniath) investigated the
+  three intrusions using Defender for Endpoint and Defender for Cloud telemetry
+  and published findings, detections, hunting queries and indicators on
+  2026-08-26; Cyber Security News reported the findings on 2026-08-27. CISA's
+  2026-09-02 KEV listing of the Kestra flaw and Wiz's independent honeypot
+  observation of the LiteLLM MCP chain corroborate the exploitation.
+recovery: >-
+  Microsoft's guidance was to patch LiteLLM, RAGFlow and Kestra, rotate
+  provider and master keys after suspected compromise, review guardrail and
+  workflow registrations, remove planted SSH keys, cron entries and startup
+  hooks, and hunt for the published indicators. Vendor fixes already existed:
+  LiteLLM 1.83.7 for CVE-2026-42271, Starlette 1.0.1 for CVE-2026-48710 and
+  Kestra 1.0.45 / 1.3.21 for CVE-2026-49869.
+prevention: >-
+  Treat AI gateways and orchestrators as high-value secret stores: require
+  authentication on API and UI surfaces, keep management ports off the
+  internet, store upstream keys in a managed secret store with per-team virtual
+  keys and spend limits rather than in environment variables, run proxies under
+  dedicated least-privilege accounts with restricted database permissions,
+  avoid mounting the Docker socket into workers, enforce deny-by-default
+  egress, monitor DNS for out-of-band callbacks, and alert on execution from
+  world-writable paths and on changes to cron, authorized keys and immutable
+  file attributes.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Provider API keys, LiteLLM master and virtual keys, database connection
+      strings and model configuration were harvested from the gateway; RAGFlow
+      provider credentials (OpenAI, Azure, Anthropic, Gemini per Microsoft's
+      detection table) were intercepted as they were configured; Kestra
+      container secrets were enumerated through the Docker socket.
+  user_harm:
+    categories: ["economic"]
+    affected_count:
+    description: >-
+      Credential theft and host CPU consumed by cryptominers across the three
+      investigated environments; Microsoft did not publish victim counts or
+      losses.
+  scope: >-
+    Three investigated environments (one LiteLLM gateway, one RAGFlow
+    deployment, one Kestra orchestrator); shared attacker infrastructure was
+    seen across multiple AI workloads.
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-05-08"
+    event: "LiteLLM 1.83.7 fixes CVE-2026-42271 by restricting the MCP test endpoints to administrators."
+  - at: "2026-06-03"
+    event: "Kestra publishes the advisory for CVE-2026-49869, fixed in 1.0.45 and 1.3.21."
+  - at: "2026-06-08"
+    event: "CISA adds LiteLLM CVE-2026-42271 to the KEV catalog."
+  - at: "2026-08-26"
+    event: "Microsoft Security publishes its report on intrusions into LiteLLM, RAGFlow and Kestra control planes."
+  - at: "2026-08-27"
+    event: "Cyber Security News reports the findings, including the CVE-2026-42271 and CVE-2026-48710 LiteLLM chain and the Kestra CVE-2026-49869 bypass."
+  - at: "2026-09-02"
+    event: "CISA adds Kestra CVE-2026-49869 and Starlette CVE-2026-48710 to the KEV catalog."
+
+cve: ["CVE-2026-42271", "CVE-2026-48710", "CVE-2026-49869"]
+cwe: ["CWE-78", "CWE-287", "CWE-444", "CWE-522"]
+mappings:
+  owasp_llm: [LLM02, LLM06, LLM10]
+  owasp_agentic: [T2, T3, T4]
+  mitre_atlas: [AML.T0024, AML.T0053]
+tags: ["litellm", "ragflow", "kestra", "ai-gateway", "rag-platform", "orchestration", "credential-theft", "cryptomining", "persistence", "docker-socket", "exploited-in-the-wild", "microsoft-security-research"]
+related_incidents:
+  - "2026-litellm-mcp-auth-bypass-kestra-workflow-rce-cisa-kev"
+  - "2026-poellm-botnet-litellm-mcp-endpoints-cryptomining"
+  - "2026-litellm-1-107-0-release-pipeline-credential-stealer"
+  - "2026-litellm-pypi-trivy-credential-stealer-poisoning"
+  - "2026-langflow-mcp-stdio-rce-honeypot-exploitation"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An AI gateway, retrieval platform or orchestrator is exposed with
+    credentials in its process environment and an execution feature behind a
+    bypassable authentication boundary; measure how quickly provider keys,
+    backend database contents and neighbouring container secrets become
+    readable and whether persistence and miner deployment are detected.
+  costbomb_seed_hint: >-
+    Stolen provider keys and gateway virtual keys can be spent on inference by
+    the attacker, and compromised hosts run miners on CPU; the dimension to
+    bound is unmetered consumption of model quota and compute after a gateway
+    compromise.
+
+sources:
+  - url: "https://www.microsoft.com/en-us/security/blog/2026/08/26/when-ai-infrastructure-becomes-target-securing-gateways-control-points/"
+    title: "When AI infrastructure becomes the target: Securing gateways and control points"
+    publisher: Microsoft Security
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://cybersecuritynews.com/hackers-exploit-ai-infrastructure/"
+    title: "Hackers Exploit AI Infrastructure to Steal API Keys, Gain Persistence and Mine Cryptocurrency"
+    publisher: Cyber Security News
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.cisa.gov/news-events/alerts/2026/09/02/cisa-adds-seven-known-exploited-vulnerabilities-catalog"
+    title: "CISA Adds Seven Known Exploited Vulnerabilities to Catalog"
+    publisher: CISA
+    type: regulatory-court
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/kestra-io/kestra/security/advisories/GHSA-5vc5-wxxq-3fjx"
+    title: "Unauthenticated Remote Code Execution via Authentication Bypass in AuthenticationFilter (GHSA-5vc5-wxxq-3fjx)"
+    publisher: Kestra (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
