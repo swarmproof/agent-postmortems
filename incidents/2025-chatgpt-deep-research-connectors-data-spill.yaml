@@ -1,0 +1,131 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2025-chatgpt-deep-research-connectors-data-spill
+title: "ChatGPT Deep Research could be prompt-injected into sending data from one connector to another attacker-controlled one"
+summary: >-
+  A researcher showed that ChatGPT Deep Research treats all enabled
+  connectors as one trust boundary. An instruction planted in a Linear ticket,
+  or in a custom MCP connector's tool description, led the agent to gather
+  production service details and credentials from several Linear tickets and
+  send them in a query to the researcher's own remote MCP server, with no
+  human in the loop during the multi-minute run. Published 2025-08-24; no
+  vendor response or fix is described.
+date: "2025-08-24"
+incident_type: hazard
+status: factual
+confidence: reported
+severity: high
+severity_rationale: >-
+  A working demonstration moved credentials from an enterprise ticketing
+  connector to an attacker-controlled server during an unattended agent run.
+  Scoped as a researcher demonstration against the researcher's own test
+  data, with no reported in-the-wild exploitation and no vendor fix described.
+
+system:
+  framework: ChatGPT Deep Research with Connectors (custom MCP)
+  models: []
+  tools: ["linear", "custom-mcp-connector", "web-search"]
+  vendor: OpenAI
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A Deep Research run had both a Linear connector and a custom MCP connector
+  enabled. Injected instructions reached the agent through two paths in the
+  demonstration: text inside a Linear ticket, and the tool description of the
+  custom MCP server. Acting on them, the agent read multiple tickets, combined
+  production service details and credentials from them, and issued a search
+  query to the custom server containing that data. Because Deep Research runs
+  can last ten minutes or more without interaction, no user was positioned to
+  notice. A stale injection ticket left over from a test against a different
+  agent also caused the run to start looking for a Slack tool to post a
+  message.
+root_cause: >-
+  Every connector enabled for a Deep Research run shares a single trust
+  boundary with the agent, which may freely use data retrieved from one source
+  to construct queries to another. Low-integrity sources, such as a ticket
+  body or a third-party tool description, therefore carry the same authority
+  as the user's request, and there is no boundary preventing confidential data
+  from one connector flowing into the parameters of a call to another. The
+  researcher noted the same design applies to other deep research agents and
+  that stored memories and web search traffic may also flow to tools.
+contributing_factors:
+  - All enabled connectors shared one trust boundary in the agent's context.
+  - Content from a ticketing system was treated as actionable instruction.
+  - Custom MCP connector tool descriptions were loaded as prompt content from a third party.
+  - Long unattended runs removed the opportunity for human review before data left the system.
+  - Data from one source could be placed into query parameters sent to another source.
+detection: >-
+  Demonstrated by researcher Johann Rehberger (wunderwuzzi) roughly two months
+  before publication on 2025-08-24 as part of the Month of AI Bugs 2025
+  series, using a self-built remote MCP server as the receiving connector.
+  The post describes no report to or response from OpenAI.
+recovery: >-
+  No fix is described. The researcher recommended enabling only trusted
+  connectors, not mixing sensitive sources with low-integrity ones in the same
+  research run, reviewing third-party privacy policies, being cautious about
+  exposing tools that can modify or delete data, and watching which tools are
+  invoked in ChatGPT's activity pane. The post notes behaviour may have changed
+  since the research was conducted.
+prevention: >-
+  Separate trust boundaries between connectors so data from one source cannot
+  be placed into calls to another without policy; treat ticket bodies, tool
+  descriptions and other retrieved content as untrusted; require review before
+  an unattended research run sends data to third-party endpoints; limit which
+  connectors can be combined in a single run; log and surface cross-connector
+  data flows.
+
+blast_radius:
+  data:
+    classification: credentials
+    description: >-
+      Production service details and credentials stored in Linear tickets were
+      combined by the agent and sent to a third-party MCP server in the
+      demonstration; the researcher used his own test data and server.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      A researcher demonstration against the researcher's own tenant; no
+      in-the-wild exploitation or user harm was reported.
+  scope: "ChatGPT Deep Research users with multiple connectors enabled, including custom MCP connectors"
+  reversibility: reversible
+
+cwe: ["CWE-200"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+tags: ["prompt-injection", "data-exfiltration", "chatgpt", "deep-research", "connectors", "mcp", "confused-deputy", "cross-connector", "no-cve"]
+related_incidents:
+  - "2026-chatgpt-shared-cache-cross-account-connector-leak"
+  - "2025-github-mcp-private-repo-leak"
+  - "2025-echoleak-m365-copilot"
+  - "2025-claude-desktop-mcp-hidden-unicode-tool-metadata"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A long-running research agent has a sensitive data connector and a
+    third-party connector enabled in the same run and encounters injected
+    instructions in retrieved content; measure whether it copies data from
+    the sensitive connector into the parameters of calls to the third-party
+    connector without user review.
+
+sources:
+  - url: "https://embracethered.com/blog/posts/2025/chatgpt-deep-research-connectors-data-spill-and-leaks/"
+    title: "How Deep Research Agents Can Leak Your Data"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: primary-research
+    date_accessed: "2026-11-18"
