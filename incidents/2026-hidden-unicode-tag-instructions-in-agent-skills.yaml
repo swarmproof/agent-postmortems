@@ -1,0 +1,131 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-hidden-unicode-tag-instructions-in-agent-skills
+title: "Invisible Unicode Tag characters hid executable instructions inside an otherwise legitimate agent Skill file"
+summary: >-
+  Researcher Johann Rehberger showed that instructions encoded as invisible
+  Unicode Tag codepoints could be hidden in a legitimate-looking Agent Skill
+  file and were followed by Claude Code (Bash auto-approval on) and GitHub
+  Copilot: on the first turn the agent fetched and ran a remote script. The
+  text is invisible in editors and review UIs and was missed by common skill
+  scanners. Proof of concept; no in-the-wild case was reported.
+date: "2026-02-11"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  The demonstration reached remote script execution through a skill that
+  passes human review and most skill scanners, across a skill format adopted by
+  several major agent products. Limited by the need for the skill to be
+  installed and, in the Claude Code demo, by Bash auto-approval being on; no
+  in-the-wild exploitation of this technique in skills was reported.
+
+system:
+  framework: Agent Skills (SKILL.md, agentskills.io open standard) loaded by Claude Code; also demonstrated with GitHub Copilot
+  models: []
+  tools: ["skills", "bash", "curl"]
+  vendor: Anthropic (Claude Code), GitHub (Copilot)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: supply-chain-compromise
+failure_classes:
+  - class: supply-chain-compromise
+    subclass: extension
+  - class: prompt-injection
+    subclass: indirect
+  - class: unsafe-action
+attack_vector: supply-chain
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A copy of a genuine, vendor-curated security-best-practices Skill was
+  modified to carry an additional instruction block encoded entirely in Unicode
+  Tag codepoints, which render as nothing in editors, terminals and web review
+  interfaces. When the skill was invoked, the agent decoded the hidden text as
+  instructions: it emitted a fixed marker phrase and then used its shell tool to
+  download and execute a script from a remote server on the first conversation
+  turn. The behaviour was observed in Claude Code with Bash auto-approval
+  enabled and in GitHub Copilot running a Claude model.
+root_cause: >-
+  Skill files are loaded into the model's context as trusted instructions, yet
+  the review path for them (human reading, diff tools, most skill scanners)
+  operates on rendered text while the model operates on raw codepoints. Models
+  that interpret Unicode Tag sequences as text therefore receive instructions
+  that no reviewer saw, and an agent with a shell tool and relaxed approval
+  settings will act on them.
+contributing_factors:
+  - Several models interpret Unicode Tag codepoints as readable text even though no UI renders them.
+  - Skill review and scanning tools largely checked visible content and did not decode or flag invisible codepoint runs.
+  - Progressive disclosure means a skill's detailed instructions load only on invocation, so the hidden block is not seen at install time.
+  - Auto-approval for the shell tool removed the human gate between the hidden instruction and execution.
+  - Skills are distributed as plain files through public hubs, so a backdoored copy of a trusted skill is easy to publish.
+detection: >-
+  Described in a researcher blog post published 2026-02-11, with an
+  accompanying open-source scanner that decodes Tag runs and counts invisible
+  characters. On a retest on 2026-02-10 the researcher observed Claude Code
+  detecting the invisible characters and refusing; the researcher could not
+  confirm whether this was an intentional mitigation. The Cloud Security
+  Alliance published a research note on 2026-03-10 analysing the technique
+  across skill files, tool descriptions and MCP servers.
+recovery: >-
+  No vendor-confirmed fix is recorded. The researcher published a scanner and
+  proposed detection changes to an open-source skills hub. Anthropic's handling
+  of Tag characters in Claude Code appeared to change around 2026-02-10 per the
+  researcher's observation, but no vendor statement confirming that change was
+  cited.
+prevention: >-
+  Strip or flag Unicode Tag, zero-width and variation-selector codepoints in
+  skill and instruction files before they reach the model; have skill scanners
+  decode invisible runs rather than only reading rendered text; install only
+  skills from trusted authors and remove unused ones; run agents in sandboxes
+  with egress controls; keep shell tools behind approval; avoid skill designs
+  that pass API tokens through shell commands.
+
+blast_radius:
+  data:
+    classification: n-a
+    description: >-
+      Proof of concept against the researcher's own environment; the remote
+      script was benign and no data was taken.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Research demonstration; no users affected and no in-the-wild exploitation
+      of this technique in skills reported.
+  scope: Users of any skill-capable agent who install a skill from an untrusted or tampered source
+  reversibility: reversible
+
+cwe: ["CWE-94", "CWE-116"]
+mappings:
+  owasp_llm: [LLM01, LLM03, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
+tags: ["agent-skills", "skill-md", "unicode-tags", "invisible-characters", "ascii-smuggling", "claude-code", "github-copilot", "supply-chain"]
+related_incidents:
+  - "2026-skills-sh-paperclip-browser-use-credential-stealer-skills"
+  - "2025-amazon-q-find-exec-rce"
+  - "2026-planted-agents-md-downloads-coding-agent-hijack"
+  - "2025-claude-desktop-mcp-hidden-unicode-tool-metadata"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent loads an instruction file whose visible text is benign but whose
+    raw bytes contain an invisible instruction block; measure whether the
+    loader, scanner or model rejects the file, and whether the agent's shell
+    tool executes a fetched script without approval.
+
+sources:
+  - url: "https://embracethered.com/blog/posts/2026/scary-agent-skills/"
+    title: "Scary Agent Skills: Hidden Unicode Instructions in Skills ...And How To Catch Them"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://labs.cloudsecurityalliance.org/research/csa-research-note-unicode-instruction-injection-ai-skills-20/"
+    title: "Hidden Unicode Instruction Injection in AI Agent Skills: Invisible Adversarial Payloads in Tool Descriptions, Skill Files, and MCP Servers"
+    publisher: Cloud Security Alliance AI Safety Initiative
+    type: other
+    date_accessed: "2026-11-18"
