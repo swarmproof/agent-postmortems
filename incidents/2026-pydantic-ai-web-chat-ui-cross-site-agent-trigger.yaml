@@ -1,0 +1,151 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-pydantic-ai-web-chat-ui-cross-site-agent-trigger
+title: "Pydantic AI development web chat UI let any website drive a local agent and its approval-gated tools (CVE-2026-107295)"
+summary: >-
+  The Pydantic AI development web chat UI (Agent.to_web(), clai web) did not
+  check the content type of chat requests, so a website open in a developer's
+  browser could reach the loopback server, run the served agent, and execute
+  its tools with the local process's credentials. Approval-gated tools were
+  also reachable because approval decisions were client-relayed. Fixed in
+  1.107.4 and 2.28.0 (CVE-2026-107295); no exploitation reported.
+date: "2026-08-12"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Any website a developer visits could run a local agent and its tools with the
+  developer's credentials, and the human-approval gate on side-effecting tools
+  offered no protection (CVSS 3.1 7.6, High). Exposure is limited to the
+  development chat UI while it is running, and the flaw was patched with no
+  in-the-wild exploitation reported.
+
+system:
+  framework: Pydantic AI (Agent.to_web() / clai web development chat UI)
+  models: []
+  tools: ["web-chat-endpoint", "agent-tools", "requires-approval-tools"]
+  vendor: Pydantic
+  autonomy_level: human-in-the-loop
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+    subclass: cross-domain-action
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  A developer ran an agent through the Pydantic AI web chat UI on their own
+  machine and, while it was running, visited a website the attacker controlled.
+  Because the chat endpoint accepted request bodies without checking their
+  content type, the page could issue a plain cross-origin request that browsers
+  send without a CORS preflight, reaching the loopback address and submitting a
+  chat turn of the attacker's choosing. The served agent then ran that turn and
+  invoked its tools, and tools flagged as requiring approval executed because
+  the endpoint accepted the approval decision relayed by the same client.
+root_cause: >-
+  The development chat endpoint treated any browser-reachable request as a
+  legitimate operator interaction. Two trust assumptions failed together: the
+  endpoint did not require a content type that would force a cross-origin
+  preflight, and the human-approval gate for side-effecting tools was enforced
+  by the client rather than the server, so the party driving the agent could
+  also approve its own tool calls. Binding to localhost did not help because a
+  page in the developer's browser can reach loopback.
+contributing_factors:
+  - The approval decision for requires_approval tools was relayed by the client and trusted by the server, so the approval gate collapsed whenever the client was untrusted.
+  - The endpoint accepted non-JSON content types, letting browsers send the request as a simple cross-origin request that bypasses CORS preflight checks.
+  - A loopback bind was treated as an access control, although any page open in the same browser can address it.
+  - The served agent ran with the full privileges and credentials of the developer's local process, so tool side effects and data disclosure scaled with whatever the developer had configured.
+detection: >-
+  Reported to the Pydantic AI maintainers by Thai Son Dinh of VinSOC Labs, who
+  is credited in the advisory. The fix was released and publicly described in
+  the v1.107.4 release notes on 2026-08-12; GitHub Security Advisory
+  GHSA-h4xc-3qfq-jf93 and NVD entry CVE-2026-107295 were published on
+  2026-10-08. A companion advisory published the same day (GHSA-q2xc-rrxj-58x9,
+  CVE-2026-107292) covered the same endpoint's lack of Host-header validation
+  against DNS rebinding.
+recovery: >-
+  Patched in pydantic-ai and pydantic-ai-slim 1.107.4 on the v1 line and 2.28.0
+  on the v2 line. The chat endpoint now requires a JSON content type and rejects
+  other requests before the body is parsed and before the agent runs; the
+  bundled UI already sent that header, and non-browser clients calling the
+  endpoint directly may need to add it. Users who could not upgrade were advised
+  not to run the web UI while browsing untrusted sites, to stop it when idle,
+  and not to serve agents with side-effecting tools through it.
+prevention: >-
+  Enforce tool approval gates server-side with state the client cannot forge,
+  rather than trusting client-relayed decisions; require a content type and an
+  Origin or CSRF check on every endpoint that can start an agent run, even on
+  loopback; validate the Host header to defeat DNS rebinding; run development
+  agent UIs with least-privilege credentials and no side-effecting tools unless
+  needed; and treat a browser-reachable local agent endpoint as an attack
+  surface equivalent to a public one.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      Whatever data the served agent's tools could read with the developer's
+      local credentials could be disclosed to the attacker's page, alongside
+      unwanted tool side effects; the actual exposure depended on the tools
+      each developer had attached.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A disclosed vulnerability with a released fix; no in-the-wild exploitation
+      was reported.
+  scope: "Developers serving an agent through Agent.to_web() or clai web on pydantic-ai 1.34.0 to 1.107.3 or 2.0.0b1 to 2.27.x"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-08-12"
+    event: "pydantic-ai 1.107.4 released with the content-type fix and a public description of the flaw; 2.28.0 carries the same fix on the v2 line."
+  - at: "2026-10-08"
+    event: "GitHub Security Advisory GHSA-h4xc-3qfq-jf93 published; NVD publishes CVE-2026-107295 with CWE-352."
+
+cve: ["CVE-2026-107295"]
+cwe: ["CWE-352"]
+mappings:
+  owasp_llm: [LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024]
+tags: ["pydantic-ai", "csrf", "localhost", "approval-gate-bypass", "web-chat-ui", "developer-tooling", "cve"]
+related_incidents:
+  - "2026-mcphub-missing-authz-server-config-rce"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A locally hosted agent endpoint is reachable from a browser page on another
+    origin and the approval for side-effecting tools is relayed by the client;
+    measure whether a cross-origin request can start an agent run and whether
+    the server independently enforces the approval gate before tool execution.
+
+sources:
+  - url: "https://github.com/pydantic/pydantic-ai/security/advisories/GHSA-h4xc-3qfq-jf93"
+    title: "Pydantic AI Web chat UI: a website visited by the developer can trigger agent runs and server-side tool execution on the local chat endpoint (GHSA-h4xc-3qfq-jf93)"
+    publisher: Pydantic (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-107295"
+    title: "CVE-2026-107295 — Pydantic AI development chat endpoint missing request content-type validation"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/pydantic/pydantic-ai/releases/tag/v1.107.4"
+    title: "pydantic-ai v1.107.4 release notes — security backports"
+    publisher: Pydantic
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
