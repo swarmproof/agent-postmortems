@@ -1,0 +1,213 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-litellm-mcp-auth-bypass-kestra-workflow-rce-cisa-kev
+title: "LiteLLM MCP auth bypass (CVE-2026-59822) and Kestra unauthenticated workflow RCE (CVE-2026-49869) exploited in the wild, added to CISA KEV"
+summary: >-
+  On 2026-09-02 CISA added two AI control-plane flaws to its KEV catalog on
+  evidence of active exploitation: CVE-2026-59822, a fail-open authentication
+  fallback on LiteLLM's MCP endpoint that let an arbitrary bearer token open an
+  MCP session and call configured tools, and CVE-2026-49869, a suffix-match
+  authentication exemption in Kestra OSS that let an unauthenticated caller
+  create and run workflows with root command execution. Wiz honeypots saw the
+  LiteLLM bypass exploited from 2026-07-07.
+date: "2026-09-02"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Both flaws give an unauthenticated network attacker control of an AI
+  control plane that brokers model-provider credentials and tool access; CISA
+  listed both on evidence of active exploitation, Wiz observed the LiteLLM
+  bypass in its honeypots, and Microsoft documented the Kestra flaw as the
+  likely initial access in a cryptomining intrusion. Victim counts were not
+  published.
+
+system:
+  framework: LiteLLM proxy (AI gateway with MCP gateway) and Kestra OSS (event-driven orchestration)
+  models: []
+  tools: ["mcp", "litellm", "kestra", "script-plugins"]
+  vendor: BerriAI (LiteLLM); Kestra
+  autonomy_level: unknown
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: tool-misuse
+    subclass: unvalidated-args
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  LiteLLM below 1.84.0: a request to the MCP Streamable HTTP endpoint carrying
+  a fabricated bearer token failed LiteLLM key validation, but the OAuth2
+  passthrough fallback replaced the failed check with an empty authentication
+  object instead of rejecting the request, so the caller obtained an
+  authenticated MCP session and could list and invoke configured MCP tools and
+  the services behind them. Kestra OSS below 1.0.45 and 1.3.21: the
+  authentication filter exempted the public configuration endpoint from Basic
+  Auth by matching the end of the request path rather than the exact path, so
+  any API path whose final segment matched was served without credentials; an
+  unauthenticated caller could create and execute workflows, and because
+  script-execution plugins ship enabled by default this gave command execution
+  as root inside the worker container.
+root_cause: >-
+  In both components the authentication boundary of the control plane failed
+  open. LiteLLM's MCP auth handler treated a validation failure as a fallback
+  to passthrough rather than a denial (CWE-287, CWE-306). Kestra's filter used
+  an incomplete path check to decide which requests needed credentials (CWE-184,
+  CWE-287). Behind each boundary sat an execution capability, MCP tool calls in
+  LiteLLM and shell and Python script tasks in Kestra, so a bypass translated
+  directly into tool invocation or command execution.
+contributing_factors:
+  - Both products expose execution capabilities (MCP tool invocation; shell and Python script tasks) directly behind a single authentication boundary.
+  - Kestra OSS ships script-execution plugins enabled by default and runs worker tasks as root in the container.
+  - LiteLLM gateways concentrate model-provider keys, master keys and virtual keys, making them a credential store as well as a proxy; Wiz found nearly one in ten publicly reachable instances accepted a default master key or required no authentication.
+  - Four other flaws in the same KEV batch (Starlette CVE-2026-48710, JFrog Artifactory CVE-2026-82329, Sangoma Switchvox and SonicWall SMA1000) are general infrastructure; the Starlette host-header bypass had earlier been chained with LiteLLM CVE-2026-42271 and is context only here.
+  - Exploit activity against AI infrastructure was sustained through mid-2026 according to Wiz's 90-day honeypot telemetry, with tooling adapted to each service's internals.
+detection: >-
+  Kestra published GHSA-5vc5-wxxq-3fjx on 2026-06-03 and LiteLLM published
+  GHSA-7488-6r32-c95q on 2026-06-30. Wiz Threat Research observed CVE-2026-59822
+  exploited against its honeypots on 2026-07-07 and published its 90-day
+  honeypot report on 2026-08-27. Microsoft's 2026-08-26 report assessed with
+  high confidence that CVE-2026-49869 was the likely initial access in a Kestra
+  intrusion. CISA added both CVEs to the KEV catalog on 2026-09-02 with
+  federal remediation deadlines of 2026-09-05 (Kestra) and 2026-09-16
+  (LiteLLM).
+recovery: >-
+  LiteLLM fixed CVE-2026-59822 in 1.84.0 and advised disabling MCP routes or
+  blocking the MCP endpoints at a reverse proxy until upgraded. Kestra fixed
+  CVE-2026-49869 in 1.0.45 and 1.3.21. CISA directed federal agencies to apply
+  vendor mitigations under BOD 26-04 or discontinue use, with forensic triage
+  required for the Kestra flaw. Wiz and Microsoft guidance included rotating
+  provider and master keys, reviewing registered guardrails and workflows for
+  unexpected entries, restricting egress, and treating gateways and
+  orchestrators as production security assets.
+prevention: >-
+  Authentication fallbacks in gateways should deny on validation failure
+  rather than substitute an empty principal; path-based authentication
+  exemptions should match exact routes; execution plugins should be opt-in and
+  run as an unprivileged user; MCP and workflow control planes should not be
+  internet-exposed without authentication, and provider credentials should be
+  scoped per team in a managed secret store rather than concentrated in the
+  gateway process.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      An authenticated MCP session in LiteLLM reaches configured MCP tools and
+      the services behind them; command execution in a Kestra worker reaches
+      container secrets, the Docker socket where mounted, and any credentials
+      held by workflows. Microsoft reported provider-key theft and cryptomining
+      following Kestra compromise.
+  user_harm:
+    categories: ["economic"]
+    affected_count:
+    description: >-
+      In-the-wild exploitation confirmed by CISA, Wiz and Microsoft; individual
+      victims and losses were not published.
+  scope: >-
+    Internet-exposed LiteLLM proxies below 1.84.0 with MCP routes enabled and
+    Kestra OSS instances below 1.0.45 / 1.3.21 using Basic Auth (the default).
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-06-03"
+    event: "Kestra publishes GHSA-5vc5-wxxq-3fjx (CVE-2026-49869, CVSS 10.0), fixed in 1.0.45 and 1.3.21."
+  - at: "2026-06-30"
+    event: "LiteLLM publishes GHSA-7488-6r32-c95q (CVE-2026-59822, CVSS 4.0 8.8), fixed in 1.84.0."
+  - at: "2026-07-07"
+    event: "Wiz Threat Research observes CVE-2026-59822 exploited against its honeypot infrastructure."
+  - at: "2026-08-26"
+    event: "Microsoft publishes its report on intrusions into LiteLLM, RAGFlow and Kestra, assessing CVE-2026-49869 as the likely Kestra initial access."
+  - at: "2026-08-27"
+    event: "Wiz publishes 90-day honeypot telemetry on attacks against AI infrastructure, naming CVE-2026-59822."
+  - at: "2026-09-02"
+    event: "CISA adds CVE-2026-59822 and CVE-2026-49869 (with five non-AI flaws) to the KEV catalog; deadlines 2026-09-16 and 2026-09-05."
+  - at: "2026-09-09"
+    event: "Wiz publishes a full write-up of the LiteLLM authentication bypass and related flaws, confirming the KEV listing."
+
+cve: ["CVE-2026-59822", "CVE-2026-49869"]
+cwe: ["CWE-287", "CWE-306", "CWE-184", "CWE-78"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0053]
+tags: ["litellm", "kestra", "mcp", "ai-gateway", "orchestration", "authentication-bypass", "exploited-in-the-wild", "cisa-kev", "honeypot", "cve"]
+related_incidents:
+  - "2026-microsoft-litellm-ragflow-kestra-control-plane-intrusions"
+  - "2026-poellm-botnet-litellm-mcp-endpoints-cryptomining"
+  - "2026-litellm-1-107-0-release-pipeline-credential-stealer"
+  - "2026-litellm-pypi-trivy-credential-stealer-poisoning"
+  - "2026-fastgpt-agent-sandbox-unauthenticated-code-server"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An AI gateway or workflow orchestrator whose authentication layer falls
+    back to an empty principal or exempts routes by path suffix is exposed on
+    the internet; measure whether an unauthenticated caller can reach MCP tool
+    invocation or script-task execution, and which provider credentials and
+    container secrets become readable.
+  costbomb_seed_hint: >-
+    Compromised orchestrator workers were used to run cryptominers on host CPU;
+    the compute-theft dimension to bound is unmetered task execution by
+    unauthenticated workflows.
+
+sources:
+  - url: "https://www.cisa.gov/news-events/alerts/2026/09/02/cisa-adds-seven-known-exploited-vulnerabilities-catalog"
+    title: "CISA Adds Seven Known Exploited Vulnerabilities to Catalog"
+    publisher: CISA
+    type: regulatory-court
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/BerriAI/litellm/security/advisories/GHSA-7488-6r32-c95q"
+    title: "MCP Authentication Bypass via OAuth2 Passthrough Fallback (GHSA-7488-6r32-c95q)"
+    publisher: BerriAI (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/kestra-io/kestra/security/advisories/GHSA-5vc5-wxxq-3fjx"
+    title: "Unauthenticated Remote Code Execution via Authentication Bypass in AuthenticationFilter (GHSA-5vc5-wxxq-3fjx)"
+    publisher: Kestra (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://www.wiz.io/blog/ai-infrastructure-honeypot"
+    title: "Inside 90 days of attacks on AI infrastructure"
+    publisher: Wiz Threat Research
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.wiz.io/blog/off-guard-breaking-litellm-from-authentication-bypass-to-cloud-compromise"
+    title: "Off Guard: Breaking LiteLLM from authentication bypass to cloud compromise"
+    publisher: Wiz
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.microsoft.com/en-us/security/blog/2026/08/26/when-ai-infrastructure-becomes-target-securing-gateways-control-points/"
+    title: "When AI infrastructure becomes the target: Securing gateways and control points"
+    publisher: Microsoft Security
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-59822"
+    title: "CVE-2026-59822 — LiteLLM MCP Streamable HTTP authentication bypass"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-49869"
+    title: "CVE-2026-49869 — Kestra OSS authentication bypass to unauthenticated remote code execution"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://forkast.news/three-of-seven-cisa-kev-additions-now-target-ai-infrastructure/"
+    title: "Three-of-Seven CISA KEV Additions Now Target AI Infrastructure"
+    publisher: Forkast
+    type: news
+    date_accessed: "2026-11-18"
