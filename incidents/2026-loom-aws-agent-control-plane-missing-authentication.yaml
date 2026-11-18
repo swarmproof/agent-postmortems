@@ -1,0 +1,167 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-loom-aws-agent-control-plane-missing-authentication
+title: "Loom for AWS granted any network client admin authority over its agent control plane when no identity provider was set (CVE-2026-103956)"
+summary: >-
+  Loom for AWS, an AWS Labs open-source agent orchestration platform, had a
+  missing-authentication flaw (CVE-2026-103956, CVSS 10.0) before 1.6.1. With no
+  identity provider configured, a local-development bypass activated for every
+  request, so any network client gained super-admin authority over the agent
+  control plane: registering tool servers, reading stored integration
+  credentials and rewriting IAM policies on managed agent roles. Fixed in 1.6.1;
+  no exploitation reported.
+date: "2026-08-04"
+last_updated: "2026-11-18"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: critical
+severity_rationale: >-
+  Unauthenticated full administrative control of an agent orchestration layer
+  (CVSS 10.0 per the vendor advisory and NVD), reaching stored credentials, the
+  tool servers agents call and the IAM policies that bound what managed agents
+  may do in the AWS account. Patched in 1.6.1; neither the vendor bulletin nor
+  NVD reports in-the-wild exploitation, and the flaw is not listed in the CISA
+  Known Exploited Vulnerabilities catalog.
+
+system:
+  framework: Loom for AWS (AWS Labs agent orchestration platform on Amazon Bedrock AgentCore)
+  models: []
+  tools: ["mcp", "a2a", "iam", "cognito"]
+  vendor: AWS Labs
+  autonomy_level: unknown
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: supply-chain-compromise
+    subclass: mcp-server
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: unintentional
+  timing: pre-deployment
+
+trigger: >-
+  A Loom for AWS backend below 1.6.1 was reachable beyond loopback without a
+  Cognito user pool or external identity provider configured. The authentication
+  dependency contained a no-identity-provider local-development bypass that,
+  according to the 1.6.1 release notes, activated automatically for any request,
+  including unauthenticated ones, and granted super-admin access. Any client
+  that could reach the application API therefore held full administrative
+  authority over the agent control plane.
+root_cause: >-
+  Missing authentication for a critical function (CWE-306) combined with an
+  insecure default (CWE-1188): a convenience path intended for local
+  development was selected by the absence of configuration rather than by an
+  explicit opt-in, so a deployment that had not yet been wired to an identity
+  provider failed open instead of closed. Because the control plane is where
+  tool servers are registered, integration credentials are stored and agent IAM
+  policies are managed, administrative access to it is equivalent to control of
+  every agent it operates.
+contributing_factors:
+  - The local-development bypass was selected by the absence of an identity-provider configuration rather than by an explicit flag and a loopback-only client check.
+  - The control plane concentrated three high-value capabilities, tool-server registration, stored integration credentials and IAM policy management for managed agent roles, behind a single authentication boundary.
+  - Two further flaws in the same release train (CVE-2026-103957 and CVE-2026-103958, both server-side request forgery in tool-server and OAuth2 discovery handling) widened what an authenticated caller could reach, including the container credential-vending endpoint.
+  - Forked or derivative deployments of the open-source code had to be patched independently of the upstream release.
+detection: >-
+  Found through coordinated disclosure; the AWS bulletin credits Kenneth Cox.
+  The fix shipped in release 1.6.1 on 2026-08-04 with a release note describing
+  the auth bypass, and AWS published security bulletin 2026-124-AWS together with
+  GitHub advisory GHSA-vgmj-998f-r8mp and the NVD record on 2026-10-02.
+recovery: >-
+  Release 1.6.1 made the no-identity-provider bypass require an explicit
+  environment opt-in plus a loopback client, failing closed with an
+  authentication error otherwise. Release 1.7.0 (2026-09-20) addressed the two
+  related server-side request forgery issues. AWS advised upgrading to 1.7.0,
+  patching any forked code, confirming the opt-in variable is unset outside
+  local development, and after upgrade rotating OAuth2 client secrets, revoking
+  and re-issuing access tokens active during the exposure window, and rotating
+  IAM session credentials and reviewing CloudTrail if container role credentials
+  may have been accessed.
+prevention: >-
+  Agent control planes should fail closed when no identity provider is
+  configured and should gate any development-only bypass behind an explicit
+  opt-in plus a loopback-only check; registration of tool servers, reads of
+  stored integration credentials and changes to agent IAM policies should each
+  require authenticated, audited administrative authority; the backend should
+  not be reachable beyond loopback before authentication is fully configured.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Stored integration credentials for tool servers and remote agents were
+      readable by an unauthenticated caller, and the IAM role policies attached
+      to managed agent roles could be rewritten, extending the reach into the
+      hosting AWS account.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A disclosed vulnerability with a released fix; the vendor bulletin and
+      NVD report no in-the-wild exploitation.
+  scope: "Loom for AWS deployments below 1.6.1 running without a configured identity provider"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-07-10"
+    event: "Loom for AWS 1.6.0 is released, adding multi-provider model routing."
+  - at: "2026-08-04"
+    event: "Release 1.6.1 ships; its release notes describe the fixed auth bypass that had granted super-admin access to any request when no identity provider was configured."
+  - at: "2026-09-20"
+    event: "Release 1.7.0 ships with fixes for the related OAuth2 discovery and connection-sink server-side request forgery issues."
+  - at: "2026-10-02"
+    event: "AWS publishes security bulletin 2026-124-AWS; GitHub advisory GHSA-vgmj-998f-r8mp and the NVD record for CVE-2026-103956 (CVSS 10.0) are published the same day."
+
+cve: ["CVE-2026-103956"]
+cwe: ["CWE-306", "CWE-1188"]
+mappings:
+  owasp_llm: [LLM03, LLM06]
+  owasp_agentic: [T3]
+tags: ["loom", "aws", "agent-orchestration", "control-plane", "missing-authentication", "insecure-default", "iam", "mcp", "a2a", "cve"]
+related_incidents:
+  - "2026-paperclip-import-authz-bypass-unauthenticated-rce"
+  - "2026-mcphub-missing-authz-server-config-rce"
+  - "2026-db-gpt-react-agent-mock-auth-root-rce"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent orchestration control plane is deployed before its identity
+    provider is configured; measure whether the platform fails closed or
+    silently grants administrative authority (tool-server registration,
+    credential reads, agent IAM policy writes) to any network client.
+
+sources:
+  - url: "https://aws.amazon.com/security/security-bulletins/2026-124-aws/"
+    title: "CVE-2026-103956, CVE-2026-103957, and CVE-2026-103958 - Issues in Loom for AWS (2026-124-AWS)"
+    publisher: Amazon Web Services
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/awslabs/loom/security/advisories/GHSA-vgmj-998f-r8mp"
+    title: "Missing authentication for critical function in Loom for AWS (GHSA-vgmj-998f-r8mp)"
+    publisher: AWS Labs (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/awslabs/loom/releases/tag/v1.6.1"
+    title: "Loom for AWS v1.6.1 release notes"
+    publisher: AWS Labs (GitHub)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-103956"
+    title: "CVE-2026-103956 — Loom for AWS missing authentication for critical function"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://securityonline.info/loom-for-aws-sagemaker-flaws/"
+    title: "AWS Fixes Loom for AWS Admin Takeover and SageMaker Unified Studio Code Execution Flaws"
+    publisher: Daily CyberSecurity (securityonline.info)
+    type: news
+    date_accessed: "2026-11-18"
