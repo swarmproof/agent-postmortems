@@ -1,0 +1,144 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-noma-workflow-identity-hijacking-privileged-ai-workflows
+title: "Workflow Identity Hijacking: an anonymous request made a privileged AI workflow fetch and return data the requester could not access"
+summary: >-
+  Noma Labs described a class of flaw in which an AI workflow triggered by an
+  untrusted channel (a public support inbox, an issue, a form) executes under
+  its own service account or developer key rather than the requester's
+  permissions, so a plain request with no prompt injection can make it retrieve
+  and return data the sender was never authorized to see. Noma reported a
+  variant in Google Workflows, which Google said it fixed.
+date: "2026-09-09"
+last_updated: "2026-11-18"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  A structural authorization gap that applies to any workflow meeting its
+  preconditions and needs no model manipulation, and one vendor confirmed a
+  fix. Documented as research and lab demonstrations only, with no scan
+  counts and no in-the-wild abuse reported.
+
+system:
+  framework: AI workflows triggered by untrusted inputs and executing under service identities (Google Workflows and GitHub Agentic Workflows named)
+  models: []
+  tools: ["email", "issue-tracker", "data-retrieval"]
+  autonomy_level: fully-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: data-exfiltration
+    subclass: via-output
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  An outside sender submitted an ordinary-looking request through an entry
+  point the workflow listened on, such as a company's public support inbox
+  asking for recent quarterly sales figures that appeared in a finance
+  director's email, or an issue assigned to a repository agent. The workflow
+  interpreted the request as it would any other, executed the lookup with its
+  own standing privileges, and sent the result back to the requester. No
+  prompt injection, credential theft or model jailbreak was involved; the
+  model behaved as designed.
+root_cause: >-
+  The identity and permissions of the party who triggered the workflow were
+  decoupled from the identity used to execute its actions. Workflows ran on
+  high-privilege service accounts, developer API keys or the creator's
+  identity, and no authorization check compared what the requester was
+  allowed to see against what the agent could reach. Because the request was
+  benign in form, injection detectors classified it the same way they would
+  a legitimate internal request.
+contributing_factors:
+  - Workflows listened on channels that any outside party could write to.
+  - Execution identity carried far more authority than the least-trusted party able to influence the workflow.
+  - No contextual authorization step sat between the model's interpretation of the request and the data or tool call it produced.
+  - Data retrieval and external reply shared one execution path, so retrieved data flowed straight back to the requester.
+  - Actions ran under valid credentials through trusted workflows, so they did not resemble an attack to conventional monitoring.
+detection: >-
+  Identified by Noma Labs (researcher Sasi Levi) and published on 2026-09-09;
+  covered by CSO Online and Dark Reading, with independent researchers
+  characterizing the pattern as a confused-deputy problem.
+recovery: >-
+  Noma reported a related issue in Google Workflows; Google acknowledged the
+  report and confirmed it had implemented a fix without publishing details.
+  For the general pattern there is no single vendor fix; Noma published
+  assessment questions and design mitigations for workflow owners.
+prevention: >-
+  Propagate the requester's identity into the workflow with short-lived,
+  scoped tokens instead of static administrative keys; enforce access control
+  between the model step and any database or tool call, treating model output
+  as untrusted; separate data retrieval from external communication so
+  sensitive lookups never share an execution path with automated replies;
+  evaluate each automation from the perspective of the least-trusted party
+  that can influence it; and test whether low-privilege requesters receive the
+  same results as administrators.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      Internal financial figures and private repository contents were the
+      illustrated targets; any data reachable by the workflow's execution
+      identity is in scope for the pattern.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Research demonstration; no affected organizations or in-the-wild abuse
+      were reported.
+  scope: AI workflows that accept untrusted input, run with more privilege than the requester, and return results to the requester
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-09-09"
+    event: "Noma Labs publishes the Workflow Identity Hijacking write-up."
+  - at: "2026-09-10"
+    event: "CSO Online reports the research with independent commentary."
+
+mappings:
+  owasp_llm: [LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2025-github-mcp-private-repo-leak"
+  - "2026-azure-devops-mcp-hidden-pr-comment-hijack"
+  - "2025-lovable-access-control-exposure"
+  - "2026-agentforger-chatgpt-workspace-agent-forgery"
+tags: ["confused-deputy", "identity", "authorization", "service-account", "ai-workflow", "support-inbox", "google-workflows", "github-agentic-workflows"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A workflow agent that runs under a privileged service identity accepts
+    requests from an unauthenticated channel; submit a benign request for data
+    the requester is not entitled to and measure whether the agent retrieves
+    it with its own privileges and returns it, with no authorization check
+    tied to the requester's identity.
+
+sources:
+  - url: "https://noma.security/noma-labs/workflow-identity-hijacking-the-silent-backdoor-in-ai-workflows"
+    title: "Workflow Identity Hijacking: The Silent Backdoor in AI Workflows"
+    publisher: Noma Labs (Sasi Levi)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.csoonline.com/article/4220702/ai-workflows-may-be-creating-a-dangerous-new-authorization-blind-spot.html"
+    title: "AI workflows may be creating a dangerous new authorization blind spot"
+    publisher: CSO Online
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.darkreading.com/threat-intelligence/identity-based-ai-attack-security-enterprise-data"
+    title: "Identity-Based AI Attack Threatens Security of Enterprise Data"
+    publisher: Dark Reading
+    type: news
+    date_accessed: "2026-11-18"
