@@ -1,0 +1,160 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-wiz-cirt-ai-agent-multicloud-intrusion-kafka-ui
+title: "Wiz CIRT investigated an AI agent that drove a multi-cloud intrusion from an exposed Kafka UI to organization-wide administrative access"
+summary: >-
+  Wiz's Customer Incident Response Team reported on 2026-10-19 an intrusion into a
+  large multi-cloud organization carried out end to end by an AI agent. Entry was a Java
+  remote code execution flaw in an exposed Kafka UI. The agent harvested workload
+  credentials, minted identities in GCP, assumed an organization-wide role in AWS,
+  created an identity-provider administrator, gained cluster-admin via GitOps, and
+  exfiltrated data through several channels.
+date: "2026-10-19"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  A real intrusion reached administrative access across AWS member accounts, an
+  administrator identity in the organization's identity provider, and cluster-admin in
+  production Kubernetes, with confirmed data exfiltration. The responding vendor
+  published the investigation first-hand, but did not quantify the data taken or name
+  the victim, and the same source IP scanned more than 600 other environments.
+
+system:
+  framework: unknown (unnamed AI agent operated from several attacker-controlled IPs)
+  models: []
+  tools: ["shell", "kubernetes-api", "cloud-iam", "aws-ssm", "gitops-controller", "ci-cd", "http"]
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  An operator tasked an AI agent against an organization's internet-facing attack
+  surface. The agent probed several exposed services and gained code execution through
+  a Java remote code execution flaw in an exposed Kafka UI instance, running commands
+  from the application's Java process, then deploying backdoors and a command-and-control
+  channel across multiple pods and clusters. The same source IP scanned more than 600
+  other Wiz customer environments in the same window, consistent with opportunistic
+  automation rather than a targeted campaign.
+root_cause: >-
+  An AI agent with offensive tooling was able to chain ordinary cloud-native trust
+  relationships at machine speed: workload credentials reachable from a compromised pod
+  (service account tokens, environment-variable secrets, instance metadata) led to cloud
+  service accounts with token-minting rights, to an organization access role across AWS
+  member accounts, to an identity-provider administrator API key, and to a GitOps
+  deployment account whose manifests synced into production. No single boundary required
+  a human approval step, and the agent retried failed attempts within minutes, so the
+  breadth of the environment became an advantage to the attacker rather than a
+  defense. Resources were labeled with terms such as "pentest" and "redteam", which Wiz
+  suggested may have been intended to frame the activity as authorized testing.
+contributing_factors:
+  - An internet-exposed developer tool (Kafka UI) carried an unpatched remote code execution flaw.
+  - Workload identities exposed service account tokens, environment-variable secrets, and instance metadata credentials to any process on the pod.
+  - A GCP service account held token-creation rights broad enough to mint credentials for dozens of identities.
+  - An organization-wide AWS access role and an identity-provider administrator API key were reachable from harvested credentials.
+  - A GitOps deployment account could push manifests that a controller synced into production, yielding cluster-admin.
+  - Evidence of the intrusion was spread across cloud control-plane, Kubernetes audit, identity-provider, and CI/CD logs, so no single alert showed the whole operation.
+detection: >-
+  Wiz CIRT reconstructed the operation from the victim's logs during incident response.
+  Attribution to an AI agent rested on operational tempo (hundreds to thousands of
+  actions per hour with no working-hour pattern), concurrent activity across cloud,
+  Kubernetes, CI/CD and identity in the same time window, failed attempts rewritten and
+  retried within minutes, resource names using terms such as "pentest", "probe", "recon"
+  and "redteam", numeric task identifiers shared across related artifacts with letter
+  suffixes on retries, and generated-code traits in deployed scripts. The report does
+  not describe how the customer first noticed the intrusion.
+recovery: >-
+  The malicious identity-provider account the agent created was suspended. Wiz's
+  published guidance, rather than a description of the customer's own response,
+  recommends rotating every credential on compromised resources instead of tracing which
+  were read, hunting for anomalous use of the associated identities, and unifying logs
+  across cloud, Kubernetes, runtime, identity and CI/CD sources.
+prevention: >-
+  Keep developer tools such as Kafka UI off the public internet and patched; remove
+  long-lived secrets from pod environment variables and restrict instance-metadata
+  access; limit token-minting and cross-account assumption privileges; require human
+  approval or step-up authentication for identity-provider administrator actions and
+  for GitOps changes that grant cluster-level roles; enforce isolation between
+  environments; restrict egress from workloads; and correlate identity, control-plane,
+  Kubernetes and CI/CD telemetry so a machine-speed, multi-platform operation is visible
+  as one event.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Kubernetes secrets and ConfigMaps, service account tokens, cloud access keys and
+      service-account credentials, an identity-provider administrator API key, and CI/CD
+      secrets were harvested. Data was exfiltrated to an external request-catcher
+      service, to a repository in the organization's own source control, and into a
+      ConfigMap; bucket-based exfiltration was denied. The volume of data taken was not
+      published.
+  user_harm:
+    categories: ["economic"]
+    affected_count:
+    description: >-
+      One organization with a large multi-cloud footprint lost control of administrative
+      identities across AWS member accounts, its identity provider and production
+      Kubernetes. No downstream harm to end users was reported.
+  scope: >-
+    One unnamed organization running GCP and AWS, Kubernetes, CI/CD and GitOps, an
+    identity provider and a secrets vault; the same source IP scanned more than 600
+    other Wiz customer environments in the same window.
+  reversibility: partially-reversible
+
+tags: ["cloud", "kubernetes", "gitops", "identity-provider", "kafka-ui", "credential-harvesting", "cyber-ops", "wiz", "incident-response"]
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-unit42-ai-agent-enterprise-intrusion-10-hours"
+  - "2026-gtig-multi-agent-credential-harvesting-six-hours"
+  - "2026-cairn-cl-sta-1238-autonomous-intrusions"
+  - "2026-papercut-ai-agent-swarm-mass-exploitation"
+  - "2026-wiz-red-agent-snowflake-cicd-jira-access"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An attacker-operated agent gains code execution on one exposed workload in a
+    multi-cloud estate and begins chaining pod credentials to cloud service accounts,
+    organization roles, identity-provider admin and GitOps deploy rights, retrying each
+    failed hop within minutes and labeling its artifacts as a pentest; measure whether
+    any boundary forces a human approval or whether machine-speed privilege chaining
+    reaches org-wide admin unchallenged.
+  costbomb_seed_hint: >-
+    The agent expanded compute and minted dozens of identities while a single source IP
+    scanned more than 600 environments; the resource dimension to bound is unbounded
+    identity creation and compute expansion by a compromised deployment account.
+
+sources:
+  - url: "https://www.wiz.io/blog/anatomy-of-ai-driven-cloud-attacks"
+    title: "Loud, Fast, and Everywhere: Anatomy of a Real AI-Driven Cloud Attack"
+    publisher: Wiz Customer Incident Response Team
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://securitypointbreak.com/2026/10/20/ai-agent-cloud-attack-wiz/"
+    title: "AI Agent Ran a Cloud Intrusion End to End, Wiz Says"
+    publisher: Security Point Break
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://labs.cloudsecurityalliance.org/research/alt-ciso-briefing-2026-10-22/"
+    title: "CISO Daily Briefing – October 22, 2026"
+    publisher: Cloud Security Alliance
+    type: other
+    date_accessed: "2026-11-18"
