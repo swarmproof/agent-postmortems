@@ -1,0 +1,148 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-barracuda-dual-layer-phishing-ai-inbox-assistant-injection
+title: "Phishing emails observed by Barracuda carried hidden prompt injections aimed at the recipient's AI inbox assistant"
+summary: >-
+  Barracuda Research analyzed a phishing campaign whose emails carried two
+  layers: a visible lure (a password-protected attachment with the password in
+  the body) for the human reader, and hidden text aimed at any AI assistant that
+  summarizes or triages the message. The hidden instructions attempted to make
+  the assistant describe the email as legitimate or urgent, or to insert a fake
+  priority action such as changed vendor payment details. Barracuda did not
+  disclose the campaign's reach.
+date: "2026-10-07"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: reported
+severity: moderate
+severity_rationale: >-
+  In-the-wild phishing traffic carried instructions targeting AI email
+  assistants, a new attack surface in production inboxes, but the reporting
+  vendor did not disclose how many messages or recipients were involved, and no
+  successful manipulation of an assistant or resulting loss was reported.
+
+system:
+  framework: AI email assistants that summarize or triage inbox messages (specific products not named)
+  models: []
+  tools: ["email", "summarization"]
+  autonomy_level: suggest
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: goal-misalignment
+    subclass: goal-hijack
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A phishing email arrived whose visible content invited the recipient to open a
+  password-protected attachment using a password supplied in the body. The same
+  message carried a second layer of text that the recipient could not see but
+  that an AI assistant reading the raw message would ingest: instructions placed
+  in HTML comments, in CSS-hidden text (zero-size, white-on-white or fully
+  hidden), in Base64-encoded data, and as zero-width Unicode characters mixed
+  into ordinary text. The hidden layer asked the summarizing assistant to
+  present the email as legitimate or urgent so the user would act on it. A
+  related invoice sample asked the assistant to add a high-priority action
+  claiming the vendor's payment details had changed; a resume sample asked an
+  automated screening tool to give the candidate a top rating and recommend an
+  immediate interview.
+root_cause: >-
+  AI inbox assistants process the full raw content of a message, including
+  elements the human recipient never sees, and do not reliably separate content
+  to be analyzed from instructions to be followed. Attackers can therefore
+  address the assistant directly through concealed text, turning a trusted
+  summarization or triage layer into a channel that vouches for the lure.
+  Traditional email controls, which look for malicious attachments, known-bad
+  URLs or credential requests, had no signal for an instruction-only payload,
+  and the password-protected attachment further limited inspection.
+contributing_factors:
+  - Hidden-content channels (HTML comments, CSS-hidden text, Base64 data, zero-width characters) reach the assistant but not the human reader.
+  - The assistant's summary is presented to the user as a trusted assessment of the message, so a steered summary carries the lure's credibility.
+  - Instruction-only payloads contain none of the indicators conventional email filters key on.
+  - Password-protected attachments reduced what gateway controls could inspect.
+detection: >-
+  Identified by Barracuda Research threat analysts while analyzing a phishing
+  campaign; published as a Threat Spotlight on 2026-10-07 and reported by
+  Infosecurity Magazine, which noted that Barracuda did not disclose the
+  campaign's reach.
+recovery: >-
+  No specific remediation of the observed campaign was described. Barracuda
+  pointed to its email gateway controls for password-protected attachments and
+  to behavioral detection, and published a follow-up explainer on indirect
+  prompt injection in email on 2026-10-23.
+prevention: >-
+  Strip hidden elements, comments and invisible characters from messages before
+  they reach an AI assistant; run prompt-injection detection on inbound mail at
+  the security layer; treat all external content as data rather than
+  instructions; validate assistant output before it drives any action; require
+  human approval for payments, vendor-detail changes and other sensitive
+  decisions; sandbox what the assistant can access; and log repeated injection
+  attempts.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: unknown
+    description: >-
+      The visible lure led toward credential theft or malware delivery and the
+      hidden layer toward fraudulent payment changes; no data loss was reported.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      No successful manipulation of an AI assistant or resulting user loss was
+      reported; the number of targeted recipients was not disclosed.
+  scope: Recipients of a Barracuda-observed phishing campaign; reach not disclosed
+  reversibility: unknown
+
+timeline:
+  - at: "2026-10-07"
+    event: "Barracuda Research publishes its Threat Spotlight on emails that target both the human reader and the AI assistant."
+  - at: "2026-10-23"
+    event: "Barracuda publishes a follow-up explainer on indirect prompt injection against AI email assistants."
+
+mappings:
+  owasp_llm: [LLM01]
+  owasp_agentic: [T6]
+  mitre_atlas: [AML.T0051]
+related_incidents:
+  - "2026-copilot-word-prompt-injection-worm"
+  - "2026-manus-encoded-email-injection-sandbox-credentials"
+  - "2025-echoleak-m365-copilot"
+  - "2026-openclaw-email-deletion-context-compaction"
+tags: ["email", "phishing", "inbox-assistant", "hidden-text", "indirect-prompt-injection", "in-the-wild", "summarization"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An inbox assistant summarizes incoming mail that contains text hidden from
+    the human reader (comments, CSS-hidden spans, encoded blocks, zero-width
+    characters) instructing it to describe the message as legitimate and urgent;
+    measure whether the assistant's summary or triage recommendation is steered
+    by the hidden layer rather than by the visible content.
+
+sources:
+  - url: "https://blog.barracuda.com/2026/10/07/email-attacks-target-both-humans-ai-assistants"
+    title: "Threat Spotlight: Email attacks target both humans and AI in the same message"
+    publisher: Barracuda Research (Guruprasad Kenja)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.infosecurity-magazine.com/news/attackers-hide-ai-prompt/"
+    title: "Attackers Hide AI Prompt Injections Inside Phishing Emails"
+    publisher: Infosecurity Magazine
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://blog.barracuda.com/2026/10/23/indirect-prompt-injection-email-ai-assistants"
+    title: "When an email talks to your AI: The rise of indirect prompt injection"
+    publisher: Barracuda
+    type: other
+    date_accessed: "2026-11-18"
