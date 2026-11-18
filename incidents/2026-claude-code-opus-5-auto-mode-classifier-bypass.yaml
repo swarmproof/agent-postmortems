@@ -1,0 +1,154 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-claude-code-opus-5-auto-mode-classifier-bypass
+title: "Claude Code Auto Mode permission classifier let web-content prompt injection reach code execution on Opus 5 in a majority of runs"
+summary: >-
+  Researcher Johann Rehberger showed that a web page Claude Code (Opus 5, Auto
+  Mode) was asked to summarise could steer the agent into extracting an archive
+  and running attacker code, producing a second-stage download, a
+  command-and-control callback and, in a variant, a nested headless Claude
+  instance doing reconnaissance. Small-sample success was 3 to 4 of 5 runs.
+  Anthropic closed the report as Informative. An independent write-up reported
+  6 of 10 runs against the same mode.
+date: "2026-08-26"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Reached arbitrary code execution and an outbound command-and-control callback
+  on the permission mode that had been the default for new Claude Code sessions
+  since mid-August 2026, with no fix shipped. Bounded by small sample sizes
+  (3 to 4 of 5 and 6 of 10 runs across two researchers) and no reported
+  in-the-wild exploitation.
+
+system:
+  framework: Claude Code (CLI) in Auto Mode
+  models: ["claude-opus-5"]
+  tools: ["web-fetch", "bash", "filesystem", "python"]
+  vendor: Anthropic
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The user asked Claude Code to summarise a web page. The attacker's server
+  redirected the agent's fetch to an archive containing catalogue-style data, a
+  decoy binary, and a file named so as to shadow a standard-library module. The
+  page content steered the agent away from its web-fetch tool toward the shell
+  tool, where it wrote and ran its own decoder inside the extracted directory.
+  That run imported the shadowing file, executing attacker code. Observed
+  outcomes were a remote second-stage download, a native test payload, a
+  command-and-control callback and a Calculator launch; a variant spawned a
+  nested non-interactive Claude instance that performed basic system
+  reconnaissance and wrote a file outside the workspace. Each step passed the
+  Auto Mode classifier in a majority of trials.
+root_cause: >-
+  Auto Mode replaces per-action human approval with a classifier that judges
+  whether an action is destructive, irreversible or aimed outside the
+  environment. Actions that are individually ordinary (fetching a page,
+  extracting an archive, writing a small script, running it in the working
+  directory) each look benign to such a classifier, while their composition
+  under attacker-controlled content produces code execution. The vendor's own
+  documentation states the mode relies on classification and does not
+  eliminate risk, and the researcher reported that Anthropic treats it as a
+  convenience feature with a best-effort classifier rather than a security
+  boundary, placing the real boundary at OS isolation and network egress
+  control.
+contributing_factors:
+  - Auto Mode became the default permission mode for new sessions, so the classifier was the only gate for many users.
+  - The classifier evaluates actions one at a time; the exploit was built from steps that are each unremarkable.
+  - The agent could move freely from a read-only web tool to a shell tool on the strength of fetched content.
+  - Python-style module shadowing meant running a self-written script in an untrusted directory loaded attacker code.
+  - No default OS sandbox or egress restriction stopped the outbound callback.
+detection: >-
+  Demonstrated and published by researcher Johann Rehberger on 2026-08-26,
+  with a video. A separate write-up on itmeetsot.eu, whose URL dates it
+  2026-08-12 and which was updated 2026-08-29 to reference the Embrace The Red
+  post, reported an image-repository variant in which the Sonnet 5 classifier
+  allowed untrusted code execution in 6 of 10 trials on Claude Code 2.1.228.
+recovery: >-
+  No fix was reported. The researcher stated that a first submission to
+  Anthropic's model bug bounty address received no reply, and that a
+  subsequent submission through Anthropic's security channel was answered
+  quickly and closed as Informative with the behaviour described as working as
+  designed. Anthropic's 2026-08-07 post on making Auto Mode the default reports
+  a third-party evaluation (Trajectory Labs, 72 held-out indirect injection
+  scenarios run 10 times each) in which no attempt succeeded against Opus 5 in
+  Auto Mode, and states that the mode relies on classification systems and
+  therefore does not eliminate risk.
+prevention: >-
+  Run Auto Mode only inside an isolated environment with network egress
+  control, as the vendor's position implies; keep hard-deny rules for
+  sensitive paths and outbound destinations; prevent escalation from
+  read-only web tools to shell execution on the basis of fetched content;
+  avoid executing self-written scripts inside directories populated from
+  untrusted downloads; evaluate classifiers against multi-step chains rather
+  than single actions; monitor for nested agent spawns and outbound callbacks.
+
+blast_radius:
+  data:
+    classification: n-a
+    description: >-
+      Proof of concept on researcher-controlled hosts; the demonstrations
+      executed code and performed reconnaissance but no data was taken.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Research demonstration; no in-the-wild exploitation reported.
+  scope: Claude Code users running Auto Mode without OS-level isolation or egress controls
+  reversibility: reversible
+
+cwe: ["CWE-427", "CWE-863"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
+tags: ["claude-code", "auto-mode", "permission-classifier", "prompt-injection", "code-execution", "module-shadowing", "opus-5", "vendor-working-as-designed"]
+related_incidents:
+  - "2026-copilot-cli-env-exfiltration"
+  - "2025-claude-code-dns-exfiltration"
+  - "2026-claude-code-mods-unsandboxed-default"
+  - "2025-amazon-q-find-exec-rce"
+timeline:
+  - at: "2026-08-07"
+    event: "Anthropic publishes the post announcing Auto Mode as the default for new Claude Code sessions, with a third-party prompt-injection evaluation."
+  - at: "2026-08-12"
+    event: "Independent write-up on itmeetsot.eu (date per URL) reports the classifier allowing untrusted code execution in 6 of 10 trials."
+  - at: "2026-08-26"
+    event: "Embrace The Red publishes the Opus 5 Auto Mode write-up and video; report closed by Anthropic as Informative."
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent whose only approval gate is a per-action classifier is asked to
+    summarise untrusted web content that redirects to an archive; measure how
+    often a chain of individually benign actions (fetch, extract, write
+    script, run script) ends in code execution and an outbound callback.
+
+sources:
+  - url: "https://embracethered.com/blog/posts/2026/breaking-claude-code-opus-5-and-automode/"
+    title: "Breaking Claude Code Opus 5 Auto Mode"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://itmeetsot.eu/posts/2026-08-12-opus5_automode/"
+    title: "Prompt Injection Experiments with Opus-5 in Claude Code - Auto-Mode Edition"
+    publisher: itmeetsot.eu
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://claude.com/blog/auto-mode-default-in-claude-code"
+    title: "Auto mode is now the default in Claude Code for Pro, Max, Ultra, and Team plans"
+    publisher: Anthropic
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
