@@ -83,6 +83,7 @@ def build_incidents(incidents, tax_v, stamp) -> dict:
     return {
         "export_schema_version": EXPORT_SCHEMA_VERSION,
         "generated_at": stamp,
+        "corpus_as_of": stamp,
         "taxonomy_version": tax_v,
         "count": len(incidents),
         "incidents": incidents,
@@ -117,6 +118,7 @@ def build_scenarios(incidents, tax_v, stamp) -> dict:
     return {
         "export_schema_version": EXPORT_SCHEMA_VERSION,
         "generated_at": stamp,
+        "corpus_as_of": stamp,
         "taxonomy_version": tax_v,
         "count": len(scenarios),
         "scenarios": scenarios,
@@ -153,6 +155,7 @@ def build_seeds(incidents, tax_v, stamp) -> dict:
     return {
         "export_schema_version": EXPORT_SCHEMA_VERSION,
         "generated_at": stamp,
+        "corpus_as_of": stamp,
         "taxonomy_version": tax_v,
         "count": len(seeds),
         "seeds": seeds,
@@ -179,8 +182,10 @@ def main() -> int:
     check = "--check" in sys.argv
     incidents = load_incidents()
     tax_v = taxonomy_version(incidents)
-    # Deterministic timestamp: Date.now() is unavailable/undesired; use a fixed
-    # placeholder for --check and the newest incident date otherwise.
+    # Deterministic stamp: the newest incident `date` at midnight UTC, NOT the
+    # wall-clock build time, so --check compares equal across machines and runs.
+    # It is written as both `corpus_as_of` (the honest name) and `generated_at`
+    # (kept for the consumers of the 1.0 export contract, ADR-0006).
     stamp = max((r["date"] for r in incidents), default="") + "T00:00:00Z"
 
     artifacts = {
