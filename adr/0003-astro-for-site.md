@@ -1,6 +1,6 @@
 # ADR-0003 — Static site generator
 
-**Status:** Superseded in implementation — built with a dependency-light Python generator, not Astro.
+**Status:** Superseded by [ADR-0010](./0010-python-site-generator.md) — built with a dependency-light Python generator, not Astro.
 
 ## Original decision
 The site would be built with Astro, binding incidents to a content collection whose schema mirrors `incident.schema.json`. Rationale: content-collection schema validation gives a second validation gate for free; islands keep the filter UI cheap.

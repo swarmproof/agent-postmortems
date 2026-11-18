@@ -17,7 +17,7 @@ Thanks for helping build **agent-postmortems** — part of the [Swarm Proof tool
 
 1. Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml) to `incidents/<incident_id>.yaml` — the filename must equal `incident_id` (`YYYY-kebab-slug`).
 2. Fill the required core; add as much of the optional body as the sources support. Classify with the taxonomy in [`TAXONOMY.md`](./TAXONOMY.md).
-3. Validate locally: `uv run scripts/validate.py` and `uv run scripts/check_links.py`.
+3. Validate locally: `uv run scripts/validate.py`, then `uv run scripts/check_links.py incidents/<incident_id>.yaml` — the scoped link check CI runs on a pull request. With no arguments, `check_links.py` checks the whole corpus.
 4. Open a PR — the PR template contains the checklist below, and CI enforces every gate.
 
 ### Sourcing rules (the one rule)
@@ -34,9 +34,13 @@ Thanks for helping build **agent-postmortems** — part of the [Swarm Proof tool
 - Never identify harmed individuals beyond what public sources already published.
 - If a vendor disputes a record, we add their response as a `vendor-response` source and set `confidence: disputed` — sourced incidents are never deleted (ADR-0008).
 
+### Disputing a record
+
+A named party who contests the facts of a record follows the process in [`DISPUTES.md`](./DISPUTES.md). The dispute becomes part of the record; the record itself is annotated, never removed.
+
 ## Principles
 - **Provider-agnostic** — no hard dependency on a single model vendor.
 - **Factual over promotional** — document what happened and its boundaries; don't editorialize.
 - **Reproducible** — validation and exports regenerate deterministically from the repo.
 
-By contributing you agree your work is licensed under this repo's LICENSE.
+By contributing you agree that code (schema, validators, scripts, site) is licensed under [Apache-2.0](./LICENSE) and incident records (`incidents/`, `export/`) under [CC-BY-4.0](./LICENSE-DATA), as set out in [ADR-0009](./adr/0009-data-license.md).
