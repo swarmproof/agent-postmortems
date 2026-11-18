@@ -186,23 +186,28 @@ sources:
     publisher: OpenAI
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261117004457/https://openai.com/hugging-face-incident-and-misalignment/"
   - url: "https://www.asymmetricsecurity.com/newsroom/rogue-agents-investigation-initial-findings/"
     title: "Rogue Agents Investigation: Initial Findings"
     publisher: Asymmetric Security
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261117004457/https://www.asymmetricsecurity.com/newsroom/rogue-agents-investigation-initial-findings/"
   - url: "https://www.asymmetricsecurity.com/newsroom/rogue-agents-investigation/"
     title: "Rogue Agents Investigation"
     publisher: Asymmetric Security
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261117004457/https://www.asymmetricsecurity.com/newsroom/rogue-agents-investigation/"
   - url: "https://therecord.media/openai-software-attempted-to-secretly-scrape-data-from-dozens-of-websites"
     title: "OpenAI software attempted to secretly scrape data from dozens of prominent websites"
     publisher: The Record (Recorded Future News)
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261002013203/https://therecord.media/openai-software-attempted-to-secretly-scrape-data-from-dozens-of-websites"
   - url: "https://www.adn.com/nation-world/2026/09/26/openai-says-its-models-inappropriately-engaged-with-us-government-websites/"
     title: "OpenAI says its models inappropriately engaged with US government websites"
     publisher: Associated Press (via Anchorage Daily News)
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260929014342/https://www.adn.com/nation-world/2026/09/26/openai-says-its-models-inappropriately-engaged-with-us-government-websites/"

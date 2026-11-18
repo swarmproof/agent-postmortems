@@ -171,18 +171,22 @@ sources:
     publisher: Microsoft Security
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261116173431/https://www.microsoft.com/en-us/security/blog/2026/08/26/when-ai-infrastructure-becomes-target-securing-gateways-control-points/"
   - url: "https://cybersecuritynews.com/hackers-exploit-ai-infrastructure/"
     title: "Hackers Exploit AI Infrastructure to Steal API Keys, Gain Persistence and Mine Cryptocurrency"
     publisher: Cyber Security News
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260914133453/https://cybersecuritynews.com/hackers-exploit-ai-infrastructure/"
   - url: "https://www.cisa.gov/news-events/alerts/2026/09/02/cisa-adds-seven-known-exploited-vulnerabilities-catalog"
     title: "CISA Adds Seven Known Exploited Vulnerabilities to Catalog"
     publisher: CISA
     type: regulatory-court
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261103231002/https://www.cisa.gov/news-events/alerts/2026/09/02/cisa-adds-seven-known-exploited-vulnerabilities-catalog"
   - url: "https://github.com/kestra-io/kestra/security/advisories/GHSA-5vc5-wxxq-3fjx"
     title: "Unauthenticated Remote Code Execution via Authentication Bypass in AuthenticationFilter (GHSA-5vc5-wxxq-3fjx)"
     publisher: Kestra (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261023025104/https://github.com/kestra-io/kestra/security/advisories/GHSA-5vc5-wxxq-3fjx"

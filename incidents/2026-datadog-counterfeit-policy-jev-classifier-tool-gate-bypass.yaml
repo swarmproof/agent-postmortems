@@ -129,8 +129,10 @@ sources:
     publisher: Datadog Security Labs (Nick Frichette, Feras Al-Kassar)
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261025183240/https://securitylabs.datadoghq.com/articles/jev-as-a-judge-how-counterfeit-policy-steers-jev/"
   - url: "https://docs.langchain.com/oss/python/integrations/providers/typesafe"
     title: "TypeSafe integration (TypeSafeClassifier and AutoModeMiddleware)"
     publisher: LangChain documentation
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261106150740/https://docs.langchain.com/oss/python/integrations/providers/typesafe"

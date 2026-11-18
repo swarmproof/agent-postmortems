@@ -137,16 +137,19 @@ sources:
     publisher: Langflow (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260904115443/https://github.com/langflow-ai/langflow/security/advisories/GHSA-3645-fxcv-hqr4"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-27966"
     title: "CVE-2026-27966 — Langflow CSV Agent remote code execution"
     publisher: NVD
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260904115444/https://nvd.nist.gov/vuln/detail/cve-2026-27966"
   - url: "https://github.com/langflow-ai/langflow/commit/d8c6480daa17b2f2af0b5470cdf5c3d28dc9e508"
     title: "fix: default remote code execution in CSV agent (#11762)"
     publisher: Langflow (GitHub)
     type: vendor-response
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260305002006/https://github.com/langflow-ai/langflow/commit/d8c6480daa17b2f2af0b5470cdf5c3d28dc9e508"
   - url: "https://www.rapid7.com/db/modules/exploit/multi/http/langflow_rce_cve_2026_27966"
     title: "Langflow RCE (exploit/multi/http/langflow/rce_cve_2026_27966)"
     publisher: Rapid7 Vulnerability & Exploit Database
@@ -157,3 +160,4 @@ sources:
     publisher: Cyber Security News
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260304050431/https://cybersecuritynews.com/langflows-ai-csv-agent-vulnerability/"

@@ -124,18 +124,22 @@ sources:
     publisher: CBC News
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261115135930/https://www.cbc.ca/news/business/ai-chatbot-bmw-dealership-9.7230226"
   - url: "https://www.carscoops.com/2026/06/bmw-dealer-ai-chatbot-offer/"
     title: "A BMW Dealership Let An AI Make Offers, It Cost Them $7,000"
     publisher: Carscoops
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261030192146/https://www.carscoops.com/2026/06/bmw-dealer-ai-chatbot-offer/"
   - url: "https://jalopnik.com/2194304/dealer-revokes-ai-chatbot-buyback-offer/"
     title: "AI Chatbot Makes Reasonable Buy-Back Offer, Dealer Revokes It Because It's Too Good"
     publisher: Jalopnik
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260729125915/https://www.jalopnik.com/2194304/dealer-revokes-ai-chatbot-buyback-offer/"
   - url: "https://incidentdatabase.ai/cite/1772/"
     title: "Incident 1772: AI Chatbot at BMW Dealership in Toronto, Canada, Reportedly Made Erroneous Buyback Offer, Prompting Customer Dispute"
     publisher: AI Incident Database
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261031002631/https://incidentdatabase.ai/cite/1772"

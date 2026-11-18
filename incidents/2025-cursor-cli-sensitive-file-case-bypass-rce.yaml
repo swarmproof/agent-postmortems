@@ -131,8 +131,10 @@ sources:
     publisher: Cursor (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20251114120510/https://github.com/cursor/cursor/security/advisories/GHSA-x2vq-h6v6-jhc6"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2025-61593"
     title: "CVE-2025-61593 — Cursor CLI Agent sensitive file protection bypass"
     publisher: NVD
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260712113430/https://nvd.nist.gov/vuln/detail/CVE-2025-61593"

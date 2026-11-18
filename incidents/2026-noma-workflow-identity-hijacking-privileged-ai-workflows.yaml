@@ -132,13 +132,16 @@ sources:
     publisher: Noma Labs (Sasi Levi)
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261106174052/https://noma.security/noma-labs/workflow-identity-hijacking-the-silent-backdoor-in-ai-workflows"
   - url: "https://www.csoonline.com/article/4220702/ai-workflows-may-be-creating-a-dangerous-new-authorization-blind-spot.html"
     title: "AI workflows may be creating a dangerous new authorization blind spot"
     publisher: CSO Online
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260915012451/https://www.csoonline.com/article/4220702/ai-workflows-may-be-creating-a-dangerous-new-authorization-blind-spot.html"
   - url: "https://www.darkreading.com/threat-intelligence/identity-based-ai-attack-security-enterprise-data"
     title: "Identity-Based AI Attack Threatens Security of Enterprise Data"
     publisher: Dark Reading
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260912211526/https://www.darkreading.com/threat-intelligence/identity-based-ai-attack-security-enterprise-data"

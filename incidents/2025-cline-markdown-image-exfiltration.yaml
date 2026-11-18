@@ -122,13 +122,16 @@ sources:
     publisher: Embrace The Red (Johann Rehberger)
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261005124231/https://embracethered.com/blog/posts/2025/cline-vulnerable-to-data-exfiltration/"
   - url: "https://github.com/cline/cline/issues/4640"
     title: "Security Vulnerability Reports are not being looked at (cline/cline issue #4640)"
     publisher: GitHub (cline/cline)
     type: social-primary
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261106162140/https://github.com/cline/cline/issues/4640"
   - url: "https://www.youtube.com/watch?v=F8B2sg62iOo"
     title: "Cline: Data Exfiltration via Image Rendering (Month of AI Bugs 2025 video demonstration)"
     publisher: Embrace The Red (Johann Rehberger)
     type: social-primary
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261106160930/https://www.youtube.com/watch?v=F8B2sg62iOo"

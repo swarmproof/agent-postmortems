@@ -133,18 +133,22 @@ sources:
     publisher: FastGPT (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260512014630/https://github.com/labring/FastGPT/security/advisories/GHSA-34rc-438g-7w78"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-42302"
     title: "CVE-2026-42302 — FastGPT agent-sandbox unauthenticated RCE"
     publisher: NVD
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260509043359/https://nvd.nist.gov/vuln/detail/CVE-2026-42302"
   - url: "https://github.com/labring/FastGPT/pull/6781"
     title: "fix(sandbox): fix unauthenticated RCE via agent-sandbox"
     publisher: FastGPT (GitHub)
     type: vendor-response
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260509173201/https://github.com/labring/FastGPT/pull/6781"
   - url: "https://github.com/labring/FastGPT/releases/tag/v4.14.13"
     title: "FastGPT v4.14.13"
     publisher: FastGPT (GitHub Releases)
     type: vendor-response
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260509173147/https://github.com/labring/FastGPT/releases/tag/v4.14.13"

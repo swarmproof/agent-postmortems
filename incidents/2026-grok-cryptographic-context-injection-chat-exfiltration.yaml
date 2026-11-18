@@ -147,6 +147,7 @@ sources:
     publisher: Adversa AI (Rony Utevsky)
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261114154510/https://adversa.ai/blog/cryptographic-context-injection-grok-data-theft/"
   - url: "https://www.theregister.com/a/5290019"
     title: "Grok chat duped into swallowing injected instructions"
     publisher: The Register

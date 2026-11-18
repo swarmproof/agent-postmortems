@@ -136,11 +136,13 @@ sources:
     publisher: Barracuda Research (Guruprasad Kenja)
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261111155526/https://blog.barracuda.com/2026/10/07/email-attacks-target-both-humans-ai-assistants"
   - url: "https://www.infosecurity-magazine.com/news/attackers-hide-ai-prompt/"
     title: "Attackers Hide AI Prompt Injections Inside Phishing Emails"
     publisher: Infosecurity Magazine
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261106214610/https://www.infosecurity-magazine.com/news/attackers-hide-ai-prompt/"
   - url: "https://blog.barracuda.com/2026/10/23/indirect-prompt-injection-email-ai-assistants"
     title: "When an email talks to your AI: The rise of indirect prompt injection"
     publisher: Barracuda

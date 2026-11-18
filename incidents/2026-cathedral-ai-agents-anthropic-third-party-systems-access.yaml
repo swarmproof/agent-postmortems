@@ -137,18 +137,22 @@ sources:
     publisher: Decrypt
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261101083839/https://decrypt.co/381860/ai-agents-hack-anthropic-business-systems-12-hours"
   - url: "https://www.techradar.com/pro/security/ai-startup-claims-it-hacked-anthropic-in-12-hours-gains-access-to-employee-details-and-internal-messages"
     title: "AI startup claims it hacked Anthropic in 12 hours, gains access to employee details and internal messages"
     publisher: TechRadar Pro
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261111103129/https://www.techradar.com/pro/security/ai-startup-claims-it-hacked-anthropic-in-12-hours-gains-access-to-employee-details-and-internal-messages"
   - url: "https://www.techtimes.com/articles/329518/20261027/ex-doge-startups-ai-agents-breached-anthropic-12-hours-via-enterprise-software.htm"
     title: "Ex-DOGE Startup's AI Agents Breached Anthropic in 12 Hours via Enterprise Software"
     publisher: Tech Times
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261101173407/https://www.techtimes.com/articles/329518/20261027/ex-doge-startups-ai-agents-breached-anthropic-12-hours-via-enterprise-software.htm"
   - url: "https://aa.com.tr/en/world/months-old-us-startup-accessed-anthropic-s-sensitive-data-in-under-12-hours-report/4102515"
     title: "Months-old US startup accessed Anthropic's sensitive data in under 12 hours: Report"
     publisher: Anadolu Agency
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261104205613/https://www.aa.com.tr/en/world/months-old-us-startup-accessed-anthropic-s-sensitive-data-in-under-12-hours-report/4102515"

@@ -148,6 +148,7 @@ sources:
     publisher: Wiz Customer Incident Response Team
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261030050022/https://www.wiz.io/blog/anatomy-of-ai-driven-cloud-attacks"
   - url: "https://securitypointbreak.com/2026/10/20/ai-agent-cloud-attack-wiz/"
     title: "AI Agent Ran a Cloud Intrusion End to End, Wiz Says"
     publisher: Security Point Break

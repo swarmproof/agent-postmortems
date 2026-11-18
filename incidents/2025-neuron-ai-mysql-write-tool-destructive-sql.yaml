@@ -138,18 +138,22 @@ sources:
     publisher: Neuron (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20251217121659/https://github.com/neuron-core/neuron-ai/security/advisories/GHSA-898v-775g-777c"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2025-67510"
     title: "CVE-2025-67510 — Neuron MySQLWriteTool arbitrary SQL execution"
     publisher: NVD
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260911070118/https://nvd.nist.gov/vuln/detail/cve-2025-67510"
   - url: "https://github.com/neuron-core/neuron-ai/releases/tag/2.8.12"
     title: "Neuron 2.8.12 — Security Vulnerability Fix"
     publisher: Neuron (GitHub Releases)
     type: vendor-response
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20251217072350/https://github.com/neuron-core/neuron-ai/releases/tag/2.8.12"
   - url: "https://github.com/neuron-core/neuron-ai/commit/44bab85d92bf162898ee48d0bcef6ba0d29b59c9"
     title: "fix security vulnerability in mysql tools"
     publisher: Neuron (GitHub)
     type: vendor-response
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20251217095906/https://github.com/neuron-core/neuron-ai/commit/44bab85d92bf162898ee48d0bcef6ba0d29b59c9"

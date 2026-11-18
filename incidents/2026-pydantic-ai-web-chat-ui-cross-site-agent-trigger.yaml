@@ -139,13 +139,16 @@ sources:
     publisher: Pydantic (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261104034533/https://github.com/pydantic/pydantic-ai/security/advisories/GHSA-h4xc-3qfq-jf93"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-107295"
     title: "CVE-2026-107295 — Pydantic AI development chat endpoint missing request content-type validation"
     publisher: NVD
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261104034507/https://nvd.nist.gov/vuln/detail/cve-2026-107295"
   - url: "https://github.com/pydantic/pydantic-ai/releases/tag/v1.107.4"
     title: "pydantic-ai v1.107.4 release notes — security backports"
     publisher: Pydantic
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261104034533/https://github.com/pydantic/pydantic-ai/releases/tag/v1.107.4"

@@ -142,13 +142,16 @@ sources:
     publisher: Embrace The Red (Johann Rehberger)
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261102140904/https://embracethered.com/blog/posts/2026/breaking-claude-code-opus-5-and-automode/"
   - url: "https://itmeetsot.eu/posts/2026-08-12-opus5_automode/"
     title: "Prompt Injection Experiments with Opus-5 in Claude Code - Auto-Mode Edition"
     publisher: itmeetsot.eu
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260903044450/https://itmeetsot.eu/posts/2026-08-12-opus5_automode/"
   - url: "https://claude.com/blog/auto-mode-default-in-claude-code"
     title: "Auto mode is now the default in Claude Code for Pro, Max, Ultra, and Team plans"
     publisher: Anthropic
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261003111148/https://claude.com/blog/auto-mode-default-in-claude-code"

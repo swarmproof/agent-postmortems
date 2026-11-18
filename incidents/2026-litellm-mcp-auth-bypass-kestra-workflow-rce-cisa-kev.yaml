@@ -171,43 +171,52 @@ sources:
     publisher: CISA
     type: regulatory-court
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261103231002/https://www.cisa.gov/news-events/alerts/2026/09/02/cisa-adds-seven-known-exploited-vulnerabilities-catalog"
   - url: "https://github.com/BerriAI/litellm/security/advisories/GHSA-7488-6r32-c95q"
     title: "MCP Authentication Bypass via OAuth2 Passthrough Fallback (GHSA-7488-6r32-c95q)"
     publisher: BerriAI (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261023024958/https://github.com/BerriAI/litellm/security/advisories/GHSA-7488-6r32-c95q"
   - url: "https://github.com/kestra-io/kestra/security/advisories/GHSA-5vc5-wxxq-3fjx"
     title: "Unauthenticated Remote Code Execution via Authentication Bypass in AuthenticationFilter (GHSA-5vc5-wxxq-3fjx)"
     publisher: Kestra (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261023025104/https://github.com/kestra-io/kestra/security/advisories/GHSA-5vc5-wxxq-3fjx"
   - url: "https://www.wiz.io/blog/ai-infrastructure-honeypot"
     title: "Inside 90 days of attacks on AI infrastructure"
     publisher: Wiz Threat Research
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261027051504/https://www.wiz.io/blog/ai-infrastructure-honeypot"
   - url: "https://www.wiz.io/blog/off-guard-breaking-litellm-from-authentication-bypass-to-cloud-compromise"
     title: "Off Guard: Breaking LiteLLM from authentication bypass to cloud compromise"
     publisher: Wiz
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261021111629/https://www.wiz.io/blog/off-guard-breaking-litellm-from-authentication-bypass-to-cloud-compromise"
   - url: "https://www.microsoft.com/en-us/security/blog/2026/08/26/when-ai-infrastructure-becomes-target-securing-gateways-control-points/"
     title: "When AI infrastructure becomes the target: Securing gateways and control points"
     publisher: Microsoft Security
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261116173431/https://www.microsoft.com/en-us/security/blog/2026/08/26/when-ai-infrastructure-becomes-target-securing-gateways-control-points/"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-59822"
     title: "CVE-2026-59822 — LiteLLM MCP Streamable HTTP authentication bypass"
     publisher: NVD
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260906001330/https://nvd.nist.gov/vuln/detail/cve-2026-59822"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-49869"
     title: "CVE-2026-49869 — Kestra OSS authentication bypass to unauthenticated remote code execution"
     publisher: NVD
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261029025400/https://nvd.nist.gov/vuln/detail/cve-2026-49869"
   - url: "https://forkast.news/three-of-seven-cisa-kev-additions-now-target-ai-infrastructure/"
     title: "Three-of-Seven CISA KEV Additions Now Target AI Infrastructure"
     publisher: Forkast
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261028192144/https://forkast.news/three-of-seven-cisa-kev-additions-now-target-ai-infrastructure/"

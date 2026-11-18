@@ -138,13 +138,16 @@ sources:
     publisher: Symantec (Broadcom) Threat Intelligence
     type: primary-research
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261103160151/https://www.security.com/threat-intelligence/ai-llmjacking-skynet"
   - url: "https://www.helpnetsecurity.com/2026/10/23/llmjacking-agent-hijacks-exposed-ai-models/"
     title: "Hackers hijack exposed AI models to launch cyberattacks at victims' expense"
     publisher: Help Net Security
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261104145054/https://www.helpnetsecurity.com/2026/10/23/llmjacking-agent-hijacks-exposed-ai-models/"
   - url: "https://www.csoonline.com/article/4241421/attackers-built-a-skynet-ai-agent-that-hijacks-exposed-models-to-run-cyberattacks.html"
     title: "Attackers built a 'Skynet' AI agent that hijacks exposed models to run cyberattacks"
     publisher: CSO Online
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261109094029/https://www.csoonline.com/article/4241421/attackers-built-a-skynet-ai-agent-that-hijacks-exposed-models-to-run-cyberattacks.html"

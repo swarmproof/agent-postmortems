@@ -157,16 +157,19 @@ sources:
     publisher: HKUDS (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261021025121/https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-jqmf-mx4f-hfr6"
   - url: "https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-5rmq-chc7-m22f"
     title: "Vibe-Trading file-read tools expose arbitrary server-readable files (GHSA-5rmq-chc7-m22f)"
     publisher: HKUDS (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261021025152/https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-5rmq-chc7-m22f"
   - url: "https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-v2f8-6655-7grj"
     title: "Unauthenticated network clients can drive the entire FastAPI surface (GHSA-v2f8-6655-7grj)"
     publisher: HKUDS (GitHub Security Advisory)
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261021025018/https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-v2f8-6655-7grj"
   - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-114107"
     title: "CVE-2026-114107 — HKUDS Vibe-Trading indirect prompt injection to shell command execution as root"
     publisher: NVD
@@ -177,6 +180,7 @@ sources:
     publisher: HKUDS
     type: vendor-disclosure
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20260626065312/https://github.com/HKUDS/Vibe-Trading/releases/tag/v0.1.7"
   - url: "https://www.vulncheck.com/advisories/hkuds-vibe-trading-0.1.0-before-0.1.7-indirect-prompt-injection-rce-via-bashtool-and-backgroundruntool"
     title: "HKUDS Vibe-Trading 0.1.0 before 0.1.7 Indirect Prompt Injection RCE via BashTool and BackgroundRunTool"
     publisher: VulnCheck
