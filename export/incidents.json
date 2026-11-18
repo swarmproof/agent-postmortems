@@ -10543,7 +10543,8 @@
           "title": "GHSA-5vjv-vw3m-qpqp — DB-GPT through 0.8.2 contains an unauthenticated remote code execution vulnerability",
           "publisher": "GitHub Advisory Database",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118111252/https://github.com/advisories/GHSA-5vjv-vw3m-qpqp"
         }
       ]
     },
