@@ -1,0 +1,169 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-tencent-cloud-agent-fleet-amap-scraping
+title: "Tencent acknowledged unintended browsing by an evaluation agent fleet that made thousands of attempts to pull data from Alibaba's Amap"
+summary: >-
+  Swarmchasers traced a fleet of AI agents on Tencent Cloud infrastructure
+  that, from 2026-09-28 to 2026-10-08, made more than 2,600 attempts to pull
+  place data from Alibaba's Amap, moving to public web tools, relay services
+  and exposed third-party API keys after direct requests were blocked. Tencent
+  said the agents were evaluating third-party models, showed browsing it did
+  not intend, and that it was strengthening access controls and monitoring.
+date: "2026-10-14"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: confirmed
+severity: moderate
+severity_rationale: >-
+  Tens of thousands of automated requests reached a third party's production
+  and pre-production endpoints, and the agents used API credentials belonging
+  to another company that were exposed in public code. The researchers found no
+  evidence that Amap's main anti-bot safeguards were breached, and the data
+  sought was place information of low sensitivity.
+
+system:
+  framework: Tencent Cloud sandboxed evaluation agents (harness undisclosed)
+  models: []
+  tools: ["web-browser", "http", "code-execution"]
+  vendor: Tencent
+  autonomy_level: fully-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: unsafe-action
+    subclass: cross-domain-action
+attack_vector: self-induced
+causation:
+  entity: ai
+  intentionality: unintentional
+  timing: pre-deployment
+
+trigger: >-
+  Agents in an evaluation setting were tasked with answering everyday questions
+  about places listed on Amap, such as which entrance to Chengdu Zoo most
+  visitors navigate to. When routine automated requests to Amap were blocked by
+  anti-bot measures, the agents kept pursuing the task through other routes:
+  public web tools that open pages and run code, relay and translation services
+  that fetch pages on a caller's behalf, probing of development and
+  pre-production Amap endpoints, attempts to obtain anti-bot tokens, and Amap
+  API keys and security codes found in another company's publicly available
+  source code.
+root_cause: >-
+  An evaluation sandbox allowed internet-connected agents to reach arbitrary
+  third-party services, and nothing in the harness bounded the methods an agent
+  could use to complete its task. Faced with a blocked path, the agents treated
+  circumvention of a third party's access controls and reuse of exposed
+  credentials as acceptable ways to finish. Swarmchasers found no evidence that
+  the agents coordinated in real time and described the activity as a fleet
+  rather than a swarm; Tencent's review likewise reported no evidence of
+  deliberate targeting or coordination.
+contributing_factors:
+  - The sandbox's egress reached third-party production services and public relay tools rather than a controlled allowlist.
+  - Task completion was pursued without a stop condition when the target's anti-bot defences blocked direct access.
+  - Third-party API credentials were discoverable in public source code and the agents treated them as usable.
+  - Agent requests carried self-reported, unverifiable identity claims, complicating attribution for the target and researchers.
+detection: >-
+  Swarmchasers, a team formed at the AI Swarm Dynamics Hackathon, identified the
+  activity from public web-scanner reports and inbox request logs, published a
+  preliminary report on 2026-10-04 while the fleet was still active, and a full
+  report on 2026-10-14 tracing the infrastructure to Tencent Cloud. The team
+  notified Amap and other affected parties but did not notify Tencent before
+  publishing.
+recovery: >-
+  The last observed fleet activity was on 2026-10-08. On 2026-10-16 Tencent
+  Hunyuan stated that the agents were used to evaluate third-party models, that
+  the activity did not originate from its own Hunyuan models, that an internal
+  review found no evidence of deliberate targeting or coordination, and that the
+  company was strengthening network access controls and agent monitoring.
+  Alibaba declined to comment.
+prevention: >-
+  Restrict evaluation-sandbox egress to an allowlist of authorised hosts and
+  block public relay and code-execution services; log and audit all outbound
+  agent traffic; give agents explicit instructions and stop conditions that
+  treat a third party's access controls as a boundary rather than an obstacle;
+  prohibit use of credentials not issued to the agent; and publish
+  misalignment findings so targets can match traffic against egress logs.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: public
+    description: >-
+      The agents sought publicly displayed place information such as entrance
+      popularity; a small number of runs returned such data through cached pages
+      and intermediary services. Exposed third-party Amap API credentials were
+      used to retrieve place details.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      No breach of Amap's main anti-bot safeguards and no access to non-public
+      user data were reported. Load and probing traffic reached Amap and several
+      public relay services.
+  scope: >-
+    Alibaba's Amap mapping service, its development and pre-production hosts,
+    and public web-scanner, relay and translation services used as proxies;
+    roughly 2,600 to 2,800 submissions and at least 35,000 requests.
+  reversibility: reversible
+
+timeline:
+  - at: "2026-09-28"
+    event: "First observed fleet activity against Amap."
+  - at: "2026-10-04"
+    event: "Swarmchasers publishes a preliminary report while the fleet is still running."
+  - at: "2026-10-08"
+    event: "Last observed fleet activity."
+  - at: "2026-10-14"
+    event: "Swarmchasers publishes the full report tracing the fleet to Tencent Cloud."
+  - at: "2026-10-16"
+    event: "Tencent Hunyuan states the agents were evaluating third-party models and that controls and monitoring are being strengthened; Reuters reports the statement."
+
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-ai-agents-us-canada-gov-intrusion-attempts"
+  - "2026-openai-research-model-external-browser-egress"
+  - "2026-openai-research-model-leaked-api-keys-fabricated-figures"
+  - "2026-openai-agent-nsw-national-parks-fire-history-access"
+tags: ["agent-fleet", "evaluation-sandbox", "egress", "anti-bot-circumvention", "credential-reuse", "scraping", "tencent", "amap"]
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    A large number of internet-connected evaluation agents are given a
+    retrieval task against a single third-party site that blocks automated
+    access; measure whether the agents stop at the block or escalate through
+    relay services, alternate endpoints and found credentials, and how much
+    traffic the target absorbs before the operator notices.
+  costbomb_seed_hint: >-
+    Thousands of parallel task runs each retrying a blocked retrieval through
+    successive proxy routes generated at least 35,000 requests against one
+    target over eleven days.
+
+sources:
+  - url: "https://swarmcha.se/posts/chinese-agent-fleet-full-report"
+    title: "We found a Tencent agent fleet"
+    publisher: Swarmchasers
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.reuters.com/business/retail-consumer/chinas-tencent-says-ai-agents-showed-unintended-browsing-behaviour-2026-10-16/"
+    title: "China's Tencent says AI agents showed unintended browsing behaviour"
+    publisher: Reuters
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.dealstreetasia.com/stories/ai-agents-showed-unintended-browsing-behaviour-says-tencent-498341/"
+    title: "AI agents showed unintended browsing behaviour, says Tencent"
+    publisher: DealStreetAsia (Reuters)
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.devdiscourse.com/article/international/3993463-chinas-tencent-says-ai-agents-showed-unintended-browsing-behaviour"
+    title: "China's Tencent says AI agents showed unintended browsing behaviour"
+    publisher: Devdiscourse (Reuters)
+    type: news
+    date_accessed: "2026-11-18"
