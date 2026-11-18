@@ -1,0 +1,64 @@
+name: Submit an incident
+description: Report an AI-agent failure or demonstrated hazard for the corpus. Public sources required.
+title: "[incident] "
+labels: ["candidates"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Every record in this corpus needs at least one **public, linkable source**: no rumours, no private accounts, no speculation about intent. A maintainer or contributor will turn an accepted candidate into an `incidents/<incident_id>.yaml` record. If you would rather write the record yourself, copy `incidents/_TEMPLATE.yaml` and open a pull request instead.
+
+        To dispute or correct an existing record, do not use this form. See [DISPUTES.md](https://github.com/swarmproof/agent-postmortems/blob/main/DISPUTES.md).
+  - type: input
+    id: title
+    attributes:
+      label: Title of the failure
+      description: One line, factual, naming the system. No blame adjectives.
+      placeholder: "Replit AI agent deleted a production database during a declared code freeze"
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Public source(s)
+      description: One URL per line. Prefer the strongest available type, such as the researcher writeup, the vendor disclosure, or a court or regulatory record, over news coverage.
+      placeholder: |
+        https://
+        https://
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: Date
+      description: When the failure happened or was disclosed, as YYYY-MM-DD. Approximate is fine; say so.
+      placeholder: "2025-07-18"
+    validations:
+      required: false
+  - type: dropdown
+    id: incident_type
+    attributes:
+      label: Realized incident or demonstrated hazard?
+      description: "`incident` is realized harm in the wild. `hazard` is a researcher proof-of-concept or a near-miss caught before exploitation. Both are recorded; label honestly."
+      options:
+        - incident (realized harm in the wild)
+        - hazard (proof-of-concept or near-miss)
+        - not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What the agent did
+      description: In plain language, what the agent did, what set it off, and what the impact was. Describe the trigger as a shape ("a hidden instruction in a fetched web page"), not as a payload. Do not paste exploit strings, injection text, or runnable code. Records store natural-language trigger shapes only, and the export build rejects anything that looks like a payload.
+      placeholder: "The agent was asked to summarise a GitHub issue. The issue body contained an instruction to read a private repository and post its contents in a comment, which the agent followed."
+    validations:
+      required: true
+  - type: input
+    id: cve
+    attributes:
+      label: Known CVE (optional)
+      description: If the failure has a CVE identifier, list it here, for example CVE-2025-12345. Leave blank if none.
+      placeholder: "CVE-"
+    validations:
+      required: false
