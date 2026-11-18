@@ -1,0 +1,150 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-fastgpt-agent-sandbox-unauthenticated-code-server
+title: "FastGPT agent-sandbox exposed an unauthenticated web IDE on all interfaces, allowing code execution in the agent sandbox (CVE-2026-42302)"
+summary: >-
+  The agent-sandbox component of FastGPT, an AI agent building platform,
+  launched code-server from its startup script with authentication turned off
+  and bound to every network interface on port 8080. Anyone able to reach that
+  port could open the web IDE and obtain a shell inside the sandbox container
+  where agent code runs (CVE-2026-42302, CVSS 9.8), exposing environment
+  variables, API keys and a pivot point into adjacent services. Affected
+  4.14.10 through 4.14.12; fixed in 4.14.13.
+date: "2026-04-22"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Unauthenticated remote code execution in the container that executes agent
+  code (CVE-2026-42302, CVSS 9.8), reachable wherever the port was published.
+  Patched within three versions; NVD's SSVC record notes proof-of-concept
+  status, CISA KEV does not list the CVE, and no in-the-wild exploitation has
+  been reported.
+
+system:
+  framework: FastGPT (AI agent building platform), agent-sandbox component
+  models: []
+  tools: ["agent-sandbox", "code-server"]
+  vendor: FastGPT (labring)
+  autonomy_level: unknown
+
+primary_failure_class: other
+failure_classes:
+  - class: other
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: n-a
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  A party with network access to the sandbox container's port 8080 connected
+  to the code-server instance that the component's startup script launched.
+  Because the script started it with authentication disabled and listening on
+  all interfaces, no login was required: the web IDE opened directly and its
+  integrated terminal provided a shell in the sandbox. The advisory notes the
+  port becomes reachable through Docker port publishing, a Kubernetes NodePort
+  or a permissive firewall.
+root_cause: >-
+  The sandbox that executes agent-generated code also hosted an interactive
+  developer IDE, and the startup script configured that IDE as if it were
+  reachable only locally, with no authentication and a wildcard bind address,
+  while the deployment patterns in use could expose it to the network. A
+  component whose purpose is to contain agent code execution therefore
+  offered an unauthenticated route into the same container (CWE-306).
+contributing_factors:
+  - code-server was started with its authentication option set to none.
+  - The service bound to all interfaces rather than the loopback address.
+  - Common container and Kubernetes deployments publish the sandbox port beyond the host.
+  - The sandbox container held environment variables and API keys for the agent platform.
+detection: >-
+  Reported by the researcher credited as jinyimeng01 through FastGPT's GitHub
+  security advisory process. The fix pull request was opened and merged on
+  2026-04-20, release v4.14.13 followed on 2026-04-22, GHSA-34rc-438g-7w78 was
+  published the same day, and NVD published CVE-2026-42302 on 2026-05-08.
+recovery: >-
+  Pull request #6781, titled as a fix for unauthenticated remote code
+  execution via the agent sandbox, was merged into main on 2026-04-20 and
+  shipped in FastGPT 4.14.13. Users of 4.14.10 through 4.14.12 were advised
+  to upgrade; the advisory lists no workaround.
+prevention: >-
+  Never ship interactive development services inside an agent execution
+  sandbox with authentication disabled; bind auxiliary services to loopback
+  by default and require explicit opt-in to expose them; keep secrets out of
+  the sandbox environment; network-isolate sandbox containers from other
+  platform services; include startup scripts and container entrypoints in
+  security review.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      The advisory describes disclosure of environment variables, API keys and
+      source code inside the sandbox, with lateral movement to services on the
+      same Docker or Kubernetes network and resource abuse such as cryptomining
+      as further impacts. No real-world compromise through this flaw has been
+      publicly documented.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A disclosed vulnerability with a released fix; no in-the-wild
+      exploitation reported.
+  scope: "FastGPT deployments running agent-sandbox 4.14.10 through 4.14.12 with port 8080 reachable from untrusted networks"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-04-20"
+    event: "Fix pull request #6781 opened and merged into the FastGPT main branch."
+  - at: "2026-04-22"
+    event: "FastGPT v4.14.13 released; GHSA-34rc-438g-7w78 published."
+  - at: "2026-05-08"
+    event: "NVD publishes CVE-2026-42302 (CVSS 9.8, CWE-306)."
+
+cve: ["CVE-2026-42302"]
+cwe: ["CWE-306"]
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+tags: ["fastgpt", "agent-sandbox", "code-server", "missing-authentication", "misconfiguration", "exposed-service", "sandbox-boundary", "agent-builder", "cve"]
+related_incidents:
+  - "2026-flowise-custom-js-sandbox-escape-rce"
+  - "2026-poellm-botnet-litellm-mcp-endpoints-cryptomining"
+  - "2026-paperclip-import-authz-bypass-unauthenticated-rce"
+  - "2026-langflow-mcp-stdio-rce-honeypot-exploitation"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent platform's code-execution sandbox exposes an auxiliary service
+    without authentication on a published port; measure whether the sandbox
+    boundary holds against network access that bypasses the agent entirely,
+    and what credentials the sandbox environment leaks once entered.
+
+sources:
+  - url: "https://github.com/labring/FastGPT/security/advisories/GHSA-34rc-438g-7w78"
+    title: "Unauthenticated Remote Code Execution (RCE) via code-server Misconfiguration in agent-sandbox"
+    publisher: FastGPT (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-42302"
+    title: "CVE-2026-42302 — FastGPT agent-sandbox unauthenticated RCE"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/labring/FastGPT/pull/6781"
+    title: "fix(sandbox): fix unauthenticated RCE via agent-sandbox"
+    publisher: FastGPT (GitHub)
+    type: vendor-response
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/labring/FastGPT/releases/tag/v4.14.13"
+    title: "FastGPT v4.14.13"
+    publisher: FastGPT (GitHub Releases)
+    type: vendor-response
+    date_accessed: "2026-11-18"
