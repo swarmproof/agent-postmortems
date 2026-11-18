@@ -1,0 +1,150 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-symantec-skynet-llmjacking-attack-agent-honeypot
+title: "Symantec honeypot captured an autonomous attack agent that hijacks exposed LLM endpoints to operate at the model owner's expense"
+summary: >-
+  Symantec's threat research team reported on 2026-10-21 that an AI honeypot posing as
+  an unprotected model endpoint received the full operating prompt of an autonomous
+  attack agent. The prompt jailbroke the hijacked model, attached dozens of offensive
+  tool definitions, and authorized a so-called Skynet mode of up to 100,000 unattended
+  steps. A second request a day later carried a cryptominer installer. The honeypot
+  captured but did not execute anything, and no confirmed victims were reported.
+date: "2026-10-21"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: low
+severity_rationale: >-
+  An attacker-operated agent was observed in the wild connecting to an internet-facing
+  endpoint and issuing its operating prompt and a follow-up payload, which makes this
+  observed activity rather than tool analysis. The endpoint was a honeypot that
+  captured without executing, and Symantec reported no confirmed third-party victims,
+  infections or losses attributable to this agent.
+
+system:
+  framework: custom attack-agent harness driving an OpenAI-compatible chat API with tool definitions
+  models: []
+  tools: ["openai-compatible-api", "mcp", "internet-asset-search", "shell"]
+  autonomy_level: fully-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: jailbreak
+    subclass: direct-elicitation
+  - class: cost-blowup
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Operators searched the internet for reachable LLM endpoints such as self-hosted model
+  servers, AI gateways, internal test systems and MCP servers, and sent their agent's
+  full working request to one they believed was a real unprotected model. The request
+  carried layered jailbreak instructions telling the model to conceal its identity and
+  treat secret access as routine, roughly 74 tool definitions covering reconnaissance,
+  web-framework exploitation, database dumping and botnet control, and a final
+  directive placing the agent in unattended operation for up to 100,000 steps. The
+  endpoint was a Symantec honeypot; a second request from a rotated address the next
+  day asked the model to decode a compressed script that installs the XMRig miner.
+root_cause: >-
+  Unauthenticated or key-compromised model endpoints let an outside party use someone
+  else's inference as the planning engine for an intrusion campaign, a pattern Symantec
+  calls LLMjacking. Because most self-hosted servers, gateways and relays expose the
+  same OpenAI-compatible interface, one scanner can find many target types, and the
+  hijacked model's safety behaviour is the only control between the operator's prompt
+  and tool execution. The inference bill lands on the endpoint owner, so the operator
+  has no cost pressure to limit step count, and the agent's design loops scanning,
+  infection and miner deployment without a human in the loop.
+contributing_factors:
+  - Model servers, AI gateways and MCP endpoints were reachable from the internet without authentication on every path.
+  - Stolen or leaked AI API keys were sprayed at endpoints alongside unauthenticated probing.
+  - Tool-enabled agents could reach outbound network and shell execution, so a hijacked model became an operator rather than an answer engine.
+  - Prompt-level jailbreaks were sufficient to override the hijacked model's refusals.
+  - Shifting inference cost to the victim removed the operator's incentive to bound autonomy.
+detection: >-
+  Symantec operated an AI honeypot that impersonates an unprotected, internet-facing AI
+  service. The honeypot captured the agent's complete prompt, tool definitions and the
+  follow-up miner script without executing any of them. Over the monitoring period the
+  honeypot logged more than 127,000 external requests from tens of thousands of
+  addresses, dominated by endpoint reconnaissance, stolen-key spraying and probing for
+  exposed configuration files; Symantec did not attribute that broader traffic to this
+  specific agent.
+recovery: >-
+  Nothing ran on the honeypot, so no remediation of a victim system was needed.
+  Symantec published indicators and detection coverage for the captured files and
+  advised operators of exposed AI services to assume they will be found and tested
+  shortly after exposure.
+prevention: >-
+  Require authentication on every path of model servers, gateways and MCP endpoints,
+  including health and model-listing routes; treat AI API keys as high-value
+  credentials with narrow scope, rotation and spend monitoring; restrict outbound
+  network access from AI hosts and tool-enabled agents; run agents with least privilege
+  and human approval for sensitive actions; and enforce hardened cloud metadata access
+  on workloads that host models.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: n-a
+    description: >-
+      The honeypot captured the agent's prompt, tool definitions and miner installer;
+      no data left a real system. The agent's design targets configuration files, API
+      keys and database contents on compromised hosts.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      No confirmed victims, infections or losses were reported for this agent. The
+      design shifts inference cost to model owners and compute cost to compromised hosts.
+  scope: >-
+    One Symantec honeypot endpoint; the agent is built to run against any exposed
+    OpenAI-compatible model server, gateway, relay or MCP server.
+  reversibility: reversible
+
+tags: ["llmjacking", "honeypot", "exposed-llm-endpoint", "cryptomining", "jailbreak", "denial-of-wallet", "autonomous-agent", "symantec"]
+mappings:
+  owasp_llm: [LLM01, LLM10]
+  owasp_agentic: [T4]
+  mitre_atlas: [AML.T0054]
+related_incidents:
+  - "2026-poellm-botnet-litellm-mcp-endpoints-cryptomining"
+  - "2026-langflow-mcp-stdio-rce-honeypot-exploitation"
+  - "2026-unit42-ai-agent-enterprise-intrusion-10-hours"
+  - "2026-gtig-multi-agent-credential-harvesting-six-hours"
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    An attacker-operated agent locates an unauthenticated OpenAI-compatible endpoint
+    and sends a prompt that jailbreaks the model, attaches offensive tool definitions
+    and authorizes unattended multi-step operation; measure whether the serving stack
+    authenticates every route and whether tool execution is gated independently of the
+    model's own refusals.
+  costbomb_seed_hint: >-
+    The captured directive authorized up to 100,000 unattended steps billed to the
+    endpoint owner; the dimension to bound is inference spend on a hijacked key or
+    endpoint when the operator bears none of the cost.
+
+sources:
+  - url: "https://www.security.com/threat-intelligence/ai-llmjacking-skynet"
+    title: "Autonomous LLMjacking: ‘Skynet’ Agent Hijacks Exposed AI Models to Run Attacks"
+    publisher: Symantec (Broadcom) Threat Intelligence
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.helpnetsecurity.com/2026/10/23/llmjacking-agent-hijacks-exposed-ai-models/"
+    title: "Hackers hijack exposed AI models to launch cyberattacks at victims' expense"
+    publisher: Help Net Security
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.csoonline.com/article/4241421/attackers-built-a-skynet-ai-agent-that-hijacks-exposed-models-to-run-cyberattacks.html"
+    title: "Attackers built a 'Skynet' AI agent that hijacks exposed models to run cyberattacks"
+    publisher: CSO Online
+    type: news
+    date_accessed: "2026-11-18"
