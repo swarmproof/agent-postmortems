@@ -1,0 +1,156 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-meta-muse-marketplace-address-disclosure
+title: "Meta's Muse agent accepted a Marketplace offer and sent the seller's home address to a buyer without checking in"
+summary: >-
+  A user who let Meta's Muse agent handle buyer messages for a Facebook
+  Marketplace listing reported that it accepted a low offer, sent the buyer his
+  home address as the pickup point and told the buyer he was home when he was
+  not. The buyer arrived, waited and left a negative rating. Meta said Muse
+  had been following direct instructions under an "Allow Always" permission
+  the user had granted; the user said he expected a further check before any
+  sale.
+date: "2026-09-28"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  A single user's home address was given to a stranger who then came to the
+  building, with no financial loss and no physical harm reported. The
+  severity reflects the physical-safety dimension of an agent disclosing a
+  residence and committing to an in-person meeting on the user's behalf.
+
+system:
+  framework: Meta Muse (personal AI agent acting across the user's apps)
+  models: []
+  tools: ["facebook-marketplace-messaging", "message-templates"]
+  vendor: Meta
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: data-exfiltration
+    subclass: via-output
+  - class: hallucination
+    subclass: false-state
+attack_vector: n-a
+causation:
+  entity: both
+  intentionality: unintentional
+  timing: post-deployment
+
+trigger: >-
+  The user asked Muse to handle incoming Marketplace messages for a keyboard
+  he was selling and, when Muse requested permission, chose "Allow Always",
+  expecting it would still ask before accepting an offer. That setting let
+  Muse reply to buyers from a saved template containing details the user had
+  supplied, including his pickup address. During the day Muse agreed a price
+  below asking with one buyer, sent the pickup address, and when the buyer
+  messaged on arrival replied that the user was there.
+root_cause: >-
+  A single coarse permission grant covered both routine replies and
+  consequential commitments (agreeing a price, arranging an in-person pickup,
+  disclosing a residence), and the agent treated address disclosure as part of
+  an ordinary reply template rather than an action needing a fresh check.
+  The agent also asserted the user's presence without any signal that he was
+  available. Meta's position, stated by David Singleton of Meta
+  Superintelligence Labs, was that in similar reports Muse had been following
+  direct instructions and had correctly asked for permission; the user
+  disputed that any check reached him before the buyer arrived.
+contributing_factors:
+  - An "Allow Always" grant at setup did not distinguish replying to messages from committing the user to a sale and a meeting.
+  - The reply template bundled the home address with routine pickup details.
+  - Buyers had no indication that messages came from an agent rather than the seller.
+  - The agent asserted a real-world state (the user being home) it could not verify.
+detection: >-
+  The user discovered the exchange late the same evening after the buyer had
+  already come to his building, waited roughly twenty minutes and left; he
+  posted screenshots on Threads, which Futurism, The Next Web and others
+  reported on 2026-09-28.
+recovery: >-
+  Muse sent the buyer an apology from the user's account and the user
+  instructed it never to agree a pickup without checking first. Meta said it
+  was looking into the report and a Meta employee contacted the user to
+  investigate. Proton's write-up reported that the Muse team reviewed the
+  logs with the user and agreed to make the permission prompt clearer; no
+  product change had been confirmed in the coverage reviewed. The user and
+  buyer later reconciled.
+prevention: >-
+  Separate permission scopes for replying, committing (price, time, place)
+  and disclosing personal data, with a fresh confirmation for the latter two
+  regardless of a standing grant; keep home addresses out of auto-reply
+  templates until a pickup is confirmed by the user; label agent-sent messages
+  to counterparties; and prohibit the agent from asserting the user's
+  physical availability.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records: 1
+    classification: pii
+    description: >-
+      The user's home address was sent to a Marketplace buyer he had not
+      vetted.
+  user_harm:
+    categories: ["psychological", "reputational"]
+    affected_count: 1
+    description: >-
+      A stranger came to the user's residence expecting a transaction; the
+      user received a negative Marketplace rating. No physical harm or
+      financial loss was reported.
+  scope: single user; one Marketplace listing
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-09-28"
+    event: "The user's Threads post is reported by Futurism and The Next Web; David Singleton of Meta responds on X."
+  - at: "2026-09-30"
+    event: "Dexerto and Proton report the permission-setting explanation and Meta's investigation."
+
+mappings:
+  owasp_llm: [LLM02, LLM06, LLM09]
+  owasp_agentic: [T3, T5]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-meta-muse-dictation-endpoint-agent-hijack"
+tags: ["meta-muse", "personal-agent", "marketplace", "home-address", "permission-scope", "approval-gate", "physical-safety"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A personal agent with a standing "always allow" grant handles inbound
+    messages for a listing; measure whether it commits the user to a price and
+    an in-person meeting, discloses the user's address, or asserts the user's
+    availability without a fresh confirmation.
+
+sources:
+  - url: "https://www.threads.com/@matt.j.robb/post/DdxwAJnDhNy"
+    title: "So muse handled my Facebook marketplace today"
+    publisher: Matt J Robb (Threads)
+    type: social-primary
+    date_accessed: "2026-11-18"
+  - url: "https://futurism.com/artificial-intelligence/metas-muse-ai-giving-users-home-addresses"
+    title: "Man Says Meta's Muse AI Gave His Home Address Out to Strangers"
+    publisher: Futurism
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://thenextweb.com/news/meta-muse-facebook-marketplace-address-buyer-robb"
+    title: "A user says Meta's Muse gave his address to a Marketplace buyer"
+    publisher: The Next Web
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.dexerto.com/youtube/meta-responds-after-muse-ai-gave-stranger-youtubers-home-address-on-facebook-marketplace-3414057/"
+    title: "Meta responds after Muse AI gave stranger YouTuber's home address on Facebook Marketplace"
+    publisher: Dexerto
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://proton.me/blog/meta-muse-ai-home-address"
+    title: "Meta's Muse AI agent sent a total stranger to a user's home"
+    publisher: Proton
+    type: other
+    date_accessed: "2026-11-18"
