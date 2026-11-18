@@ -118,6 +118,7 @@ cve: []
 cwe: ["CWE-78", "CWE-77"]
 mappings:
   owasp_llm: [LLM05]
+  mitre_atlas: [AML.T0116, AML.T0117]
 tags: ["autonomous-exploitation", "red-team", "github-actions", "ci", "shell-injection", "copilot-review", "snowflake", "wiz", "credential-exfiltration"]
 related_incidents:
   - "2026-php2shell-ai-assisted-discovery-weaponized"

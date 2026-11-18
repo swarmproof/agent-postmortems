@@ -121,7 +121,7 @@ tags: ["autonomous-attack", "fraud-automation", "web-skimmer", "payment-cards", 
 mappings:
   owasp_llm: [LLM01, LLM02, LLM06]
   owasp_agentic: [T3]
-  mitre_atlas: [AML.T0024, AML.T0054]
+  mitre_atlas: [AML.T0024, AML.T0054, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-aurora-ransomware-cursor-agent-esxi"
   - "2026-cairn-cl-sta-1238-autonomous-intrusions"

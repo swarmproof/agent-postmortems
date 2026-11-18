@@ -107,6 +107,8 @@ timeline:
     event: "Hunt.io publishes its analysis documenting the unattended Hermes agent and staged implant."
 
 tags: ["autonomous-attack", "hermes", "cyber-ops", "government", "thailand", "post-exploitation", "unattended-agent"]
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2026-deepseek-hermes-autonomous-campaign"
   - "2026-blackhatsect0r-hermes-refusal-deletion"

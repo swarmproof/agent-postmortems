@@ -125,7 +125,7 @@ timeline:
 tags: ["nation-state", "autonomous-attack", "cairn", "glm", "deepseek", "cyber-ops", "guardrail-bypass", "semiconductor", "civil-society", "china-nexus"]
 mappings:
   owasp_llm: [LLM01, LLM02]
-  mitre_atlas: [AML.T0024, AML.T0054]
+  mitre_atlas: [AML.T0024, AML.T0054, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-deepseek-hermes-autonomous-campaign"
   - "2026-norforge-cairn-agent-panels"

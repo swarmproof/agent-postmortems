@@ -76,10 +76,10 @@ prevention: >-
 
 blast_radius:
   cost:
-    amount_usd: null
+    amount_usd:
     estimated: false
   data:
-    records: null
+    records:
     classification: unknown
     description: >-
       Exfiltration was part of the automated workflow, but the research did not
@@ -87,7 +87,7 @@ blast_radius:
       web shell, or exfiltration for many targets.
   user_harm:
     categories: ["economic"]
-    affected_count: null
+    affected_count:
     description: >-
       At least 19 organizations underwent intrusion-validation activity, with deep
       compromise confirmed for only a small share; the clearest intrusion entered
@@ -104,6 +104,8 @@ timeline:
     event: "TrendAI publishes the English edition documenting the CyberStrikeAI platform and 44-agent configuration."
 
 tags: ["agentic-attack", "cyber-ops", "cyberstrikeai", "japan", "multi-agent", "exposed-directory"]
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2026-artex-claude-code-korea-bank-breach"
   - "2026-cyberxero-iab-claude-code-agents"

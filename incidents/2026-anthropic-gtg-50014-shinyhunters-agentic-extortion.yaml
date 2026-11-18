@@ -113,7 +113,7 @@ timeline:
 tags: ["agentic-attack", "cyber-ops", "shinyhunters", "credential-harvesting", "supply-chain", "azure-ad", "extortion", "claude"]
 mappings:
   owasp_llm: [LLM02]
-  mitre_atlas: [AML.T0024]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-anthropic-gtg-20006-russian-espionage-agentic"
   - "2026-gtig-multi-agent-credential-harvesting-six-hours"

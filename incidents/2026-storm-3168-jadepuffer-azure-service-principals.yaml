@@ -119,7 +119,7 @@ tags: ["agentic-attack", "cyber-ops", "azure", "service-principals", "data-destr
 mappings:
   owasp_llm: [LLM02, LLM06]
   owasp_agentic: [T3]
-  mitre_atlas: [AML.T0024]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-jadepuffer-agentic-ransomware"
   - "2026-storm-0940-artex-connectwise-supply-chain"

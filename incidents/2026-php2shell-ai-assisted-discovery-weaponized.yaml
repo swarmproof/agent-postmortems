@@ -80,10 +80,10 @@ prevention: >-
 
 blast_radius:
   cost:
-    amount_usd: null
+    amount_usd:
     estimated: false
   data:
-    records: null
+    records:
     classification: n-a
     description: >-
       Two critical pre-authentication RCE flaws in PHP's core engine, affecting most
@@ -100,6 +100,8 @@ blast_radius:
   reversibility: partially-reversible
 
 cve: ["CVE-2026-109618", "CVE-2026-109619", "CVE-2026-123039"]
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 
 timeline:
   - at: "2026-08-19"

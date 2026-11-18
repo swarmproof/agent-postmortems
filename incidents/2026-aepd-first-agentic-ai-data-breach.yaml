@@ -75,7 +75,7 @@ blast_radius:
       not disclosed.
   user_harm:
     categories: ["legal-regulatory"]
-    affected_count: null
+    affected_count:
     description: >-
       A reported personal-data breach at one organisation; the number of affected data
       subjects and the nature of any harm were not disclosed. The regulator cautions
@@ -83,6 +83,8 @@ blast_radius:
   scope: one undisclosed Spanish organisation
   reversibility: unknown
 
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2026-php2shell-ai-assisted-discovery-weaponized"
   - "2026-gtig-ai-developed-zeroday"

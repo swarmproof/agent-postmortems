@@ -75,6 +75,8 @@ blast_radius:
   reversibility: reversible
 
 tags: ["autonomous-misuse", "zero-day", "ai-exploit-development", "offensive-ai", "first-of-kind"]
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2025-gtg1002-ai-orchestrated-espionage"
   - "2026-jadepuffer-agentic-ransomware"

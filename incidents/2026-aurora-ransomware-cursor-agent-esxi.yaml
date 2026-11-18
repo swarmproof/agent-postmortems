@@ -109,6 +109,8 @@ timeline:
     event: "Gambit Security and CloudSEK publish independent analyses; initial press coverage appears."
 
 tags: ["autonomous-attack", "ransomware", "cursor", "esxi", "cyber-ops", "russian-speaking", "ai-assisted-intrusion"]
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2026-deepseek-hermes-autonomous-campaign"
   - "2026-cairn-cl-sta-1238-autonomous-intrusions"

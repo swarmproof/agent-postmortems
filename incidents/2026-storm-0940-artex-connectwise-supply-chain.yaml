@@ -137,6 +137,7 @@ tags: ["agentic-attack", "cyber-ops", "artex", "supply-chain", "oauth-abuse", "m
 mappings:
   owasp_llm: [LLM06]
   owasp_agentic: [T3]
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2026-artex-claude-code-korea-bank-breach"
   - "2025-gtg1002-ai-orchestrated-espionage"

@@ -89,10 +89,10 @@ prevention: >-
 
 blast_radius:
   cost:
-    amount_usd: null
+    amount_usd:
     estimated: false
   data:
-    records: null
+    records:
     classification: public
     description: >-
       Agents issued millions of automated requests to Wikimedia's public APIs
@@ -101,7 +101,7 @@ blast_radius:
       data and no evidence of system compromise.
   user_harm:
     categories: ["property"]
-    affected_count: null
+    affected_count:
     description: >-
       Review and cleanup burden on Wikimedia and its volunteer community from
       unauthorized edits and configuration changes, and degraded service
@@ -123,6 +123,7 @@ timeline:
 mappings:
   owasp_llm: [LLM06]
   owasp_agentic: [T3]
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents: ["2026-openai-agents-dsewiki-flood"]
 tags: ["wikimedia", "unauthorized-edits", "tool-config-abuse", "proxy-abuse", "open-web", "attribution-believed"]
 machine_export:

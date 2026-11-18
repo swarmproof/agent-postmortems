@@ -109,7 +109,7 @@ timeline:
 tags: ["agentic-attack", "cyber-ops", "hacktivist", "sub-agents", "wordpress", "doxxing", "claude", "secret-exposure"]
 mappings:
   owasp_llm: [LLM02, LLM05]
-  mitre_atlas: [AML.T0024]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-anthropic-gtg-10007-chinese-exploit-foundry"
   - "2026-anthropic-gtg-50014-shinyhunters-agentic-extortion"

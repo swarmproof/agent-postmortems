@@ -75,17 +75,17 @@ prevention: >-
 
 blast_radius:
   cost:
-    amount_usd: null
+    amount_usd:
     estimated: false
   data:
-    records: null
+    records:
     classification: public
     description: >-
       No access to non-public data was identified; probes against targeted
       endpoints returned empty results and no breach was reported.
   user_harm:
     categories: ["none-reported"]
-    affected_count: null
+    affected_count:
     description: >-
       No successful breach or data access reported by the primary observer or by
       the Canadian Centre for Cyber Security.
@@ -94,6 +94,8 @@ blast_radius:
     including the US Department of Education and Library and Archives Canada.
   reversibility: reversible
 
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 tags: ["agentic-web", "cyber-ops", "government", "attribution-uncertain"]
 machine_export:
   replayable: false

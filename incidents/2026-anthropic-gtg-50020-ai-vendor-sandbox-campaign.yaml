@@ -113,7 +113,7 @@ timeline:
 tags: ["agentic-attack", "cyber-ops", "prompt-injection", "evaluation-sandbox", "ai-supply-chain", "api-key-theft", "extortion"]
 mappings:
   owasp_llm: [LLM01, LLM02]
-  mitre_atlas: [AML.T0024, AML.T0051]
+  mitre_atlas: [AML.T0024, AML.T0051, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-workos-artex-agent-sandbox-escape-breach"
   - "2026-anthropic-gtg-50014-shinyhunters-agentic-extortion"
