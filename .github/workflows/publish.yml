@@ -46,7 +46,7 @@ jobs:
             uv run scripts/check_links.py --backfill || true   # archive.org outages must not block
             uv run scripts/build_exports.py
             uv run scripts/gen_readme_stats.py
-            git add incidents export README.md
+            git add incidents export README.md TAXONOMY.md
             if git diff --cached --quiet; then echo "nothing to publish"; return 0; fi
             git commit -m "chore(export): refresh exports and source archives [skip ci]"
             git push origin HEAD:main

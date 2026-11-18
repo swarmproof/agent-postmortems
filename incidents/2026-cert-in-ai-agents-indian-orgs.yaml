@@ -113,7 +113,7 @@ tags: ["agentic-attack", "cyber-ops", "excessive-agency", "india", "cert-in", "e
 mappings:
   owasp_llm: [LLM02, LLM06]
   owasp_agentic: [T3]
-  mitre_atlas: [AML.T0024]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-ai-agents-us-canada-gov-intrusion-attempts"
   - "2026-openai-eval-sandbox-escape-huggingface"

@@ -4,7 +4,7 @@
 #
 # Mappings are partial by design: a class is mapped only where a framework has a clean
 # corresponding entry. Classes with no clean equivalent (e.g. task-failure,
-# autonomous-misuse) are intentionally left unmapped rather than forced.
+# double-side-effect) are intentionally left unmapped rather than forced.
 
 version: "1.0"
 
@@ -50,6 +50,11 @@ frameworks:
       AML.T0053: "LLM Plugin Compromise"
       AML.T0054: "LLM Jailbreak"
       AML.T0024: "Exfiltration via AI Inference"
+      # Autonomous-attack techniques introduced in ATLAS release 2026.08 (atlas-data
+      # dist/v6, verified against release 2026.10). Both are employed by every ATLAS case
+      # study that overlaps this corpus (AML.CS0068–71, AML.CS0074).
+      AML.T0116: "Autonomous Reconnaissance"
+      AML.T0117: "Autonomous Attack-Path Adaptation"
 
 # failure class -> framework ids
 classes:
@@ -95,6 +100,16 @@ classes:
     owasp_llm: [LLM05]
   multi-agent-failure:
     owasp_agentic: [T13]
+  # task-failure is a reliability failure (the agent does the wrong task, or does it
+  # badly) with no OWASP LLM, OWASP Agentic, or MITRE ATLAS counterpart: all three
+  # frameworks catalogue adversarial threats, not quality defects.
   task-failure: {}
-  autonomous-misuse: {}
+  # autonomous-misuse: the agent is the adversary's operator, not the victim. ATLAS
+  # models this directly — an agent that chooses its own reconnaissance steps
+  # (AML.T0116) and builds/revises the attack path toward an adversary-defined
+  # objective (AML.T0117). No OWASP Agentic threat (T1–T17) defines weaponised agent
+  # capabilities: T2/T6 cover attackers manipulating a victim's agent, T13 is scoped to
+  # rogue agents inside a multi-agent system, so OWASP is left out for this class.
+  autonomous-misuse:
+    mitre_atlas: [AML.T0116, AML.T0117]
   other: {}

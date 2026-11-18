@@ -121,7 +121,7 @@ blast_radius:
 tags: ["cloud", "kubernetes", "gitops", "identity-provider", "kafka-ui", "credential-harvesting", "cyber-ops", "wiz", "incident-response"]
 mappings:
   owasp_llm: [LLM02]
-  mitre_atlas: [AML.T0024]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-unit42-ai-agent-enterprise-intrusion-10-hours"
   - "2026-gtig-multi-agent-credential-harvesting-six-hours"

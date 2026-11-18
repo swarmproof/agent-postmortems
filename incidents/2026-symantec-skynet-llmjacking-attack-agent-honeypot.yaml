@@ -113,7 +113,7 @@ tags: ["llmjacking", "honeypot", "exposed-llm-endpoint", "cryptomining", "jailbr
 mappings:
   owasp_llm: [LLM01, LLM10]
   owasp_agentic: [T4]
-  mitre_atlas: [AML.T0054]
+  mitre_atlas: [AML.T0054, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-poellm-botnet-litellm-mcp-endpoints-cryptomining"
   - "2026-langflow-mcp-stdio-rce-honeypot-exploitation"

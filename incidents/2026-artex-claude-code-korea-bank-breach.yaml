@@ -90,10 +90,10 @@ blast_radius:
   scope: "multiple South Korean financial organizations"
   reversibility: irreversible
 
+tags: ["agentic-attack", "cyber-ops", "financial-sector", "artex", "claude-code", "pentesting-tool"]
 mappings:
   owasp_llm: [LLM02]
-  mitre_atlas: [AML.T0024]
-tags: ["agentic-attack", "cyber-ops", "financial-sector", "artex", "claude-code", "pentesting-tool"]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2025-gtg1002-ai-orchestrated-espionage"
   - "2026-deepseek-hermes-autonomous-campaign"

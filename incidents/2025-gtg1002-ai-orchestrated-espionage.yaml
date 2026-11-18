@@ -79,7 +79,7 @@ blast_radius:
 
 mappings:
   owasp_llm: [LLM01]
-  mitre_atlas: [AML.T0054]
+  mitre_atlas: [AML.T0054, AML.T0116, AML.T0117]
 tags: ["cyber-espionage", "agentic-attack", "nation-state"]
 machine_export:
   replayable: false

@@ -107,6 +107,7 @@ timeline:
 tags: ["agentic-fraud", "fraud-automation", "dating-apps", "persona", "deception", "claude", "consumer-harm"]
 mappings:
   owasp_agentic: [T6]
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2026-anthropic-gtg-50014-shinyhunters-agentic-extortion"
   - "2026-anthropic-gtg-84006-mek-impersonation-agent"

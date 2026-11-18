@@ -82,6 +82,8 @@ blast_radius:
   reversibility: irreversible
 
 tags: ["nation-state", "autonomous-attack", "deepseek", "hermes", "cyber-ops", "telegram-c2"]
+mappings:
+  mitre_atlas: [AML.T0116, AML.T0117]
 related_incidents:
   - "2025-gtg1002-ai-orchestrated-espionage"
   - "2026-taiwan-nuclear-agency-autonomous-attack"

@@ -109,7 +109,7 @@ timeline:
 tags: ["agentic-attack", "influence-operation", "impersonation", "persistent-memory", "surveillance", "iran", "claude", "human-rights"]
 mappings:
   owasp_llm: [LLM02]
-  mitre_atlas: [AML.T0024]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-anthropic-gtg-15001-dating-app-persona-fraud"
   - "2026-anthropic-gtg-20006-russian-espionage-agentic"

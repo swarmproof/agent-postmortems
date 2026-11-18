@@ -105,7 +105,7 @@ blast_radius:
 tags: ["autonomous-attack", "initial-access-broker", "claude-code", "cyber-ops", "critical-infrastructure", "ukraine", "jailbreak"]
 mappings:
   owasp_llm: [LLM01, LLM02]
-  mitre_atlas: [AML.T0024, AML.T0054]
+  mitre_atlas: [AML.T0024, AML.T0054, AML.T0116, AML.T0117]
 related_incidents:
   - "2025-gtg1002-ai-orchestrated-espionage"
   - "2026-deepseek-hermes-autonomous-campaign"

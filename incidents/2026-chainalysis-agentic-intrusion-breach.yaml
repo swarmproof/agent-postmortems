@@ -136,7 +136,7 @@ timeline:
 tags: ["agentic-attack", "cyber-ops", "credential-exposure", "on-path-attack", "blockchain-analytics", "service-outage", "mechanism-undisclosed"]
 mappings:
   owasp_llm: [LLM02]
-  mitre_atlas: [AML.T0024]
+  mitre_atlas: [AML.T0024, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-artex-claude-code-korea-bank-breach"
   - "2025-gtg1002-ai-orchestrated-espionage"

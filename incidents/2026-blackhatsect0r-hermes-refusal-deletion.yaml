@@ -121,7 +121,7 @@ tags: ["autonomous-attack", "hermes", "deepseek", "guardrail-bypass", "memory-po
 mappings:
   owasp_llm: [LLM01, LLM04]
   owasp_agentic: [T1]
-  mitre_atlas: [AML.T0054]
+  mitre_atlas: [AML.T0054, AML.T0116, AML.T0117]
 related_incidents:
   - "2026-deepseek-hermes-autonomous-campaign"
   - "2026-thai-finance-ministry-hermes-agent"
