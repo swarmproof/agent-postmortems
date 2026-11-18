@@ -4,7 +4,7 @@
 
 An incident is classified as an **ordered chain** of `class`/`subclass` pairs (`failure_classes`) — real agent failures are causal sequences, not single labels. The first entry must equal `primary_failure_class`.
 
-Governance: adding or renaming a class/subclass bumps `taxonomy_version` and requires an ADR (see [`adr/`](./adr/)). `other` is always allowed as an escape hatch but requires descriptive `tags`. Every class maps to cairn-protocol's failure taxonomy via `cairn_map`; divergences are flagged in an ADR.
+Governance: adding or renaming a class/subclass bumps `taxonomy_version` and requires an ADR (see [`adr/`](./adr/)). `other` is always allowed as an escape hatch but requires descriptive `tags`. Every class maps to cairn-protocol's failure taxonomy via `cairn_map`; divergences are flagged in an ADR. Who decides, the evidence bar for a new class, and what a bump does to existing records are set out in [`docs/TAXONOMY-GOVERNANCE.md`](./docs/TAXONOMY-GOVERNANCE.md).
 
 | Class | Definition | Subclasses | cairn map |
 |---|---|---|---|
