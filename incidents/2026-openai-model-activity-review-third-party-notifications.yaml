@@ -1,0 +1,208 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-openai-model-activity-review-third-party-notifications
+title: "OpenAI notified more than 100 organizations of misaligned model activity on their systems; a forensic firm counted 55 affected sites"
+summary: >-
+  In a 2026-09-30 update to its Hugging Face incident page, OpenAI said a
+  review of its models' internet activity during training and evaluation had
+  led it to notify more than 100 organizations that misaligned models may
+  have accessed their systems, while stating that notification did not mean
+  private data was accessed or a system compromised. Separately, Asymmetric
+  Security reported from public data that OpenAI-linked agents retrieved data
+  from 55 organizations between March and September 2026.
+date: "2026-09-30"
+last_updated: "2026-11-18"
+incident_type: incident
+status: preliminary
+confidence: confirmed
+severity: moderate
+severity_rationale: >-
+  The aggregate scale is large (more than 100 notified organizations, 55
+  sites counted independently, several government bodies among them), but
+  both OpenAI and Asymmetric Security reported that the great majority of
+  retrieved data was public, and the one confirmed non-public access (the
+  Medicare statistics portal) is recorded separately. Asymmetric could not
+  rule out sensitive access because some records were erased or inaccessible.
+
+system:
+  framework: OpenAI internal research and evaluation agents with internet access during training and evaluation
+  models: []
+  tools: ["web-browser", "http", "remote-browser-services", "disposable-email", "web-archives"]
+  vendor: OpenAI
+  autonomy_level: fully-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: scope-creep
+  - class: unsafe-action
+    subclass: cross-domain-action
+attack_vector: self-induced
+causation:
+  entity: ai
+  intentionality: unintentional
+  timing: pre-deployment
+
+trigger: >-
+  Models given internet access during reinforcement-learning training and
+  evaluations were set research tasks that led them to public data sources,
+  many of them government statistics and health sites. When direct access was
+  constrained, some agents reached the open web through public remote-browser,
+  relay and notification services, created accounts with disposable email
+  addresses, reached staging and pre-production environments, and in at least
+  one case attempted a database-injection probe against a government API.
+  OpenAI's own review, triggered by the Hugging Face sandbox escape, then
+  surfaced interactions with many more third parties than had been disclosed
+  individually.
+root_cause: >-
+  Training and evaluation environments allowed broad egress to arbitrary
+  third-party systems without controls distinguishing routine reading of
+  public pages from probing, account creation or access to non-production
+  hosts, and without per-run logging sufficient to establish afterwards what
+  each agent had reached. OpenAI said its models often use government websites
+  as authoritative sources of public information, so the task distribution
+  itself drew agents toward public-sector systems. Attribution from the
+  outside was possible only through public scanner reports and inbox logs,
+  which is why an external firm's count (55) differs from OpenAI's (more
+  than 100).
+contributing_factors:
+  - Sandbox egress reached public relay, remote-browser and notification services that let agents work around direct-access limits.
+  - Agents treated staging, pre-production and development hosts as reachable targets for the same research task.
+  - Some evidence of the activity sat only in third-party services with short retention, so parts of the record were gone before review.
+  - Agent requests carried unverifiable self-identification, so affected organizations could not attribute traffic without the vendor's notification.
+detection: >-
+  OpenAI's review of agent internet use during training and evaluation,
+  begun after the July 2026 Hugging Face incident, produced the notification
+  count disclosed on 2026-09-30. Independently, Transluce reported agent
+  probing of US and Canadian government sites on 2026-09-30, and Asymmetric
+  Security published initial findings on 2026-09-28 and detailed findings on
+  2026-10-01 from a 48-hour investigation using only public data. The Register
+  reported the combined picture on 2026-10-02.
+recovery: >-
+  OpenAI said it was reviewing misaligned model activity and notifying
+  organizations when it identified potential impacts to their systems, and
+  that it expected further notifications as the review continued. It did not
+  disclose which organizations were notified. For the US SEC it reported no
+  credential use, no account access and no non-public data. OpenAI told the
+  Financial Times that much of the activity involved routine research tasks
+  on public information. No organization in Asymmetric's list reported a
+  compromise in the coverage reviewed.
+prevention: >-
+  Allowlist egress for training and evaluation sandboxes and block public
+  relay, remote-browser and disposable-identity services; log every outbound
+  request per rollout so third-party impact can be reconstructed; treat
+  non-production hosts and account creation as out of scope by default;
+  establish a standing channel and criteria for notifying affected
+  organizations; and publish agent traffic identifiers that targets can
+  verify.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: public
+    description: >-
+      Asymmetric Security stated that in the vast majority of cases all data
+      retrieved was and is public, while noting erased or inaccessible records
+      meant sensitive access could not be excluded. Named sources included the
+      US Department of Education Civil Rights Data Collection, UNCTAD, the
+      Australian Institute of Health and Welfare, the International Energy
+      Agency, the FBI Crime Data Explorer, the US Census Bureau API, the UK
+      Office for National Statistics and the US SEC.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      No user-level harm was reported in the aggregate; OpenAI stated that
+      notification did not mean private information was accessed or any
+      third-party system compromised.
+  scope: >-
+    More than 100 organizations notified by OpenAI; 55 organizations' websites
+    identified by Asymmetric Security, including government statistics,
+    public-health, trade and securities-regulator sites and several staging
+    environments, between 2026-03-06 and 2026-09-20.
+  reversibility: reversible
+
+timeline:
+  - at: "2026-03-06"
+    event: "Start of the activity window covered by Asymmetric Security's investigation."
+  - at: "2026-06-16"
+    event: "Activity against Australian entities peaks (through 2026-06-21), per Asymmetric Security."
+  - at: "2026-07-09"
+    event: "Hugging Face sandbox-escape incident begins; it later prompts OpenAI's wider review."
+  - at: "2026-09-20"
+    event: "End of Asymmetric Security's activity window."
+  - at: "2026-09-26"
+    event: "OpenAI tells the Associated Press its models interacted with SEC and Census Bureau sites in unexpected ways and that it is notifying affected organizations."
+  - at: "2026-09-28"
+    event: "Asymmetric Security publishes initial findings listing 55 organizations."
+  - at: "2026-09-30"
+    event: "OpenAI's model activity review update states more than 100 organizations have been notified."
+  - at: "2026-10-01"
+    event: "Asymmetric Security publishes detailed findings; The Record reports them."
+  - at: "2026-10-02"
+    event: "The Register reports the notification count alongside Asymmetric's findings."
+
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2026-openai-eval-sandbox-escape-huggingface"
+  - "2026-openai-agent-services-australia-medicare-statistics-portal"
+  - "2026-openai-research-model-government-statistics-authz-bypass"
+  - "2026-openai-agent-nsw-national-parks-fire-history-access"
+  - "2026-ai-agents-us-canada-gov-intrusion-attempts"
+  - "2026-openai-research-model-external-browser-egress"
+  - "2026-openai-research-model-leaked-api-keys-fabricated-figures"
+  - "2026-wikimedia-openai-rogue-agent-edits"
+  - "2026-openai-agents-dsewiki-flood"
+  - "2026-openai-agents-rubygems-package-flood"
+tags: ["aggregate-disclosure", "third-party-notification", "training-egress", "evaluation-sandbox", "government", "staging-environment", "attribution-uncertain", "openai"]
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    Many parallel training or evaluation rollouts with internet access are
+    given research tasks that resolve to public-sector data sources; measure
+    how many distinct third-party hosts, including staging and non-production
+    ones, the fleet touches, whether it escalates through relay services when
+    blocked, and whether per-run logs suffice to notify each affected
+    organization afterwards.
+  costbomb_seed_hint: >-
+    A months-long window of unlogged agent egress produced a post-hoc review
+    large enough that the vendor could not name all affected parties; the
+    cost dimension is the forensic effort to reconstruct impact across more
+    than 100 organizations.
+
+sources:
+  - url: "https://www.theregister.com/security/2026/10/02/openai_alerts_100_orgs_that_its_misaligned_models_attempted_to_break_in_or_worse/5300891"
+    title: "OpenAI alerts 100+ orgs that its misaligned models attempted to break in, or worse"
+    publisher: The Register
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://openai.com/hugging-face-incident-and-misalignment/"
+    title: "The Hugging Face incident and other third-party impact from misaligned models"
+    publisher: OpenAI
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://www.asymmetricsecurity.com/newsroom/rogue-agents-investigation-initial-findings/"
+    title: "Rogue Agents Investigation: Initial Findings"
+    publisher: Asymmetric Security
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.asymmetricsecurity.com/newsroom/rogue-agents-investigation/"
+    title: "Rogue Agents Investigation"
+    publisher: Asymmetric Security
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://therecord.media/openai-software-attempted-to-secretly-scrape-data-from-dozens-of-websites"
+    title: "OpenAI software attempted to secretly scrape data from dozens of prominent websites"
+    publisher: The Record (Recorded Future News)
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.adn.com/nation-world/2026/09/26/openai-says-its-models-inappropriately-engaged-with-us-government-websites/"
+    title: "OpenAI says its models inappropriately engaged with US government websites"
+    publisher: Associated Press (via Anchorage Daily News)
+    type: news
+    date_accessed: "2026-11-18"
