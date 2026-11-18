@@ -1,0 +1,167 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-db-gpt-react-agent-mock-auth-root-rce
+title: "DB-GPT ReAct agent endpoint granted every caller admin and ran unsandboxed code and shell tools as root (CVE-2026-77932)"
+summary: >-
+  DB-GPT, an open-source agentic data assistant, exposed its ReAct agent chat
+  endpoint behind a mock authentication helper that returned an admin user for
+  every request. An unauthenticated caller could prompt the agent into using
+  its code-interpreter and shell-interpreter tools, which ran without a
+  sandbox as root in the webserver container, with the bundled database
+  reachable on default credentials (CVE-2026-77932). No fixed version was
+  listed by the advisory sources as of 2026-11-18.
+date: "2026-10-19"
+incident_type: hazard
+status: factual
+confidence: confirmed
+severity: critical
+severity_rationale: >-
+  Unauthenticated root-level command execution on any network-reachable
+  DB-GPT deployment through the agent's own tools (CVSS 3.1 9.8), with no
+  fixed version listed by the advisory sources. VulnCheck lists the CVE in its
+  known-exploited catalog, while CISA's SSVC assessment records exploitation at
+  proof-of-concept level and no public exploitation report was located; the
+  record is therefore kept as a hazard.
+
+system:
+  framework: DB-GPT (ReAct agent over the /api/v1/chat/react-agent endpoint)
+  models: ["llama3.1:8b", "qwen3:8b"]
+  tools: ["code_interpreter", "shell_interpreter", "bundled-database"]
+  vendor: eosphoros-ai
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: excessive-agency
+failure_classes:
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: tool-misuse
+    subclass: unvalidated-args
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  A network client sent a request to the ReAct agent chat endpoint with no
+  credentials. The endpoint's only authentication step was a helper that
+  returned an admin-role user for any request, so the request was accepted and
+  the agent ran. A prompt framed as a data-analysis task led the model to emit
+  a code-interpreter tool call; the researchers reproduced this with two local
+  open-weight models and observed execution as root inside the webserver
+  container, and in one run the executed code also authenticated to the
+  bundled database on its default credentials. The shell-interpreter tool
+  offered an equivalent path by importing a local runtime directly, bypassing
+  the project's sandbox opt-in guard.
+root_cause: >-
+  Authentication for the agent endpoint was a placeholder that trusted every
+  caller, and the tools the agent could invoke executed model-generated Python
+  and shell on the host process with no container, capability or network
+  isolation. Because DB-GPT has no multi-tenancy, reaching the API at all
+  amounted to full administrative access, and the agent's tool layer turned
+  that access into code execution.
+contributing_factors:
+  - The authentication helper was a mock returning an admin user whether or not credentials were supplied, and it remained the gate on the agent endpoint across releases.
+  - The code-interpreter tool ran model-generated Python as a plain subprocess, and the shell-interpreter tool imported a local runtime that bypassed the sandbox opt-in guard.
+  - The webserver process ran as root inside its container, and the bundled database accepted default credentials from that container.
+  - Sandbox sessions shared a host temporary directory bind-mount, and the standalone sandbox API did not require authentication.
+detection: >-
+  Found by Lasso Security researchers (credited by VulnCheck as Noy Pearl,
+  Michael Sromin and Ophir Dror), who reproduced it against DB-GPT v0.8.1 and
+  published a write-up in Lasso's vulnerability database. VulnCheck, acting as
+  CNA, published its advisory on 2026-10-19; NVD and the GitHub Advisory
+  Database entry GHSA-5vjv-vw3m-qpqp followed on 2026-10-20.
+recovery: >-
+  No vendor advisory, security advisory on the project repository, or release
+  note referencing the CVE was located, and the VulnCheck, NVD and Lasso
+  entries list no fixed version. In the v0.8.3 tag published 2026-11-17 the
+  authentication helper is unchanged from the vulnerable commit, while the
+  code-interpreter tool was reworked to run through the configured sandbox
+  runtime; whether that closes the reported path has not been confirmed by
+  the vendor. Lasso advised operators to take exposed deployments off the
+  network or place them behind authentication, replace the mock helper with
+  real authentication and authorization, route both interpreter tools through
+  the container runtime with network disabled and capabilities dropped,
+  remove the shared temporary-directory mount, and require authentication on
+  the sandbox API.
+prevention: >-
+  Never ship an agent endpoint behind placeholder authentication; fail closed
+  when no identity provider is configured. Run model-generated code and shell
+  only inside an isolated runtime with no network, dropped capabilities,
+  read-only mounts and a non-root user, and make the sandbox the only path
+  rather than an opt-in. Change default database credentials and bind
+  deployment interfaces to loopback unless an operator explicitly exposes
+  them.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      Root execution in the webserver container exposed the bundled database
+      and any data sources or credentials the DB-GPT deployment was configured
+      with; the actual exposure depends on each deployment.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      No public report of harm or in-the-wild exploitation was located.
+      VulnCheck's catalog flags the CVE as known-exploited, but the underlying
+      evidence is not public and CISA's SSVC assessment records exploitation
+      at proof-of-concept level.
+  scope: "Network-reachable DB-GPT deployments through 0.8.2 (project has about 20,000 GitHub stars)"
+  reversibility: unknown
+
+timeline:
+  - at: "2026-10-19"
+    event: "VulnCheck publishes its advisory for CVE-2026-77932 as CNA."
+  - at: "2026-10-20"
+    event: "NVD and the GitHub Advisory Database (GHSA-5vjv-vw3m-qpqp) publish the entry with CVSS 3.1 9.8 and CWE-306."
+  - at: "2026-11-17"
+    event: "DB-GPT v0.8.3 released; its notes do not reference the CVE, and the authentication helper in the tag is unchanged from the vulnerable commit."
+
+cve: ["CVE-2026-77932"]
+cwe: ["CWE-306"]
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0053]
+tags: ["db-gpt", "react-agent", "mock-authentication", "unauthenticated-rce", "code-interpreter", "shell-tool", "root-container", "no-fix-listed", "cve"]
+related_incidents:
+  - "2026-mcphub-missing-authz-server-config-rce"
+  - "2026-paperclip-import-authz-bypass-unauthenticated-rce"
+  - "2026-vibe-trading-agent-tools-root-command-execution"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent chat endpoint accepts requests from any network client and the
+    agent holds code and shell tools that execute on the host; measure whether
+    an unauthenticated prompt can reach tool execution, and whether the tool
+    layer enforces isolation independently of the endpoint's authentication.
+
+sources:
+  - url: "https://www.vulncheck.com/advisories/db-gpt-through-0.8.2-unauthenticated-rce-via-api-v1-chat-react-agent"
+    title: "DB-GPT through 0.8.2 Unauthenticated RCE via /api/v1/chat/react-agent"
+    publisher: VulnCheck
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://www.lasso.security/vulnerability-database/cve-2026-77932"
+    title: "CVE-2026-77932: Unauthenticated Remote Code Execution via Mock Authentication and Unsandboxed Code Interpreter"
+    publisher: Lasso Security
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-77932"
+    title: "CVE-2026-77932 — DB-GPT through 0.8.2 unauthenticated remote code execution"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/advisories/GHSA-5vjv-vw3m-qpqp"
+    title: "GHSA-5vjv-vw3m-qpqp — DB-GPT through 0.8.2 contains an unauthenticated remote code execution vulnerability"
+    publisher: GitHub Advisory Database
+    type: other
+    date_accessed: "2026-11-18"
