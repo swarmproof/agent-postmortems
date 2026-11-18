@@ -5,7 +5,10 @@ abstract: "A structured incident database + post-mortem standard for agent failu
 authors:
   - family-names: Boudoukha
     given-names: Maroua
+version: "2026.11.2"
+date-released: "2026-11-18"
 repository-code: "https://github.com/swarmproof/agent-postmortems"
+repository-artifact: "https://github.com/swarmproof/agent-postmortems/releases/tag/2026.11.2"
 url: "https://swarmproof.github.io/agent-postmortems/"
 license:
   - Apache-2.0
