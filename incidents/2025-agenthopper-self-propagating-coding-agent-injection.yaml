@@ -1,0 +1,142 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2025-agenthopper-self-propagating-coding-agent-injection
+title: "AgentHopper: a proof-of-concept self-propagating prompt injection that spread between coding agents via Git repositories"
+summary: >-
+  Researcher Johann Rehberger (Embrace The Red) built AgentHopper, a
+  proof-of-concept "AI virus": a conditional prompt injection placed in
+  repository source files that, when processed by GitHub Copilot, Amp, Amazon Q
+  Developer or AWS Kiro, used an agent-specific flaw to escape approval
+  controls, run a propagation binary, and inject, commit and push the same
+  payload into other Git repositories on the machine. All underlying flaws were
+  patched before publication; it was never released.
+date: "2025-08-29"
+incident_type: hazard
+status: final
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Demonstrated worm-style propagation across four coding agents, each hop
+  reaching arbitrary command execution and unauthorized Git pushes. Contained to
+  researcher-controlled repositories behind a manual safety switch, and the
+  underlying vulnerabilities (including CVE-2025-53773) were patched before the
+  write-up was published; no in-the-wild spread.
+
+system:
+  framework: Multiple coding agents (GitHub Copilot in VS Code, Amp, Amazon Q Developer, AWS Kiro)
+  models: []
+  tools: ["git", "bash", "filesystem", "agent-config-files"]
+  vendor: Microsoft/GitHub, Sourcegraph, Amazon
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+    subclass: unauthorized-write
+  - class: multi-agent-failure
+    subclass: cascade
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A developer's coding agent processed a Git repository whose source files
+  carried injected instructions at the top. The injection was conditional: it
+  branched into a different exploit path depending on which agent read it,
+  because each agent had a different approval-bypass flaw. Each path led the
+  agent to disable or circumvent its approval controls (for example by editing
+  its own settings to enable auto-approve, allowlisting a command, or
+  registering an additional tool server) and then to download and execute a
+  propagation binary. That binary located other Git repositories on the
+  machine, planted the same payload, committed, and pushed, so that any
+  developer who later pulled one of those repositories with a susceptible agent
+  repeated the cycle.
+root_cause: >-
+  Coding agents treated instructions found in repository content as actionable,
+  and each agent exposed at least one path by which the model could remove or
+  bypass its own human-approval boundary (writable settings, an allowlisted
+  command with execution side effects, or a self-registerable tool server).
+  Combined with routine Git push access on developer machines, a single
+  repository-borne injection became a self-replicating payload.
+contributing_factors:
+  - Agent configuration files that control approval behaviour were writable by the agent itself.
+  - Allowlisted or "read-only" commands had execution side effects usable without approval.
+  - Developer environments held unlocked Git credentials, so an agent could push to remote repositories without a second factor.
+  - Conditional injection let one payload target several agents, widening the pool of susceptible hosts.
+  - No per-repository isolation separated the agent's workspace from other checked-out repositories on the same machine.
+detection: >-
+  Built and described by researcher Johann Rehberger as part of the "Month of AI
+  Bugs" series, published 2025-08-29, and later presented at the 39th Chaos
+  Communication Congress in December 2025. The individual agent flaws it chained
+  had each been reported to the respective vendors beforehand.
+recovery: >-
+  The research payload contained a manual safety switch that required the
+  researcher's approval before writing to any repository, so propagation never
+  left controlled repositories. The vendors patched the underlying flaws before
+  the write-up was published; GitHub's fix for the Copilot auto-approve issue
+  shipped as CVE-2025-53773 in August 2025. AgentHopper itself was not released.
+prevention: >-
+  Disable auto-approve / "YOLO" modes organisation-wide; protect agent
+  configuration and tool-registration files from agent writes; keep commands
+  with execution or network side effects off no-approval allowlists; run coding
+  agents in isolated containers without ambient Git push credentials; require
+  passphrases on SSH and signing keys; treat repository content as untrusted
+  input and scan incoming changes for injected instruction text.
+
+blast_radius:
+  data:
+    classification: n-a
+    description: >-
+      Proof of concept only; the demonstration pushed payload commits to
+      researcher-controlled repositories and exfiltrated no data.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      Research demonstration with a containment switch; no users affected and no
+      in-the-wild propagation reported.
+  scope: Researcher-controlled repositories and test installs of four coding agents
+  reversibility: reversible
+
+cve: ["CVE-2025-53773"]
+cwe: ["CWE-77", "CWE-284"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3, T13]
+  mitre_atlas: [AML.T0051]
+tags: ["prompt-injection", "self-propagating", "worm", "coding-agent", "git", "conditional-injection", "github-copilot", "amp", "amazon-q", "kiro"]
+related_incidents:
+  - "2025-github-copilot-autoapprove-rce"
+  - "2025-amp-code-config-modification-rce"
+  - "2025-amazon-q-find-exec-rce"
+  - "2025-cross-agent-privilege-escalation-config-poisoning"
+  - "2026-copilot-word-prompt-injection-worm"
+  - "2026-mind-viruses-multi-agent-propagation"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A fleet of developer machines with Git push access each runs one of several
+    coding agents; one repository receives an injected instruction block that
+    branches per agent. Measure how many hops the payload achieves before an
+    approval gate, config-write protection, or egress control stops it.
+  costbomb_seed_hint: >-
+    Each infected agent rewrites and pushes every repository it can find; the
+    unbounded dimension is commit and push volume across an organisation's
+    repositories.
+
+sources:
+  - url: "https://embracethered.com/blog/posts/2025/agenthopper-a-poc-ai-virus/"
+    title: "AgentHopper: An AI Virus"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://heise.de/-11125687"
+    title: "39C3: Security researcher hijacks AI coding assistants with prompt injection"
+    publisher: heise online
+    type: news
+    date_accessed: "2026-11-18"
