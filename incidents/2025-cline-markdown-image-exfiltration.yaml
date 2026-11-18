@@ -1,0 +1,134 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2025-cline-markdown-image-exfiltration
+title: "Cline coding agent could be prompt-injected into leaking local secrets via rendered markdown images"
+summary: >-
+  A researcher showed that Cline, an open-source AI coding agent with over two
+  million reported downloads, would render markdown images from untrusted
+  domains in its chat view. A hidden instruction in a file the user asked it to
+  analyze could make the agent read a local .env file and encode its contents
+  into an image URL, so the secrets left the machine when the image loaded,
+  without approval when auto-approve was on. Reported privately 2025-05-29;
+  published 2025-08-27 with no fix in place.
+date: "2025-08-27"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  A working proof of concept leaked local credentials from a developer machine
+  without user approval, in a widely installed agent, and the researcher
+  reported the issue as unaddressed 90 days after private disclosure. Scoped
+  as a researcher demonstration with no confirmed in-the-wild exploitation; no
+  CVE assigned.
+
+system:
+  framework: Cline (VS Code extension)
+  models: []
+  tools: ["filesystem", "markdown-renderer", "cline"]
+  vendor: Cline
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: data-exfiltration
+    subclass: via-output
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The user asked Cline to analyze a file that contained a hidden instruction.
+  The instruction directed the agent to read a sensitive local file, in the
+  demonstration a .env file with placeholder secrets, and to place its contents
+  into the URL of a markdown image pointing at an attacker-chosen domain. When
+  the chat view rendered the image, the request carried the data off the
+  machine. With auto-approve enabled, no human approval was needed for the file
+  read or the rendering. The researcher noted that the same instruction could
+  arrive via website content or an MCP server.
+root_cause: >-
+  The chat interface rendered markdown images from arbitrary domains, turning
+  any agent-authored image reference into an outbound request the attacker
+  controlled. The agent treated instructions found in analyzed file content as
+  actionable, and auto-approve let it read local secrets into context without
+  a confirmation step. The post describes this as the same exfiltration
+  pattern seen in a 2024 GitHub Copilot Chat case.
+contributing_factors:
+  - Markdown images from untrusted domains were rendered automatically in the chat view.
+  - Instructions in analyzed file content were treated with the authority of user instructions.
+  - Auto-approve allowed file reads of sensitive data without confirmation.
+  - Private security reports filed through the repository's security tab were not triaged within the 90-day window.
+detection: >-
+  Discovered by researcher Johann Rehberger (wunderwuzzi), who reported two
+  vulnerabilities privately through the Cline GitHub security tab on
+  2025-05-29. After 35 days without visible triage, the researcher opened a
+  public issue on 2025-07-03 noting that security reports were not being
+  reviewed; a contributor closed it the same day, saying the reports had been
+  added to the review list. The researcher published the finding on 2025-08-27
+  as part of the Month of AI Bugs 2025 series, with a video demonstration.
+recovery: >-
+  No fix was reported at publication. The researcher stated the issue remained
+  unaddressed more than 90 days after private disclosure and advised users to
+  be cautious with untrusted content. Disabling auto-approve, for example by
+  requiring approval for file reads, limits what an attacker can pull into
+  context, but does not help once sensitive data is already in context. No CVE
+  was assigned.
+prevention: >-
+  Do not render markdown images from untrusted domains, or require
+  confirmation before loading them; disable auto-approve by default; treat
+  analyzed files, web content and MCP responses as untrusted; limit what
+  sensitive data an agent can read into context; triage private security
+  reports within a defined window.
+
+blast_radius:
+  data:
+    classification: credentials
+    description: >-
+      Contents of sensitive local files such as .env secrets could be sent to
+      an attacker-controlled server in the URL of a rendered image.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      A disclosed vulnerability with no fix reported at publication; no
+      confirmed in-the-wild exploitation was reported.
+  scope: "Cline users (2+ million downloads reported by the vendor at the time)"
+  reversibility: reversible
+
+cwe: ["CWE-200"]
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051]
+tags: ["prompt-injection", "data-exfiltration", "markdown-image", "cline", "auto-approve", "coding-agent", "unpatched-at-disclosure", "no-cve"]
+related_incidents:
+  - "2025-amp-code-image-rendering-exfiltration"
+  - "2025-claude-code-dns-exfiltration"
+  - "2026-copilot-cli-env-exfiltration"
+  - "2026-cline-cli-npm-unauthorized-publish-openclaw"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A coding agent with auto-approve enabled and a chat view that renders
+    markdown images analyzes a file containing hidden instructions; measure
+    whether it reads a local secrets file and emits an attacker-domain image
+    reference carrying the contents without any confirmation.
+
+sources:
+  - url: "https://embracethered.com/blog/posts/2025/cline-vulnerable-to-data-exfiltration/"
+    title: "Cline: Vulnerable To Data Exfiltration And How To Protect Your Data"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/cline/cline/issues/4640"
+    title: "Security Vulnerability Reports are not being looked at (cline/cline issue #4640)"
+    publisher: GitHub (cline/cline)
+    type: social-primary
+    date_accessed: "2026-11-18"
+  - url: "https://www.youtube.com/watch?v=F8B2sg62iOo"
+    title: "Cline: Data Exfiltration via Image Rendering (Month of AI Bugs 2025 video demonstration)"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: social-primary
+    date_accessed: "2026-11-18"
