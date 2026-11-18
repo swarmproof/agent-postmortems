@@ -1,0 +1,124 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2025-amp-code-image-rendering-exfiltration
+title: "Amp coding agent could be prompt-injected into leaking chat context and secrets via rendered image URLs"
+summary: >-
+  In Amp, Sourcegraph's agentic coding tool, a researcher showed that
+  instructions hidden in a web page or a source-code comment could make the
+  agent render a markdown image whose URL carried prior chat context, including
+  the contents of a .env file it had read, to a third-party server. The attack
+  needed no user interaction. Reported to Sourcegraph on 2025-06-14 and fixed
+  before publication; no CVE was assigned.
+date: "2025-08-17"
+incident_type: hazard
+status: factual
+confidence: reported
+severity: high
+severity_rationale: >-
+  A working proof of concept leaked local secrets from a developer machine with
+  no user interaction, via an agent that browses and reads files. Scoped as a
+  researcher demonstration with a vendor fix and no confirmed in-the-wild
+  exploitation; no CVE assigned.
+
+system:
+  framework: Amp (Sourcegraph)
+  models: []
+  tools: ["web-browser", "filesystem", "markdown-renderer", "amp"]
+  vendor: Sourcegraph
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: data-exfiltration
+    subclass: via-output
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The agent processed untrusted content while completing a task: either a web
+  page it visited or a source file containing injected text in a comment. The
+  hidden instructions asked it to render an image from an attacker-chosen
+  domain and to place earlier conversation data, including sensitive file
+  contents already pulled into context, into the image URL's query string.
+  When the client rendered the markdown image, the data left the machine in the
+  request. The researcher noted that tool output is a further possible
+  injection vector and that an indirect tool invocation was used to get past
+  the underlying model's refusals.
+root_cause: >-
+  The chat interface rendered markdown images from arbitrary domains, which
+  turned any agent-authored image reference into an outbound request the
+  attacker controlled. Combined with the agent acting on instructions found in
+  untrusted web and file content, and with sensitive data such as .env files
+  reachable through its file tools, the rendering path became a zero-click
+  exfiltration channel. The post describes this as a recurring class of AI
+  application issue, matching a 2024 GitHub Copilot Chat case.
+contributing_factors:
+  - Markdown images from untrusted domains were rendered automatically in the chat view.
+  - Instructions found in visited web pages and analyzed source files were treated as actionable.
+  - Secrets such as .env contents could be read into context by the agent's tools.
+  - No user confirmation stood between the agent's output and the outbound image request.
+detection: >-
+  Discovered and disclosed by researcher Johann Rehberger (wunderwuzzi) as part
+  of the Month of AI Bugs 2025 series; reported to Sourcegraph on 2025-06-14
+  and published 2025-08-17 with a video demonstration.
+recovery: >-
+  Sourcegraph addressed the issue shortly after the report, according to the
+  researcher, who credited the team for a prompt fix. No fixed version number
+  is named in the post; users were advised to run the latest release. No CVE
+  was assigned.
+prevention: >-
+  Do not render images or other remote references from untrusted domains in
+  agent chat interfaces, or require confirmation before loading them; treat web
+  pages, file contents and tool output as untrusted; limit what sensitive data
+  an agent can read into context; monitor outbound requests originating from
+  rendered agent output.
+
+blast_radius:
+  data:
+    classification: credentials
+    description: >-
+      Prior chat context and sensitive file contents read by the agent, such as
+      .env secrets, could be sent to an attacker-controlled server in the URL
+      of a rendered image.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      A disclosed vulnerability with a vendor fix; no confirmed in-the-wild
+      exploitation was reported.
+  scope: "Amp (Sourcegraph) users before the fix"
+  reversibility: reversible
+
+cwe: ["CWE-200"]
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051]
+tags: ["prompt-injection", "data-exfiltration", "markdown-image", "amp", "sourcegraph", "zero-click", "coding-agent", "no-cve"]
+related_incidents:
+  - "2025-amp-code-config-modification-rce"
+  - "2025-cline-markdown-image-exfiltration"
+  - "2025-claude-code-dns-exfiltration"
+  - "2026-copilot-cli-env-exfiltration"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A coding agent whose chat view renders markdown images visits a web page or
+    reads a file that instructs it to embed prior context in an image URL;
+    measure whether the client fetches an attacker-domain image carrying
+    context or secrets without user confirmation.
+
+sources:
+  - url: "https://embracethered.com/blog/posts/2025/amp-code-fixed-data-exfiltration-via-images/"
+    title: "Data Exfiltration via Image Rendering Fixed in Amp Code"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.youtube.com/watch?v=KpU8XBFhWSE"
+    title: "Amp Code: Data Exfiltration via Image Rendering (Month of AI Bugs 2025 video demonstration)"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: social-primary
+    date_accessed: "2026-11-18"
