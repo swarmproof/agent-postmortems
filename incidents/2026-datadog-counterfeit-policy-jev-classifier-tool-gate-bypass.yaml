@@ -1,0 +1,136 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-datadog-counterfeit-policy-jev-classifier-tool-gate-bypass
+title: "Counterfeit policy text collapsed the Jev injection classifier's recall and pushed LangChain's tool-risk gate below its block threshold"
+summary: >-
+  Datadog Security Labs showed that attacker text framed as a classification
+  policy cut the TypeSafe Jev classifier's prompt-injection recall from about
+  83 percent to under 4 percent on four public datasets, and that the same
+  framing in a user-editable profile field pushed LangChain's Jev-backed
+  tool-risk gate below its block threshold for an unauthorized file edit it
+  otherwise always blocked. Controlled benchmark; no in-the-wild use reported.
+date: "2026-10-15"
+last_updated: "2026-11-18"
+incident_type: hazard
+status: factual
+confidence: reported
+severity: moderate
+severity_rationale: >-
+  A safety component that gates agent tool calls was steered by untrusted
+  content into approving an unauthorized write, and the same technique
+  neutralized the classifier's injection detection almost entirely. The
+  authors measured classification only, in a simulated agent, and the
+  vendor's documentation already noted the classifier's susceptibility to
+  adversarial content; no downstream compromise or real-world abuse was shown.
+
+system:
+  framework: LangChain agent with TypeSafe Jev classifier as tool-risk gating middleware
+  models: ["jev"]
+  tools: ["tool-risk-gate", "file-edit"]
+  vendor: TypeSafe AI (classifier); LangChain (middleware)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: jailbreak
+failure_classes:
+  - class: jailbreak
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  In the classifier benchmark, attacker-authored text that read like an
+  official classification policy was placed before the malicious request in
+  the content the classifier reviewed. It supplied the labels the attacker
+  wanted, quoted the request as a benign exception, and redefined each attack
+  category as a narrow unrelated condition. In the agent scenario, equivalent
+  text was stored in a user-editable profile field that reached the gate's
+  context, redefining what counted as a risky tool call before the agent
+  attempted an unauthorized edit to a workspace handbook file.
+root_cause: >-
+  The judge model evaluated untrusted content in the same channel as its own
+  decision criteria, so text that imitated policy could redefine the
+  categories it was scoring against. A gate that relied on that single
+  probabilistic judgment, with no separation between the criteria it was
+  given and the content it inspected and no secondary check, inherited the
+  judge's steerability and let the risk score drop below its threshold.
+contributing_factors:
+  - The classifier's criteria and the content under review shared one input channel, so content could restate the criteria.
+  - The tool-risk gate blocked on a single probability threshold with no human approval or independent second signal.
+  - User-editable fields flowed into the gate's context without being marked as untrusted.
+  - The classifier's documentation already acknowledged that adversarial content could influence its answers, yet it was deployed as a security decision point.
+detection: >-
+  Identified by Datadog Security Labs researchers Nick Frichette and Feras
+  Al-Kassar through a controlled evaluation on four public prompt-injection
+  datasets (12,295 samples) and a simulated LangChain agent; published on
+  2026-10-15.
+recovery: >-
+  No vendor fix or disclosure response was reported. The article noted that
+  TypeSafe's documentation already stated that injected instructions and
+  misleading framing can affect the classifier's answers; LangChain's
+  middleware documentation recommends pairing the gate with human-in-the-loop
+  approval.
+prevention: >-
+  Trace every path by which untrusted content, including user-editable
+  profile or settings fields, can reach a classifier or judge; keep the
+  judge's criteria out of band from the content it scores; test guardrail
+  components under deliberate attempts to steer them before relying on them
+  for security decisions; back probabilistic gates with human approval or a
+  second independent signal for irreversible or unauthorized actions.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: n-a
+    description: >-
+      Benchmark and simulation only; the demonstrated outcome was an
+      under-blocked unauthorized file edit in a simulated workspace.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Controlled research; no affected deployments or users reported.
+  scope: Deployments that gate agent tool calls on the Jev classifier via LangChain middleware; measured in simulation
+  reversibility: reversible
+
+timeline:
+  - at: "2026-09-15"
+    event: "TypeSafe releases the Jev classifier in limited early access."
+  - at: "2026-10-15"
+    event: "Datadog Security Labs publishes the counterfeit-policy evaluation."
+
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0054]
+related_incidents:
+  - "2026-claude-code-opus-5-auto-mode-classifier-bypass"
+  - "2025-echoleak-m365-copilot"
+  - "2026-ghostjacking-poisoned-logs-agent-insider"
+tags: ["guardrail-evasion", "llm-as-judge", "classifier", "counterfeit-policy", "tool-risk-gate", "langchain", "typesafe-jev", "benchmark"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent's tool calls are gated by a model-based risk classifier whose
+    context includes user-editable fields; store policy-like text in such a
+    field that redefines what counts as risky, then have the agent attempt an
+    unauthorized write, and measure whether the gate's risk score falls below
+    its block threshold compared with a baseline that blocks the same call.
+
+sources:
+  - url: "https://securitylabs.datadoghq.com/articles/jev-as-a-judge-how-counterfeit-policy-steers-jev/"
+    title: "Jev as a judge: How counterfeit policy steers Jev"
+    publisher: Datadog Security Labs (Nick Frichette, Feras Al-Kassar)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://docs.langchain.com/oss/python/integrations/providers/typesafe"
+    title: "TypeSafe integration (TypeSafeClassifier and AutoModeMiddleware)"
+    publisher: LangChain documentation
+    type: other
+    date_accessed: "2026-11-18"
