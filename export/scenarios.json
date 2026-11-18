@@ -1,6 +1,7 @@
 {
   "export_schema_version": "1.0",
   "generated_at": "2026-11-12T00:00:00Z",
+  "corpus_as_of": "2026-11-12T00:00:00Z",
   "taxonomy_version": "1.0",
   "count": 135,
   "scenarios": [

@@ -154,8 +154,10 @@ sources:
     publisher: Security Point Break
     type: news
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261118061106/https://securitypointbreak.com/2026/10/20/ai-agent-cloud-attack-wiz/"
   - url: "https://labs.cloudsecurityalliance.org/research/alt-ciso-briefing-2026-10-22/"
     title: "CISO Daily Briefing – October 22, 2026"
     publisher: Cloud Security Alliance
     type: other
     date_accessed: "2026-11-18"
+    archive_url: "https://web.archive.org/web/20261118061122/https://labs.cloudsecurityalliance.org/research/alt-ciso-briefing-2026-10-22/"

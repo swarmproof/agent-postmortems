@@ -1,6 +1,7 @@
 {
   "export_schema_version": "1.0",
   "generated_at": "2026-11-12T00:00:00Z",
+  "corpus_as_of": "2026-11-12T00:00:00Z",
   "taxonomy_version": "1.0",
   "count": 180,
   "incidents": [
@@ -2965,7 +2966,9 @@
           "LLM01"
         ],
         "mitre_atlas": [
-          "AML.T0054"
+          "AML.T0054",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "tags": [
@@ -3853,6 +3856,12 @@
         "scope": "one undisclosed Spanish organisation",
         "reversibility": "unknown"
       },
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "related_incidents": [
         "2026-php2shell-ai-assisted-discovery-weaponized",
         "2026-gtig-ai-developed-zeroday",
@@ -4182,7 +4191,9 @@
         ],
         "mitre_atlas": [
           "AML.T0024",
-          "AML.T0054"
+          "AML.T0054",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -4281,6 +4292,12 @@
         },
         "scope": "Multiple US state and federal government sites and Canadian federal sites, including the US Department of Education and Library and Archives Canada.",
         "reversibility": "reversible"
+      },
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
       },
       "tags": [
         "agentic-web",
@@ -4699,7 +4716,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -4838,6 +4857,10 @@
       "mappings": {
         "owasp_agentic": [
           "T6"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -4976,7 +4999,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -5124,7 +5149,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -5273,7 +5300,9 @@
         ],
         "mitre_atlas": [
           "AML.T0024",
-          "AML.T0051"
+          "AML.T0051",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -5427,7 +5456,9 @@
           "LLM05"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -5573,7 +5604,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -5989,14 +6022,6 @@
         "scope": "multiple South Korean financial organizations",
         "reversibility": "irreversible"
       },
-      "mappings": {
-        "owasp_llm": [
-          "LLM02"
-        ],
-        "mitre_atlas": [
-          "AML.T0024"
-        ]
-      },
       "tags": [
         "agentic-attack",
         "cyber-ops",
@@ -6005,6 +6030,16 @@
         "claude-code",
         "pentesting-tool"
       ],
+      "mappings": {
+        "owasp_llm": [
+          "LLM02"
+        ],
+        "mitre_atlas": [
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "related_incidents": [
         "2025-gtg1002-ai-orchestrated-espionage",
         "2026-deepseek-hermes-autonomous-campaign",
@@ -6133,6 +6168,12 @@
         "russian-speaking",
         "ai-assisted-intrusion"
       ],
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "related_incidents": [
         "2026-deepseek-hermes-autonomous-campaign",
         "2026-cairn-cl-sta-1238-autonomous-intrusions",
@@ -6593,7 +6634,8 @@
           "title": "When an email talks to your AI: The rise of indirect prompt injection",
           "publisher": "Barracuda",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118031552/https://blog.barracuda.com/2026/10/23/indirect-prompt-injection-email-ai-assistants"
         }
       ]
     },
@@ -6874,6 +6916,10 @@
         ],
         "owasp_agentic": [
           "T4"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -7021,7 +7067,9 @@
           "T1"
         ],
         "mitre_atlas": [
-          "AML.T0054"
+          "AML.T0054",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -7468,7 +7516,9 @@
         ],
         "mitre_atlas": [
           "AML.T0024",
-          "AML.T0054"
+          "AML.T0054",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -7595,7 +7645,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -7745,7 +7797,9 @@
           "T3"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -7893,7 +7947,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -9900,6 +9956,12 @@
         "multi-agent",
         "exposed-directory"
       ],
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "related_incidents": [
         "2026-artex-claude-code-korea-bank-breach",
         "2026-cyberxero-iab-claude-code-agents",
@@ -10025,7 +10087,9 @@
         ],
         "mitre_atlas": [
           "AML.T0024",
-          "AML.T0054"
+          "AML.T0054",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -10306,14 +10370,16 @@
           "title": "CVE-2026-54323 — Daytona daemon git clone disabled TLS certificate verification",
           "publisher": "NVD",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118055638/https://nvd.nist.gov/vuln/detail/cve-2026-54323"
         },
         {
           "url": "https://github.com/daytonaio/daytona/releases/tag/v0.185.0",
           "title": "Daytona 0.185.0 release notes — daemon: enforce TLS verification on daemon git clone",
           "publisher": "Daytona",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118055706/https://github.com/daytonaio/daytona/releases/tag/v0.185.0"
         }
       ]
     },
@@ -10453,7 +10519,8 @@
           "title": "DB-GPT through 0.8.2 Unauthenticated RCE via /api/v1/chat/react-agent",
           "publisher": "VulnCheck",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118032042/https://www.vulncheck.com/advisories/db-gpt-through-0.8.2-unauthenticated-rce-via-api-v1-chat-react-agent"
         },
         {
           "url": "https://www.lasso.security/vulnerability-database/cve-2026-77932",
@@ -10468,7 +10535,8 @@
           "title": "CVE-2026-77932 — DB-GPT through 0.8.2 unauthenticated remote code execution",
           "publisher": "NVD",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118032153/https://nvd.nist.gov/vuln/detail/cve-2026-77932"
         },
         {
           "url": "https://github.com/advisories/GHSA-5vjv-vw3m-qpqp",
@@ -10840,6 +10908,12 @@
         "cyber-ops",
         "telegram-c2"
       ],
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "related_incidents": [
         "2025-gtg1002-ai-orchestrated-espionage",
         "2026-taiwan-nuclear-agency-autonomous-attack",
@@ -11297,7 +11371,8 @@
           "title": "CVE-2026-69253: Flowise vm2 Sandbox Escape to RCE",
           "publisher": "SecureLayer7",
           "type": "primary-research",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261118055939/https://securelayer7.net/lab/cve-2026-69253-flowise-vm2-sandbox-escape-rce-moment-locale"
         }
       ]
     },
@@ -11559,7 +11634,8 @@
           "title": "We put the exploit in a picture. Your AI code reviewer never opens it.",
           "publisher": "ASSET Research Group, University of Missouri-Kansas City",
           "type": "primary-research",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261022155814/https://asset-group.github.io/disclosures/ghostcommit/"
         },
         {
           "url": "https://www.bleepingcomputer.com/news/security/ghostcommit-hides-prompt-injection-in-images-to-fool-ai-agents-steal-secrets/",
@@ -12757,6 +12833,12 @@
         "offensive-ai",
         "first-of-kind"
       ],
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "related_incidents": [
         "2025-gtg1002-ai-orchestrated-espionage",
         "2026-jadepuffer-agentic-ransomware"
@@ -12885,7 +12967,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -13002,6 +13086,10 @@
         ],
         "owasp_agentic": [
           "T3"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -13176,7 +13264,8 @@
           "title": "Hidden Unicode Instruction Injection in AI Agent Skills: Invisible Adversarial Payloads in Tool Descriptions, Skill Files, and MCP Servers",
           "publisher": "Cloud Security Alliance AI Safety Initiative",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118032633/https://labs.cloudsecurityalliance.org/research/csa-research-note-unicode-instruction-injection-ai-skills-20/"
         }
       ]
     },
@@ -13256,6 +13345,10 @@
         ],
         "owasp_agentic": [
           "T3"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "tags": [
@@ -13730,7 +13823,8 @@
           "title": "AVID-2026-R0418: Amazon Kiro IDE Data Exfiltration via Filename Prompt Injection and Kiro Powers Registry Fetching",
           "publisher": "AI Vulnerability Database (AVID)",
           "type": "other",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261118032738/https://avidml.netlify.app/database/avid-2026-r0418/"
         },
         {
           "url": "https://thehackernews.com/2026/08/amazon-kiro-prompt-injection-can.html",
@@ -13906,21 +14000,24 @@
           "title": "CVE-2026-9198 — IBM Langflow OSS unauthenticated remote code execution",
           "publisher": "NVD",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118032812/https://nvd.nist.gov/vuln/detail/cve-2026-9198"
         },
         {
           "url": "https://labs.cloudsecurityalliance.org/wp-content/uploads/2026/08/CSA_research_note_langflow_sustained_exploitation_20260830-csa-styled.pdf",
           "title": "Sustained Multi-Actor Exploitation Cements Langflow as Persistent Target",
           "publisher": "Cloud Security Alliance",
           "type": "primary-research",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118032910/https://labs.cloudsecurityalliance.org/wp-content/uploads/2026/08/CSA_research_note_langflow_sustained_exploitation_20260830-csa-styled.pdf"
         },
         {
           "url": "https://www.csa.gov.sg/alerts-and-advisories/alerts/al-2026-099/",
           "title": "Active exploitation of Critical Vulnerability in IBM Langflow OSS (AL-2026-099)",
           "publisher": "Cyber Security Agency of Singapore",
           "type": "regulatory-court",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118060142/https://www.csa.gov.sg/alerts-and-advisories/alerts/al-2026-099/"
         },
         {
           "url": "https://www.theregister.com/security/2026/08/05/ibms-agentic-ai-platform-is-under-active-attack-patch-now/5283535",
@@ -14095,7 +14192,8 @@
           "title": "Langflow RCE (exploit/multi/http/langflow/rce_cve_2026_27966)",
           "publisher": "Rapid7 Vulnerability & Exploit Database",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118060208/https://www.rapid7.com/db/modules/exploit/multi/http/langflow_rce_cve_2026_27966/"
         },
         {
           "url": "https://cybersecuritynews.com/langflows-ai-csv-agent-vulnerability/",
@@ -17017,7 +17115,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -18167,6 +18267,10 @@
         "owasp_agentic": [
           "T3",
           "T6"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -20671,14 +20775,16 @@
           "title": "paperclip Vulnerable to Unauthenticated Remote Code Execution via Import Authorization Bypass",
           "publisher": "GitHub Advisory Database",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261118060710/https://github.com/advisories/GHSA-68qg-g8mg-6pr7"
         },
         {
           "url": "https://github.com/advisories/GHSA-xfqj-r5qw-8g4j",
           "title": "Paperclip: Unauthenticated Access to Multiple API Endpoints in Authenticated Mode",
           "publisher": "GitHub Advisory Database",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261118060635/https://github.com/advisories/GHSA-xfqj-r5qw-8g4j"
         }
       ]
     },
@@ -20789,6 +20895,10 @@
         ],
         "owasp_agentic": [
           "T3"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -20911,6 +21021,12 @@
         "CVE-2026-109619",
         "CVE-2026-123039"
       ],
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "timeline": [
         {
           "at": "2026-08-19",
@@ -21431,7 +21547,8 @@
           "title": "PleaseFix: Zero-Click Browser Agent Hijacking (CSA research note)",
           "publisher": "Cloud Security Alliance",
           "type": "other",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261118060907/https://labs.cloudsecurityalliance.org/research/csa-research-note-pleasefix-agentic-browser-exploits-2026032/"
         }
       ]
     },
@@ -22946,6 +23063,10 @@
         ],
         "owasp_agentic": [
           "T3"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -23114,7 +23235,9 @@
           "T3"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -23249,7 +23372,9 @@
           "T4"
         ],
         "mitre_atlas": [
-          "AML.T0054"
+          "AML.T0054",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -23373,7 +23498,9 @@
         ],
         "mitre_atlas": [
           "AML.T0024",
-          "AML.T0054"
+          "AML.T0054",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -23906,6 +24033,12 @@
         "post-exploitation",
         "unattended-agent"
       ],
+      "mappings": {
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
+        ]
+      },
       "related_incidents": [
         "2026-deepseek-hermes-autonomous-campaign",
         "2026-blackhatsect0r-hermes-refusal-deletion",
@@ -24052,7 +24185,9 @@
           "T3"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -24266,7 +24401,8 @@
           "title": "CVE-2026-114107 — HKUDS Vibe-Trading indirect prompt injection to shell command execution as root",
           "publisher": "NVD",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118033904/https://nvd.nist.gov/vuln/detail/cve-2026-114107"
         },
         {
           "url": "https://github.com/HKUDS/Vibe-Trading/releases/tag/v0.1.7",
@@ -24281,7 +24417,8 @@
           "title": "HKUDS Vibe-Trading 0.1.0 before 0.1.7 Indirect Prompt Injection RCE via BashTool and BackgroundRunTool",
           "publisher": "VulnCheck",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118034027/https://www.vulncheck.com/advisories/hkuds-vibe-trading-0.1.0-before-0.1.7-indirect-prompt-injection-rce-via-bashtool-and-backgroundruntool"
         }
       ]
     },
@@ -24518,6 +24655,10 @@
         ],
         "owasp_agentic": [
           "T3"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -24656,7 +24797,9 @@
           "LLM02"
         ],
         "mitre_atlas": [
-          "AML.T0024"
+          "AML.T0024",
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "related_incidents": [
@@ -24685,14 +24828,16 @@
           "title": "AI Agent Ran a Cloud Intrusion End to End, Wiz Says",
           "publisher": "Security Point Break",
           "type": "news",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118061106/https://securitypointbreak.com/2026/10/20/ai-agent-cloud-attack-wiz/"
         },
         {
           "url": "https://labs.cloudsecurityalliance.org/research/alt-ciso-briefing-2026-10-22/",
           "title": "CISO Daily Briefing – October 22, 2026",
           "publisher": "Cloud Security Alliance",
           "type": "other",
-          "date_accessed": "2026-11-18"
+          "date_accessed": "2026-11-18",
+          "archive_url": "https://web.archive.org/web/20261118061122/https://labs.cloudsecurityalliance.org/research/alt-ciso-briefing-2026-10-22/"
         }
       ]
     },
@@ -24800,6 +24945,10 @@
       "mappings": {
         "owasp_llm": [
           "LLM05"
+        ],
+        "mitre_atlas": [
+          "AML.T0116",
+          "AML.T0117"
         ]
       },
       "tags": [
