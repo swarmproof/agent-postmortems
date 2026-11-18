@@ -85,6 +85,27 @@ newest-first, and files them as a `coverage`-labelled issue. (AIID is deliberate
 used here — it is a broad "AI harms" database that floods the critic with non-agent noise;
 we cross-reference it per-incident via `external_ids` instead.)
 
+### Link rot and archives (always on)
+
+`.github/workflows/links.yml` runs `scripts/check_links.py --backfill` over the whole
+corpus every Friday. Links rot on their own schedule, and the on-merge backfill in
+`publish.yml` is throttled by the Wayback Machine, so some sources are left without an
+`archive_url` that nothing else revisits. The weekly job:
+
+- re-probes every `sources[].url` and, for each source still lacking an `archive_url`,
+  looks up or requests a Wayback snapshot and commits it to `main` as
+  `chore(links): backfill source archives [skip ci]`;
+- files every **dead** source — one whose primary answered gone and whose archive is
+  absent or dead, or one that never answered and has no archive on file — in a single
+  reused issue labelled `link-rot`, one line per `incident_id` and URL, and closes that
+  issue once every link is reachable or archived again;
+- **never removes or rewrites a record** for a dead link (ADR-0008). A maintainer
+  resolves each entry by adding an archive snapshot or a replacement source, or by
+  annotating the record.
+
+Bot-blocked responses (403, 429 and the like) are warnings, not rot, and do not appear in
+the issue. This layer needs no secrets — it uses the default `GITHUB_TOKEN`.
+
 ## Tuning the pipeline
 
 Edit `scripts/discovery_sources.yaml` — no code change needed:
