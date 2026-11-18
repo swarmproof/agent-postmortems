@@ -4,6 +4,7 @@
 
 [![validate](https://github.com/swarmproof/agent-postmortems/actions/workflows/validate.yml/badge.svg)](https://github.com/swarmproof/agent-postmortems/actions/workflows/validate.yml)
 [![incidents](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fswarmproof%2Fagent-postmortems%2Fmain%2Fexport%2Fincidents.json&query=%24.count&label=incidents&color=1f6feb)](https://swarmproof.github.io/agent-postmortems/)
+[![release](https://img.shields.io/github/v/release/swarmproof/agent-postmortems?label=release&color=1f6feb)](https://github.com/swarmproof/agent-postmortems/releases)
 [![site](https://img.shields.io/badge/site-live-2ea043)](https://swarmproof.github.io/agent-postmortems/)
 [![code: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](./LICENSE)
 [![data: CC-BY-4.0](https://img.shields.io/badge/data-CC--BY--4.0-blue)](./LICENSE-DATA)
@@ -24,6 +25,10 @@ Agents now take real actions in production — they call tools, spend money, wri
 | **Every record** | conforms to [one schema](./SCHEMA.md), cites public sources, classified against a [versioned taxonomy](./TAXONOMY.md) |
 
 Failures span prompt injection, tool misuse, data exfiltration, sandbox escapes, model-template poisoning, reward hacking, autonomous misuse, cost blowups, and destructive actions — across coding agents, MCP servers, browser agents, chatbots, and frontier-model evaluations.
+
+## How this differs
+
+Several databases already catalogue AI harms: the [AI Incident Database](https://incidentdatabase.ai/) covers AI systems of every kind, [AIAAIC](https://www.aiaaic.org/) collects AI, algorithmic and automation incidents, and the [OECD AI Incidents Monitor](https://oecd.ai/en/incidents) documents AI incidents and hazards as an evidence base for policymakers. This corpus is narrower: it records only failures in which an agent took an action — a tool call, a write, a spend, a code execution — not model outputs or predictions on their own. Each record carries an ordered causal chain of failure classes rather than a single label, so the sequence from trigger to outcome is part of the data. Every record is also published as machine-readable JSON validated against a published schema, and demonstrated hazards are admitted alongside realized incidents but labelled as such.
 
 ## What a record looks like
 
@@ -58,11 +63,13 @@ sources:
   - {url: "https://…", type: news, publisher: Fortune}
 ```
 
-Required core + a large optional body (`causation`, `attack_vector`, `timeline`, `cve`/`cwe`, `related_incidents`, …). Every record is also cross-referenced to **OWASP Top 10 for LLM Applications**, **OWASP Agentic AI Threats**, and **MITRE ATLAS** (derived from its failure classes via [`schema/framework-mappings.yaml`](./schema/framework-mappings.yaml)). Full field reference: **[SCHEMA.md](./SCHEMA.md)** · taxonomy: **[TAXONOMY.md](./TAXONOMY.md)**.
+Required core + a large optional body (`causation`, `attack_vector`, `timeline`, `cve`/`cwe`, `related_incidents`, …). Records are cross-referenced to **OWASP Top 10 for LLM Applications**, **OWASP Agentic AI Threats**, and **MITRE ATLAS** wherever the crosswalk in [`schema/framework-mappings.yaml`](./schema/framework-mappings.yaml) defines an equivalent for their failure classes; classes with no counterpart in those frameworks (such as `autonomous-misuse` and `task-failure`) carry no `mappings` block. Mappings are derived from the crosswalk, never hand-written. Full field reference: **[SCHEMA.md](./SCHEMA.md)** · taxonomy: **[TAXONOMY.md](./TAXONOMY.md)**.
+
+**Standard stability:** `schema_version` and `taxonomy_version` are both `1.0`; additive optional fields and new classes do not bump the major version, while renaming or removing a field, class, or subclass does — and any taxonomy change bumps `taxonomy_version` and requires an ADR, per the governance note in [TAXONOMY.md](./TAXONOMY.md).
 
 ## The one rule
 
-**Every incident needs at least one public, linkable source.** No rumors, no speculation, no editorializing. Report failures factually; name systems without attacking them. Realized incidents and demonstrated hazards are both recorded, labeled honestly via `incident_type`. Disputed records are annotated, never deleted. CI enforces the rigor — schema, taxonomy, id-uniqueness, link-liveness, and a neutrality lint all run on every PR.
+**Every incident needs at least one public, linkable source.** No rumors, no speculation, no editorializing. Report failures factually; name systems without attacking them. Realized incidents and demonstrated hazards are both recorded, labeled honestly via `incident_type`. Disputed records are annotated, never deleted; a named party who contests a record can follow the process in [DISPUTES.md](./DISPUTES.md). CI enforces the rigor — schema, taxonomy, id-uniqueness, link-liveness, and a neutrality lint all run on every PR.
 
 ## Use the data
 
@@ -84,6 +91,17 @@ curl -s $BASE/incidents.json | jq -r '.incidents[] | select(.cve).incident_id'
 curl -s $BASE/incidents.json | jq -r '.incidents[] | select((.mappings.owasp_llm // []) | index("LLM06")).incident_id'
 ```
 
+The same from Python, standard library only:
+
+```python
+import json, urllib.request
+URL = "https://raw.githubusercontent.com/swarmproof/agent-postmortems/main/export/incidents.json"
+data = json.load(urllib.request.urlopen(URL))
+print(data["count"], [r["incident_id"] for r in data["incidents"] if r["primary_failure_class"] == "prompt-injection"][:3])
+```
+
+**Releases:** versioned snapshots of the three feeds (`incidents.json`, `scenarios.json`, `seeds.json`) are attached to tagged [GitHub releases](https://github.com/swarmproof/agent-postmortems/releases), so a downstream consumer can pin a tag instead of tracking `main`.
+
 Two more feeds project the corpus for downstream tooling — `scenarios.json` (replayable chaos scenarios for [stampede](https://github.com/swarmproof/stampede)) and `seeds.json` (denial-of-wallet seeds for [costbomb](https://github.com/swarmproof/costbomb)). Export entries carry natural-language trigger *shapes*, never runnable exploit payloads.
 
 The site also offers a per-incident permalink with a copyable **BibTeX** citation and an [RSS feed](https://swarmproof.github.io/agent-postmortems/feed.xml).
@@ -92,7 +110,7 @@ The site also offers a per-incident permalink with a copyable **BibTeX** citatio
 
 1. Copy [`incidents/_TEMPLATE.yaml`](./incidents/_TEMPLATE.yaml) to `incidents/<incident_id>.yaml` (filename = `incident_id`, a `YYYY-kebab-slug`).
 2. Fill it in; classify with [`TAXONOMY.md`](./TAXONOMY.md).
-3. Validate: `uv run scripts/validate.py` and `uv run scripts/check_links.py`.
+3. Validate: `uv run scripts/validate.py`, then `uv run scripts/check_links.py incidents/<incident_id>.yaml` — the scoped link check CI runs on a pull request. With no arguments, `check_links.py` checks the whole corpus.
 4. Open a PR — the template carries the sourcing + neutrality checklist; CI runs every gate.
 
 New here? The [`good-first-issue`](https://github.com/swarmproof/agent-postmortems/labels/good-first-issue) label and the auto-filed [candidate](https://github.com/swarmproof/agent-postmortems/issues?q=is%3Aissue+label%3Acandidates) / [coverage-gap](https://github.com/swarmproof/agent-postmortems/issues?q=is%3Aissue+label%3Acoverage) issues are good starting points. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
@@ -117,6 +135,7 @@ See [`docs/CURATION-PIPELINE.md`](./docs/CURATION-PIPELINE.md).
 | [mcp-probe](https://github.com/swarmproof/mcp-probe) | Lint, contract-test, benchmark, and load-test MCP servers |
 | [costbomb](https://github.com/swarmproof/costbomb) | Fuzzing for denial-of-wallet / unbounded-spend inputs |
 | [exactly-once](https://github.com/swarmproof/exactly-once) | Idempotency middleware for agent side-effects |
+| [cairn-protocol](https://github.com/swarmproof/cairn-protocol) | Checkpoint and recovery protocol for AI agents (ERC proposal, live on Base Sepolia testnet); the taxonomy's `cairn_map` aligns each class to its failure taxonomy |
 | [awesome-agent-reliability](https://github.com/swarmproof/awesome-agent-reliability) | Curated list of agent-reliability resources |
 
 ## License & citation
