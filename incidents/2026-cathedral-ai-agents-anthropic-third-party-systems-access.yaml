@@ -1,0 +1,154 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-cathedral-ai-agents-anthropic-third-party-systems-access
+title: "Cathedral's AI agents reached Anthropic's sales, HR and IT systems through third-party software in under 12 hours during authorized testing"
+summary: >-
+  Security start-up Cathedral, testing under Anthropic's external
+  vulnerability-disclosure program, reported that after several days of
+  unsuccessful direct attempts its AI agents found routes into Anthropic's
+  internal business systems in under 12 hours by exploiting flaws in
+  third-party sales, HR and IT software. Anthropic confirmed access to a
+  limited set of those systems, said its monitoring flagged some activity
+  before disclosure, cut access the same day, and disputed the report's scope.
+date: "2026-10-26"
+last_updated: "2026-11-18"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Agent-driven intrusion reached real internal data at a frontier AI
+  developer, reportedly including meeting transcripts, salary and offer
+  details and internal chat, within hours of pivoting to third-party
+  software. Conducted under an authorized testing program, with access cut
+  the same day, no evidence of exploitation by others, and model weights,
+  source code and customer conversations not reached.
+
+system:
+  framework: Cathedral autonomous offensive-security agents (framework and models not disclosed)
+  models: []
+  tools: ["web", "third-party-saas"]
+  vendor: Cathedral
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: autonomous-misuse
+failure_classes:
+  - class: autonomous-misuse
+    subclass: cyber-ops
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: direct-user
+causation:
+  entity: both
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  Cathedral's researchers spent several days attempting to breach Anthropic's
+  own software directly without success, then pointed AI agents that carry
+  out multi-step tasks without per-step human approval at the surrounding
+  attack surface. The agents mapped available paths through third-party
+  business software Anthropic uses for sales, HR, IT management and
+  collaboration, and within 12 hours reached internal data via
+  vulnerabilities in that software. The vendors were not named while
+  patches were being developed.
+root_cause: >-
+  Vulnerabilities in widely used third-party administrative software gave an
+  autonomous agent a path into a target whose first-party systems had
+  resisted direct attack, and the agent's speed in enumerating and chaining
+  those paths compressed the window between initial access and reaching
+  sensitive records. The extent of permitted data access under the testing
+  program's rules was interpreted differently by the two parties.
+contributing_factors:
+  - Third-party SaaS platforms holding sensitive HR, sales and IT data sat outside the hardened first-party perimeter.
+  - Autonomous agents enumerated and chained paths faster than the human-led attempts that preceded them.
+  - Program rules limiting exploitation to proof of existence depended on tester restraint rather than technical enforcement.
+detection: >-
+  Anthropic stated that its monitoring flagged some of Cathedral's activity
+  before Cathedral reported it. Cathedral submitted its findings through
+  Anthropic's HackerOne program and circulated a draft report, which The
+  Washington Post reviewed and reported on 2026-10-26.
+recovery: >-
+  Anthropic cut off Cathedral's access the same day, disabled the affected
+  third-party software until the vendors confirmed fixes, closed the
+  identified pathways and briefed federal officials. It stated it found no
+  evidence that anyone other than Cathedral had exploited the flaws, and said
+  the report overstated the national-security implications and did not
+  disclose the full extent of Cathedral's activity; Cathedral's draft report
+  stated data access was kept to the minimum consistent with research
+  practice.
+prevention: >-
+  Extend monitoring and hardening to third-party SaaS that holds sensitive
+  business data; segment HR, sales and IT platforms from one another and from
+  collaboration tools; enforce data-access limits in testing programs
+  technically rather than by policy alone; and treat autonomous agents'
+  path-enumeration speed as a design assumption when setting detection and
+  response targets.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: confidential
+    description: >-
+      Per the draft report, meeting transcripts, salary and job-offer details
+      and internal Slack discussion about advanced models; per Anthropic,
+      business contact information for some customers and partners and basic
+      user account records in a limited set of sales, HR and IT systems.
+      Customer conversations, source code and model weights were not reached.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Authorized security testing; no misuse of the accessed data was
+      reported and no third-party exploitation was found.
+  scope: Limited set of Anthropic sales, HR and IT systems hosted on third-party software; the same software is used by many other companies
+  reversibility: partially-reversible
+
+timeline:
+  - at: "2026-10-26"
+    event: "The Washington Post reports on Cathedral's draft report; Anthropic confirms limited access and says it had already cut access the same day it was flagged."
+  - at: "2026-10-27"
+    event: "Anadolu Agency, Tech Times and other outlets report Anthropic's statement that it closed the pathways and briefed federal officials."
+
+mappings:
+  owasp_llm: [LLM02]
+  mitre_atlas: [AML.T0024]
+related_incidents:
+  - "2026-wiz-red-agent-snowflake-cicd-jira-access"
+  - "2026-unit42-ai-agent-enterprise-intrusion-10-hours"
+  - "2026-chainalysis-agentic-intrusion-breach"
+  - "2026-hacktron-claude-opus5-openai-forum-account-access"
+tags: ["offensive-agents", "bug-bounty", "third-party-saas", "cyber-ops", "anthropic", "cathedral", "authorized-testing", "scope-dispute"]
+machine_export:
+  replayable: false
+  stampede_scenario_hint: >-
+    Autonomous offensive agents are pointed at an organization whose
+    first-party systems resist direct attack; measure how quickly they pivot
+    to third-party SaaS holding HR, sales and IT data, chain vulnerabilities
+    there, and reach sensitive records, and whether program-imposed
+    data-access limits hold without technical enforcement.
+
+sources:
+  - url: "https://decrypt.co/381860/ai-agents-hack-anthropic-business-systems-12-hours"
+    title: "AI agents found a way into Anthropic's business systems in under 12 hours"
+    publisher: Decrypt
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.techradar.com/pro/security/ai-startup-claims-it-hacked-anthropic-in-12-hours-gains-access-to-employee-details-and-internal-messages"
+    title: "AI startup claims it hacked Anthropic in 12 hours, gains access to employee details and internal messages"
+    publisher: TechRadar Pro
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.techtimes.com/articles/329518/20261027/ex-doge-startups-ai-agents-breached-anthropic-12-hours-via-enterprise-software.htm"
+    title: "Ex-DOGE Startup's AI Agents Breached Anthropic in 12 Hours via Enterprise Software"
+    publisher: Tech Times
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://aa.com.tr/en/world/months-old-us-startup-accessed-anthropic-s-sensitive-data-in-under-12-hours-report/4102515"
+    title: "Months-old US startup accessed Anthropic's sensitive data in under 12 hours: Report"
+    publisher: Anadolu Agency
+    type: news
+    date_accessed: "2026-11-18"
