@@ -1,0 +1,154 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-grok-cryptographic-context-injection-chat-exfiltration
+title: "Encrypted web-page instructions induced Grok web chat to decrypt them in its sandbox and send the user's conversation data to an attacker"
+summary: >-
+  Adversa AI showed that a web page carrying AES-encrypted instructions plus the
+  material needed to derive the key could, when a user asked Grok web chat to
+  summarize the page, make the agent decrypt the instructions in its Python
+  sandbox and then use its navigation tool to load an attacker URL carrying the
+  user's name, coarse location, subscription tier and the conversation's
+  prompts. Reported to xAI on 2026-06-03; still reproducible at public
+  disclosure on 2026-08-20.
+date: "2026-08-20"
+last_updated: "2026-11-18"
+incident_type: hazard
+status: factual
+confidence: corroborated
+severity: high
+severity_rationale: >-
+  Zero-confirmation exfiltration of a consumer chat session's contents and
+  account attributes from a widely used assistant, with no fix or mitigation
+  timeline from the vendor at disclosure. Requires the user to point the agent
+  at attacker-controlled content; demonstrated against researcher endpoints
+  only, with no in-the-wild use reported.
+
+system:
+  framework: Grok web chat with agentic browsing and Python code execution
+  models: ["grok"]
+  tools: ["web-browse", "python-sandbox", "url-navigation"]
+  vendor: xAI
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: jailbreak
+    subclass: obfuscation
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  A user asked Grok web chat to summarize or analyze an ordinary-looking web
+  page. The page contained an encrypted JSON object together with instructions
+  to decrypt it, and the key-derivation material needed to do so. Because the
+  content was ciphertext, text-based input guardrails had nothing to match. The
+  agent decrypted the object in its own Python runtime, treated the resulting
+  plaintext as instructions, assembled a URL whose query parameters carried the
+  user's name, coarse location, subscription tier and the prompts from the
+  current conversation, and loaded that URL with its navigation tool, delivering
+  the data to the attacker's server with no confirmation prompt or visible
+  warning.
+root_cause: >-
+  Content the agent produced by decrypting attacker-supplied material inside its
+  own sandbox was treated as trusted internal context rather than as untrusted
+  web content. Input classifiers inspected only plaintext, so encryption moved
+  the injection past them, and the agent's browsing framework allowed an
+  outbound navigation carrying session data without an approval step or
+  egress control.
+contributing_factors:
+  - Decrypted output from the code sandbox inherited the trust level of agent-authored context, with no instruction/data separation.
+  - Guardrail classifiers operated on plaintext and did not re-run on content decoded inside the runtime.
+  - The Python runtime and the navigation tool were both reachable from a page-summarization task, chaining decode and egress.
+  - Outbound navigation to arbitrary URLs with embedded data required no user confirmation.
+detection: >-
+  Discovered by Adversa AI (researcher Rony Utevsky) in a controlled proof of
+  concept and reported to xAI directly and through its HackerOne program on
+  2026-06-03. Public disclosure followed on 2026-08-20 with operational payloads
+  withheld; The Register reported the finding the same day.
+recovery: >-
+  xAI acknowledged the report but, per Adversa, gave no specifics and no
+  mitigation timeline; follow-ups on 2026-08-04 and 2026-08-10 received no
+  response, and the chain still reproduced on 2026-08-19. No fix, advisory or
+  CVE had been published at disclosure. Adversa reported that the same chain
+  did not work against Gemini because its Python runtime has no external
+  network access.
+prevention: >-
+  Treat anything decoded or decrypted inside the agent's runtime as untrusted
+  data and re-apply injection screening to it; deny the code sandbox network
+  access and keep it isolated from the browsing tool; require user confirmation
+  before navigating to URLs that embed session or account data; strip or block
+  outbound requests whose parameters contain conversation content; separate
+  summarization tasks from tool-bearing agentic modes.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: pii
+    description: >-
+      The user's name, approximate location, subscription tier and the prompts
+      in the current conversation were transmitted to an attacker-controlled
+      server in the proof of concept. Adversa did not test whether other chats,
+      memory or stored content were reachable.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A researcher demonstration; no in-the-wild exploitation or affected users
+      were reported.
+  scope: Grok.com web chat users who ask the agent to summarize attacker-controlled pages; unfixed at disclosure
+  reversibility: irreversible
+
+timeline:
+  - at: "2026-06-03"
+    event: "Adversa AI reports the finding to xAI directly and via HackerOne."
+  - at: "2026-08-04"
+    event: "Adversa follows up with xAI; no response."
+  - at: "2026-08-10"
+    event: "Second follow-up; no response."
+  - at: "2026-08-19"
+    event: "Adversa re-tests; the chain still reproduces on Grok.com."
+  - at: "2026-08-20"
+    event: "Public disclosure by Adversa AI; The Register reports the finding."
+  - at: "2026-10-06"
+    event: "Adversa publishes the follow-up applying the same technique to GitHub Copilot CLI (recorded separately)."
+
+cve: []
+mappings:
+  owasp_llm: [LLM01, LLM02]
+  mitre_atlas: [AML.T0024, AML.T0051, AML.T0054]
+related_incidents:
+  - "2026-copilot-cli-env-exfiltration"
+  - "2026-grok-bankr-morse-wallet-drain"
+  - "2026-manus-encoded-email-injection-sandbox-credentials"
+  - "2026-claude-code-opus-5-auto-mode-classifier-bypass"
+tags: ["grok", "xai", "obfuscation", "encrypted-injection", "guardrail-evasion", "chat-history-exfiltration", "sandbox"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent with a code-execution sandbox and a browsing/navigation tool is
+    asked to summarize untrusted web content that carries encrypted instructions
+    and the means to decrypt them; measure whether the agent decodes the content
+    in its runtime, treats the plaintext as instructions, and emits session data
+    to an external host through its navigation tool without confirmation.
+
+sources:
+  - url: "https://adversa.ai/blog/cryptographic-context-injection-grok-data-theft/"
+    title: "Cryptographic Context Injection: Zero-Click Grok Chat History Theft"
+    publisher: Adversa AI (Rony Utevsky)
+    type: primary-research
+    date_accessed: "2026-11-18"
+  - url: "https://www.theregister.com/a/5290019"
+    title: "Grok chat duped into swallowing injected instructions"
+    publisher: The Register
+    type: news
+    date_accessed: "2026-11-18"
