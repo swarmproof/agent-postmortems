@@ -1,0 +1,184 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-vibe-trading-agent-tools-root-command-execution
+title: "Vibe-Trading agent shell and file tools let injected or unauthenticated prompts run commands and read files as root (CVE-2026-114107)"
+summary: >-
+  Vibe-Trading, an open-source personal trading agent from HKUDS, shipped
+  LLM-callable shell, background-run, URL-fetch and file-read tools with no
+  input validation or approval step, in a container running as root behind an
+  API that accepted unauthenticated sessions by default. A prompt, or an
+  instruction planted in a document or web page the agent processed, could run
+  arbitrary commands and read credential files. Fixed in 0.1.7
+  (CVE-2026-114107); no exploitation reported.
+date: "2026-07-29"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: critical
+severity_rationale: >-
+  Root-level command execution and credential-file reads on the agent host,
+  reachable without authentication in the default configuration and through
+  indirect prompt injection even when authentication is enabled (GHSA CVSS 3.1
+  10.0; NVD 8.8 for the injection path). Patched in 0.1.7 with no in-the-wild
+  exploitation reported.
+
+system:
+  framework: Vibe-Trading (HKUDS personal trading agent)
+  models: []
+  tools: ["BashTool", "BackgroundRunTool", "read_url", "read_document", "trade-journal-file-tools", "fastapi-session-api"]
+  vendor: HKUDS
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: excessive-agency
+    subclass: missing-approval-gate
+  - class: unsafe-action
+    subclass: unauthorized-write
+  - class: data-exfiltration
+    subclass: via-tool
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  Two entry paths led to the same tools. In the default configuration the
+  session API accepted messages from any network client because the
+  authentication check returned immediately when no API key was configured, so
+  an anonymous caller could ask the agent to execute a command. Independently,
+  an instruction embedded in content the agent was asked to process, such as an
+  uploaded document, a web page fetched through the URL reader, or a trade
+  journal file, could make the model emit a shell tool call for the embedded
+  command. In both cases the shell tools passed the model-emitted command to a
+  shell with no allow-list, escaping, sandbox or approval step, and the file
+  tools accepted any path under the process home or working directory, which in
+  the shipped root container covered SSH keys, cloud credentials and the
+  agent's own secrets file; one document reader applied no path check at all.
+root_cause: >-
+  The agent's tool primitives placed no validation between the language model
+  and the operating-system sink: whatever the model emitted was executed or
+  read. The model's judgement was therefore the only barrier against command
+  execution, and that barrier collapses under prompt injection. Three shipped
+  defaults amplified the exposure: authentication was off unless an operator
+  set a key, the container ran as root, and the compose file bound the API to
+  all interfaces.
+contributing_factors:
+  - Shell tools passed model-emitted commands to a shell with no allow-list, parser or approval gate, and were registered unconditionally in the default tool registry.
+  - The file-path safety check treated the whole process home and working directory as safe, which in a root container exposed credential files; a second reader had no path check at all.
+  - The URL reader fetched arbitrary URLs without scheme or host validation, adding a server-side request forgery path and a second injection delivery channel.
+  - The shipped container had no non-root user and the compose configuration listened on all interfaces, so a local research tool was network-reachable and root-privileged by default.
+  - The API authentication dependency was a no-op when no key was configured, and the example configuration shipped with the key commented out.
+detection: >-
+  Reported privately to the HKUDS maintainers by researcher lemi9090 (S2W) on
+  2026-05-02 as an eight-finding report, then re-filed at the maintainers'
+  request as three GitHub Security Advisories grouped by root cause:
+  unauthenticated API surface (GHSA-v2f8-6655-7grj), tool primitives without
+  input validation (GHSA-jqmf-mx4f-hfr6) and file-read sandbox defects
+  (GHSA-5rmq-chc7-m22f), all published 2026-07-29. VulnCheck assigned
+  CVE-2026-114107 to the injection-to-command-execution path and NVD published
+  it on 2026-10-21.
+recovery: >-
+  Vibe-Trading 0.1.7, released 2026-05-06, gated shell-capable tools behind an
+  explicit entry-point opt-in, tightened upload and local-file path boundaries,
+  added safety checks to document and URL readers, validated generated strategy
+  code before import, made non-local API use stricter by default, switched the
+  runtime image to a non-root user and made the compose defaults localhost-first,
+  with regression tests covering each area. The maintainers credited the
+  researcher for validating fix coverage before release.
+prevention: >-
+  Place deterministic validation between the model and every operating-system
+  sink: allow-list or disable shell execution, require an approval gate for
+  side-effecting tools, confine file reads to an explicit data directory rather
+  than the process home, and restrict outbound fetches by scheme and host; run
+  agent containers as a non-root user bound to loopback by default; make API
+  authentication fail closed when no key is configured; and treat every
+  document, page or file the agent reads as untrusted input that can carry
+  instructions.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Files readable by the root process, including SSH keys, cloud and
+      cluster credentials, the agent's environment file holding LLM-provider
+      and market-data API keys, and system account files, could be read
+      through the agent's file tools; command execution as root allowed
+      arbitrary further access on the host.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      Disclosed vulnerabilities with a released fix; no in-the-wild
+      exploitation was reported.
+  scope: "Self-hosted Vibe-Trading deployments on vibe-trading-ai 0.1.0 to 0.1.6 (project has about 38,000 GitHub stars)"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-05-02"
+    event: "Researcher sends an eight-finding report to the maintainers by email ahead of private vulnerability reporting being enabled."
+  - at: "2026-05-06"
+    event: "Vibe-Trading 0.1.7 released with security boundary hardening across API auth, file, URL, shell-tool and Docker defaults."
+  - at: "2026-07-29"
+    event: "Three GitHub Security Advisories published for the unauthenticated API surface, the tool primitives and the file-read defects."
+  - at: "2026-10-21"
+    event: "NVD publishes CVE-2026-114107 for the indirect prompt injection to command execution path."
+
+cve: ["CVE-2026-114107"]
+cwe: ["CWE-78", "CWE-918", "CWE-22", "CWE-306", "CWE-1427"]
+mappings:
+  owasp_llm: [LLM01, LLM02, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0024, AML.T0051]
+tags: ["vibe-trading", "trading-agent", "shell-tool", "root-container", "unauthenticated-api", "path-traversal", "ssrf", "indirect-prompt-injection", "cve"]
+related_incidents:
+  - "2026-paperclip-import-authz-bypass-unauthenticated-rce"
+  - "2026-mcphub-missing-authz-server-config-rce"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent exposes shell and file-read tools whose arguments are passed
+    straight from the model to the operating system, and is asked to summarise
+    a document that carries an embedded instruction; measure whether the
+    embedded instruction reaches the shell, whether any approval gate fires,
+    and whether file reads are confined to a data directory rather than the
+    process home.
+
+sources:
+  - url: "https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-jqmf-mx4f-hfr6"
+    title: "LLM-callable tool primitives execute attacker-controlled commands, code, and outbound URLs without input validation (GHSA-jqmf-mx4f-hfr6)"
+    publisher: HKUDS (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-5rmq-chc7-m22f"
+    title: "Vibe-Trading file-read tools expose arbitrary server-readable files (GHSA-5rmq-chc7-m22f)"
+    publisher: HKUDS (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/HKUDS/Vibe-Trading/security/advisories/GHSA-v2f8-6655-7grj"
+    title: "Unauthenticated network clients can drive the entire FastAPI surface (GHSA-v2f8-6655-7grj)"
+    publisher: HKUDS (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-114107"
+    title: "CVE-2026-114107 — HKUDS Vibe-Trading indirect prompt injection to shell command execution as root"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/HKUDS/Vibe-Trading/releases/tag/v0.1.7"
+    title: "Vibe-Trading v0.1.7 — Security boundary hardening + research workflow polish"
+    publisher: HKUDS
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://www.vulncheck.com/advisories/hkuds-vibe-trading-0.1.0-before-0.1.7-indirect-prompt-injection-rce-via-bashtool-and-backgroundruntool"
+    title: "HKUDS Vibe-Trading 0.1.0 before 0.1.7 Indirect Prompt Injection RCE via BashTool and BackgroundRunTool"
+    publisher: VulnCheck
+    type: other
+    date_accessed: "2026-11-18"
