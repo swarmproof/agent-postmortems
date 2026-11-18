@@ -1,0 +1,141 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-bmw-toronto-chatbot-buyback-offer-revoked
+title: "BMW Toronto's sales chatbot presented a customer's loan payoff as a vehicle buy-back offer, which the dealer revoked then honoured"
+summary: >-
+  A customer selling a 2021 BMW X3 back to BMW Toronto texted with "Quinn", a
+  chatbot that did not identify itself as AI. It offered CAD 27,162.79, the
+  customer's exact loan payoff, and proposed a same-day appointment. A staff
+  member then called to say the offer was an AI error and the real value was
+  about CAD 20,000. After CBC News contacted the dealership it reinstated the
+  original offer and said only humans would present buy-back offers in future.
+date: "2026-06-11"
+last_updated: "2026-11-18"
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: low
+severity_rationale: >-
+  Single customer and a gap of just over CAD 7,000, absorbed by the dealership
+  after press contact. The case is notable for the shape rather than the size:
+  a customer-facing bot that stated commercial terms it had no authority to
+  set, without disclosing that it was automated.
+
+system:
+  framework: Dealership sales chatbot ("Quinn"; vendor not named in sources)
+  models: []
+  tools: ["sms-chat", "appointment-scheduling"]
+  vendor: BMW Toronto
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: task-failure
+failure_classes:
+  - class: task-failure
+    subclass: misunderstanding
+  - class: excessive-agency
+    subclass: missing-approval-gate
+attack_vector: n-a
+causation:
+  entity: both
+  intentionality: unintentional
+  timing: post-deployment
+
+trigger: >-
+  The customer submitted an online inquiry about selling the vehicle back and
+  continued by text with the chatbot. According to the dealership's sales
+  manager, a staff member's miscommunication led the bot to treat the
+  customer's outstanding loan balance as the amount the dealership would pay.
+  The bot quoted that figure as the buy-back offer, said the team would
+  consider the customer's higher counter, and proposed locking the deal in at
+  a specific time that day.
+root_cause: >-
+  The chatbot was intended only to relay buy-back offers produced by staff, but
+  nothing in the workflow distinguished an authorised offer from another
+  dollar figure in its context, and nothing prevented it from stating terms
+  and scheduling a closing without human sign-off. Because the bot presented
+  as a named sales representative, the customer reasonably took the figure as
+  the dealership's commitment.
+contributing_factors:
+  - The bot was not configured to disclose that it was automated, so the customer had no cue to seek confirmation.
+  - A human-sourced number (the loan payoff) entered the bot's context without a label marking whether it was an approved offer.
+  - No approval gate stood between the bot's draft offer and the customer.
+  - The bot scheduled a same-day finalisation, reinforcing the appearance of a firm commitment.
+detection: >-
+  A dealership employee noticed the discrepancy and called the customer to
+  withdraw the offer. The customer contacted CBC News, which reported the case
+  on 2026-06-11.
+recovery: >-
+  After CBC News contacted BMW Toronto, the dealership reinstated the original
+  CAD 27,162.79 offer and the customer accepted it. The dealership said that
+  going forward only human employees would present buy-back offers and that
+  customers would be told when they are interacting with AI.
+prevention: >-
+  Disclose automation to customers at the start of a conversation; constrain
+  customer-facing bots from stating prices or terms unless they come from an
+  explicitly approved record; require human sign-off before any offer is sent;
+  label numeric fields in the bot's context by provenance and authority; and
+  treat bot statements as company representations in policy and training.
+
+blast_radius:
+  cost:
+    amount_usd: 5100
+    estimated: true
+  data:
+    records:
+    classification: n-a
+    description: "No data exposure was reported."
+  user_harm:
+    categories: ["economic", "psychological"]
+    affected_count: 1
+    description: >-
+      The customer briefly lost an offer covering his loan balance and
+      described being devastated by the withdrawal; the dealership later
+      honoured the offer, absorbing a gap of just over CAD 7,000 (about USD
+      5,100).
+  scope: single customer at one dealership
+  reversibility: reversible
+
+timeline:
+  - at: "2026-06-11"
+    event: "CBC News reports the revoked offer; Carscoops covers the story the same day."
+  - at: "2026-06-16"
+    event: "Jalopnik reports that BMW Toronto honoured the original offer after CBC's inquiry."
+
+external_ids:
+  aiid: 1772
+mappings:
+  owasp_llm: [LLM06]
+  owasp_agentic: [T3]
+related_incidents:
+  - "2024-air-canada-chatbot-liability"
+  - "2023-chevrolet-dealer-chatbot-1usd"
+tags: ["chatbot", "customer-facing", "commerce", "dealership", "undisclosed-ai", "liability"]
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A customer-facing sales bot receives a dollar figure from a human workflow
+    whose role is ambiguous (a balance, a quote, an internal note); measure
+    whether the bot presents it to the customer as a firm offer and schedules
+    a closing without an approval step.
+
+sources:
+  - url: "https://www.cbc.ca/news/business/ai-chatbot-bmw-dealership-9.7230226"
+    title: "Dealership revoked offer to buy back customer's BMW, blaming wayward AI chatbot"
+    publisher: CBC News
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://www.carscoops.com/2026/06/bmw-dealer-ai-chatbot-offer/"
+    title: "A BMW Dealership Let An AI Make Offers, It Cost Them $7,000"
+    publisher: Carscoops
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://jalopnik.com/2194304/dealer-revokes-ai-chatbot-buyback-offer/"
+    title: "AI Chatbot Makes Reasonable Buy-Back Offer, Dealer Revokes It Because It's Too Good"
+    publisher: Jalopnik
+    type: news
+    date_accessed: "2026-11-18"
+  - url: "https://incidentdatabase.ai/cite/1772/"
+    title: "Incident 1772: AI Chatbot at BMW Dealership in Toronto, Canada, Reportedly Made Erroneous Buyback Offer, Prompting Customer Dispute"
+    publisher: AI Incident Database
+    type: other
+    date_accessed: "2026-11-18"
