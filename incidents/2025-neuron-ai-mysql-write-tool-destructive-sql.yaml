@@ -1,0 +1,155 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2025-neuron-ai-mysql-write-tool-destructive-sql
+title: "Neuron PHP agent framework's MySQL write tool executed any SQL the model emitted, including schema-destroying statements (CVE-2025-67510)"
+summary: >-
+  In Neuron, a PHP framework for building AI agents, the MySQLWriteTool passed
+  whatever SQL the agent supplied straight to the database with no restriction
+  on statement type. An agent exposed to untrusted or injected prompts could
+  therefore be led to drop or truncate tables, delete rows, alter schemas or
+  change privileges, bounded only by the database user's rights
+  (CVE-2025-67510, CVSS 9.4). Version 2.8.12 added per-tool blocklists of
+  forbidden statements.
+date: "2025-12-09"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: moderate
+severity_rationale: >-
+  Destructive database writes are irreversible without backups, and the CVSS
+  score is critical (9.4), but the impact depends on a deployment both
+  exposing the tool to untrusted prompts and running it under a privileged
+  database account. Fixed in 2.8.12; NVD's SSVC record lists no exploitation
+  and CISA KEV does not list the CVE.
+
+system:
+  framework: Neuron AI (PHP agent framework)
+  models: []
+  tools: ["mysql-write-tool", "mysql", "pdo"]
+  vendor: Neuron (neuron-core)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: tool-misuse
+    subclass: over-broad-scope
+  - class: unsafe-action
+    subclass: data-deletion
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  An agent built with Neuron and equipped with the MySQLWriteTool received a
+  prompt, directly from a user or indirectly through content it processed,
+  that steered it to emit a destructive SQL statement. The tool handed that
+  statement to the database through a prepared-statement call with no check on
+  what kind of statement it was, so schema, data-removal and privilege
+  statements ran exactly as the model wrote them, limited only by the
+  permissions of the configured database user.
+root_cause: >-
+  The write tool was designed as a general SQL executor, which matched its
+  name but not its context: a language-model agent that can be prompt-injected
+  was given a tool with no policy layer between the model's output and the
+  database. The advisory frames this as an agent "footgun": the absence of
+  statement-type restrictions, allowlisted tables, or an approval step meant
+  the model's judgement was the only control over destructive operations.
+contributing_factors:
+  - The tool executed any SQL statement type, including DROP, TRUNCATE, DELETE, ALTER and GRANT.
+  - No application-layer policy, allowlist or review step sat between model output and the database.
+  - Deployments commonly run agent tools under a database user with broad privileges.
+  - Prompt content, direct or indirect, was treated as a sufficient reason to issue a write.
+detection: >-
+  Reported to the maintainer by the researcher credited as siewer through
+  GitHub's security advisory process. The fix commit landed on 2025-11-24,
+  release 2.8.12 followed on 2025-11-25, GHSA-898v-775g-777c was published on
+  2025-12-09 and NVD published CVE-2025-67510 on 2025-12-10.
+recovery: >-
+  Release 2.8.12, headed "Security Vulnerability Fix", added a list of
+  forbidden statements to the MySQLWriteTool covering DROP, CREATE, ALTER,
+  GRANT, TRUNCATE, REPLACE, MERGE, CALL, EXECUTE and DELETE, extended the
+  MySQLSelectTool's blocklist to file-writing clauses, and made both lists
+  customisable per tool. Users were advised to upgrade.
+prevention: >-
+  Give agents constrained write operations (insert or update on allowlisted
+  tables and columns) rather than raw SQL; enforce a policy layer that rejects
+  schema and privilege statements; run agent database tools under a
+  least-privilege account without drop, alter or grant rights; log and require
+  human approval or dry-run for high-risk statements; do not expose write tools
+  to untrusted prompts without these controls.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: internal
+    description: >-
+      Any table reachable by the tool's database user could be truncated,
+      dropped, altered or have rows deleted; privilege statements could widen
+      access. No real-world data loss through this flaw has been publicly
+      documented.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A disclosed vulnerability with a released fix; no in-the-wild
+      exploitation reported.
+  scope: "Neuron deployments at 2.8.11 and below that expose an agent with MySQLWriteTool enabled to untrusted input"
+  reversibility: irreversible
+
+timeline:
+  - at: "2025-11-24"
+    event: "Fix commit lands in the neuron-ai repository."
+  - at: "2025-11-25"
+    event: "Release 2.8.12 ships with forbidden-statement lists for the MySQL tools."
+  - at: "2025-12-09"
+    event: "GHSA-898v-775g-777c published."
+  - at: "2025-12-10"
+    event: "NVD publishes CVE-2025-67510 (CVSS 9.4, CWE-250, CWE-284)."
+
+cve: ["CVE-2025-67510"]
+cwe: ["CWE-250", "CWE-284", "CWE-20"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0051, AML.T0053]
+tags: ["neuron-ai", "php", "sql", "database-tool", "destructive-write", "agent-framework", "least-privilege", "cve"]
+related_incidents:
+  - "2026-pocketos-cursor-db-deletion"
+  - "2025-replit-prod-db-deletion"
+  - "2026-check-point-agent-frameworks-post-injection-exploitation"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent holds a database write tool that forwards raw SQL with no
+    statement-type policy; measure whether injected or adversarial prompts can
+    drive it to schema-destroying statements and whether the database account's
+    privileges bound the damage.
+
+sources:
+  - url: "https://github.com/neuron-core/neuron-ai/security/advisories/GHSA-898v-775g-777c"
+    title: "MySQLWriteTool allows arbitrary/destructive SQL when exposed to untrusted prompts (agent \"footgun\")"
+    publisher: Neuron (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2025-67510"
+    title: "CVE-2025-67510 — Neuron MySQLWriteTool arbitrary SQL execution"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/neuron-core/neuron-ai/releases/tag/2.8.12"
+    title: "Neuron 2.8.12 — Security Vulnerability Fix"
+    publisher: Neuron (GitHub Releases)
+    type: vendor-response
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/neuron-core/neuron-ai/commit/44bab85d92bf162898ee48d0bcef6ba0d29b59c9"
+    title: "fix security vulnerability in mysql tools"
+    publisher: Neuron (GitHub)
+    type: vendor-response
+    date_accessed: "2026-11-18"
