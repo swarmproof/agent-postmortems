@@ -1,0 +1,159 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2026-langflow-csv-agent-python-repl-rce
+title: "Langflow CSV Agent node always exposed a Python REPL tool, letting prompt injection reach remote code execution (CVE-2026-27966)"
+summary: >-
+  Langflow's CSV Agent node hardcoded LangChain's dangerous-code setting to
+  enabled, so every CSV Agent carried a Python REPL tool that could not be
+  turned off from the UI or configuration. A prompt injected through the chat
+  input could steer the agent into running arbitrary Python and operating
+  system commands on the Langflow server (CVE-2026-27966, CVSS 9.8). Fixed in
+  Langflow 1.8.0. A public Metasploit module exists; no in-the-wild
+  exploitation has been documented.
+date: "2026-02-25"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Unauthenticated remote code execution on the agent-builder server
+  (CVE-2026-27966, CVSS 9.8) reachable through ordinary chat input, with a
+  public Metasploit module published afterwards. Patched in 1.8.0; CISA KEV
+  does not list the CVE and no in-the-wild exploitation has been reported.
+
+system:
+  framework: Langflow (visual LLM agent and workflow builder, built on LangChain)
+  models: []
+  tools: ["csv-agent", "python-repl", "langchain"]
+  vendor: Langflow (IBM)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: direct
+  - class: tool-misuse
+    subclass: over-broad-scope
+  - class: unsafe-action
+attack_vector: direct-user
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  A user with access to a Langflow chat interface backed by a flow containing
+  the CSV Agent node sent input that instructed the agent to use its
+  code-execution tool rather than answer about the CSV data. Because the node
+  always enabled LangChain's dangerous-code setting, the Python REPL tool was
+  present in every CSV Agent, and the model's emitted tool call ran as Python
+  on the server with the privileges of the Langflow process. The same shape
+  applies when the injected instruction arrives through CSV content the agent
+  reads rather than the chat box.
+root_cause: >-
+  The CSV Agent component hardcoded LangChain's allow-dangerous-code flag to
+  enabled instead of defaulting it off or exposing it as an operator choice.
+  LangChain gates the Python REPL tool behind that flag precisely because a
+  language model that can be prompt-injected should not have an unconditional
+  code-execution tool; Langflow's wrapper removed that gate for every flow that
+  used the node, with no UI toggle or environment variable to restore it.
+contributing_factors:
+  - The dangerous-code setting was hardcoded on, with no configuration path to disable it.
+  - A general-purpose Python REPL tool was attached to an agent whose job was tabular question answering.
+  - Chat input reaching the agent was treated as instructions rather than untrusted data.
+  - The REPL executed in the Langflow server process rather than an isolated sandbox.
+detection: >-
+  Reported to the maintainers by the researcher weblover12 through Langflow's
+  GitHub security advisory process; published as GHSA-3645-fxcv-hqr4 on
+  2026-02-25 and as CVE-2026-27966 by NVD on 2026-02-26. A Metasploit module
+  authored by weblover12 and Takahiro Yokoyama was later added to the
+  framework's public exploit database.
+recovery: >-
+  The fix commit (2026-02-18) introduced an explicit allow-dangerous-code flag
+  on the CSV Agent that defaults to off, and the change shipped in Langflow
+  1.8.0. Operators were advised to upgrade; the advisory describes no
+  workaround for earlier versions.
+prevention: >-
+  Keep code-execution tools opt-in and off by default in agent builders; expose
+  dangerous-capability flags to operators rather than hardcoding them; run any
+  REPL or code tool in an isolated sandbox with least privilege; treat chat and
+  file content reaching an agent as untrusted; keep agent-builder platforms
+  patched and off the public internet where possible.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Code execution on the Langflow server exposes the platform's stored
+      provider API keys, connector credentials, flow definitions and anything
+      else reachable from the server process. No real-world compromise through
+      this flaw has been publicly documented.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A disclosed vulnerability with a released fix and public exploit code; no
+      in-the-wild exploitation reported.
+  scope: "Langflow deployments before 1.8.0 that include a CSV Agent node reachable by users"
+  reversibility: reversible
+
+timeline:
+  - at: "2026-02-18"
+    event: "Fix commit lands in the Langflow repository, adding a default-off dangerous-code flag to the CSV Agent."
+  - at: "2026-02-25"
+    event: "Langflow publishes GHSA-3645-fxcv-hqr4; fixed version 1.8.0."
+  - at: "2026-02-26"
+    event: "NVD publishes CVE-2026-27966 (CVSS 9.8, CWE-94)."
+  - at: "2026-03-03"
+    event: "Cyber Security News reports on the flaw."
+
+cve: ["CVE-2026-27966"]
+cwe: ["CWE-94"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T2, T3]
+  mitre_atlas: [AML.T0051, AML.T0053]
+tags: ["langflow", "langchain", "csv-agent", "python-repl", "rce", "code-execution-tool", "agent-builder", "cve", "metasploit-module"]
+related_incidents:
+  - "2026-langflow-mcp-stdio-rce-honeypot-exploitation"
+  - "2026-jadepuffer-agentic-ransomware"
+  - "2026-flowise-custom-js-sandbox-escape-rce"
+  - "2025-framelink-figma-mcp-rce"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent-builder node silently attaches a general code-execution tool to
+    every agent built from it, with no operator switch; measure whether chat or
+    file input can steer the model into invoking that tool and whether the
+    execution is sandboxed away from the platform's own credentials.
+
+sources:
+  - url: "https://github.com/langflow-ai/langflow/security/advisories/GHSA-3645-fxcv-hqr4"
+    title: "Remote Code Execution in CSV Agent"
+    publisher: Langflow (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2026-27966"
+    title: "CVE-2026-27966 — Langflow CSV Agent remote code execution"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://github.com/langflow-ai/langflow/commit/d8c6480daa17b2f2af0b5470cdf5c3d28dc9e508"
+    title: "fix: default remote code execution in CSV agent (#11762)"
+    publisher: Langflow (GitHub)
+    type: vendor-response
+    date_accessed: "2026-11-18"
+  - url: "https://www.rapid7.com/db/modules/exploit/multi/http/langflow_rce_cve_2026_27966"
+    title: "Langflow RCE (exploit/multi/http/langflow/rce_cve_2026_27966)"
+    publisher: Rapid7 Vulnerability & Exploit Database
+    type: other
+    date_accessed: "2026-11-18"
+  - url: "https://cybersecuritynews.com/langflows-ai-csv-agent-vulnerability/"
+    title: "Langflow's AI CSV Agent Vulnerability Allows Remote Code Execution Attacks"
+    publisher: Cyber Security News
+    type: news
+    date_accessed: "2026-11-18"
