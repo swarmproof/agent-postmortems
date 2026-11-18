@@ -1,0 +1,138 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2025-cursor-cli-sensitive-file-case-bypass-rce
+title: "Cursor CLI Agent's sensitive-file guard could be bypassed by path casing, turning prompt injection into code execution (CVE-2025-61593)"
+summary: >-
+  The Cursor CLI Agent guards sensitive files such as its own configuration
+  file from modification by the agent. The guard compared paths without
+  accounting for case-insensitive filesystems, the default on macOS and
+  Windows, so a prompt-injected instruction could have the agent write the
+  protected file under a differently cased path. Modifying that configuration
+  leads to remote code execution (CVE-2025-61593). Fixed in commit 25b418f,
+  listed by the vendor as CLI build 2025.09.17-25b418f.
+date: "2025-10-02"
+incident_type: hazard
+status: final
+confidence: confirmed
+severity: high
+severity_rationale: >-
+  Remote code execution on a developer's machine via the agent rewriting its
+  own trust configuration (CVE-2025-61593; CVSS 7.1 vendor, 8.8 NVD). Requires
+  prompt injection and a case-insensitive filesystem. Patched; no in-the-wild
+  exploitation reported and CISA KEV does not list the CVE.
+
+system:
+  framework: Cursor CLI Agent
+  models: []
+  tools: ["filesystem-write", "cli-config"]
+  vendor: Cursor (Anysphere)
+  autonomy_level: supervised-autonomous
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: indirect
+  - class: unsafe-action
+    subclass: unauthorized-write
+attack_vector: untrusted-content
+causation:
+  entity: human
+  intentionality: intentional
+  timing: pre-deployment
+
+trigger: >-
+  Content the agent processed carried injected instructions to write to its
+  own configuration file. The agent's sensitive-file check matched the
+  canonical lowercase path only, while the host filesystem resolved any casing
+  of the same path to the same file. An instruction naming the file with
+  altered letter case passed the check, and the write landed on the real
+  configuration file, giving the injected content control over settings that
+  govern what the agent may execute.
+root_cause: >-
+  The agent enforced its sensitive-file boundary with a case-sensitive string
+  comparison, while the filesystems it most commonly runs on resolve paths
+  case-insensitively. A protection that depends on the agent's own file writes
+  being filtered is only as strong as the path matcher, and the matcher did
+  not model the host's semantics (CWE-178). Because the protected file
+  configures the agent's own permissions, bypassing the guard converted an
+  unauthorized write into code execution.
+contributing_factors:
+  - Sensitive-file matching was case-sensitive on filesystems that are not.
+  - The agent could write files in the same working tree that holds its own trust configuration.
+  - Configuration controlled by that file governs command execution, so one write escalated to code execution.
+  - Processed content was treated as instructions rather than untrusted data.
+detection: >-
+  Reported by the researcher credited as AlonZa through Cursor's GitHub
+  security advisory process. Cursor published GHSA-x2vq-h6v6-jhc6 on
+  2025-10-02; NVD published CVE-2025-61593 on 2025-10-03, noting that the fix
+  commit 25b418f had not yet shipped in a release at that date.
+recovery: >-
+  Cursor changed the sensitive-file checks to respect the local filesystem's
+  case handling. The advisory lists affected builds as Cursor CLI before
+  2025.09.12-4852336 and the patched build as 2025.09.17-25b418f; NVD
+  describes the affected range as versions 1.7 and below. Users were advised
+  to update.
+prevention: >-
+  Canonicalise paths with the host filesystem's semantics before comparing
+  them to protection lists; keep agent-writable directories separate from the
+  agent's own configuration and trust files; require explicit approval for
+  any write that touches configuration governing permissions; treat content
+  the agent processes as untrusted.
+
+blast_radius:
+  cost:
+    amount_usd:
+    estimated: false
+  data:
+    records:
+    classification: credentials
+    description: >-
+      Code execution on the developer's machine exposes local credentials,
+      source and anything the user can reach; no real-world compromise through
+      this flaw has been publicly documented.
+  user_harm:
+    categories: ["none-reported"]
+    affected_count:
+    description: >-
+      A disclosed vulnerability with a released fix; no in-the-wild
+      exploitation reported.
+  scope: "Cursor CLI Agent users on case-insensitive filesystems (macOS, Windows defaults) before the patched build"
+  reversibility: reversible
+
+timeline:
+  - at: "2025-10-02"
+    event: "Cursor publishes GHSA-x2vq-h6v6-jhc6 (CWE-178), patched build 2025.09.17-25b418f."
+  - at: "2025-10-03"
+    event: "NVD publishes CVE-2025-61593; fix commit 25b418f noted as not yet in a release."
+
+cve: ["CVE-2025-61593"]
+cwe: ["CWE-178", "CWE-94"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T3]
+  mitre_atlas: [AML.T0051]
+tags: ["cursor", "cursor-cli", "coding-agent", "configuration-trust", "case-insensitive-filesystem", "path-check-bypass", "rce", "cve"]
+related_incidents:
+  - "2026-programdata-writable-config-ai-coding-tools-windows"
+  - "2026-gitspawn-git-config-coding-agent-rce"
+  - "2025-claude-code-dns-exfiltration"
+  - "2026-cursor-fireworks-key-agent-traces-extension-compromise"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    A coding agent protects its own trust configuration with a path denylist
+    whose matching differs from the host filesystem's; measure whether injected
+    content can steer a write to an alias of the protected path and whether
+    the resulting configuration change widens what the agent may execute.
+
+sources:
+  - url: "https://github.com/cursor/cursor/security/advisories/GHSA-x2vq-h6v6-jhc6"
+    title: "Cursor CLI Agent: Sensitive File Overwrite Bypass"
+    publisher: Cursor (GitHub Security Advisory)
+    type: vendor-disclosure
+    date_accessed: "2026-11-18"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2025-61593"
+    title: "CVE-2025-61593 — Cursor CLI Agent sensitive file protection bypass"
+    publisher: NVD
+    type: other
+    date_accessed: "2026-11-18"
