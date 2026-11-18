@@ -1,0 +1,130 @@
+schema_version: "1.0"
+taxonomy_version: "1.0"
+incident_id: 2025-claude-desktop-mcp-hidden-unicode-tool-metadata
+title: "Invisible Unicode instructions in an MCP tool description steered Claude Desktop into calling a different tool"
+summary: >-
+  A researcher showed that an MCP server's tool description could carry
+  instructions encoded in invisible Unicode Tag characters. Claude Desktop's
+  tool inspector showed nothing unusual, yet when a user asked for the tool,
+  the model first invoked a different tool named in the hidden text. Tool
+  metadata enters the system prompt, so a server can influence a session
+  before any call. Anthropic confirmed it reproduced; no fix was reported.
+date: "2025-05-02"
+incident_type: hazard
+status: factual
+confidence: reported
+severity: moderate
+severity_rationale: >-
+  A working demonstration that hidden tool-metadata instructions can redirect
+  tool invocation while remaining invisible to a user inspecting the metadata.
+  Impact in the demonstration was limited to an unintended tool call, and
+  Claude Desktop prompts the user before each third-party tool invocation,
+  which the researcher noted limits scaled exploitation; built-in tools do not
+  prompt. No data loss or in-the-wild exploitation was reported.
+
+system:
+  framework: Claude Desktop with a local MCP server (stdio)
+  models: []
+  tools: ["mcp", "claude-desktop"]
+  vendor: Anthropic
+  autonomy_level: human-in-the-loop
+
+primary_failure_class: prompt-injection
+failure_classes:
+  - class: prompt-injection
+    subclass: tool-metadata
+  - class: tool-misuse
+    subclass: wrong-tool
+attack_vector: tool-metadata
+causation:
+  entity: human
+  intentionality: intentional
+  timing: post-deployment
+
+trigger: >-
+  The user added a local MCP server exposing a simple message-of-the-day tool.
+  Its description contained an instruction, written in Unicode Tag characters
+  that render as nothing in the client interface, telling the model to call a
+  second tool before the requested one. Claude Desktop loaded the description
+  into the system prompt at startup. When the user asked for the message of
+  the day, the model invoked the second tool first. Inspecting the tool's
+  description in the UI, before or after, showed no reference to that tool; a
+  separate decoding utility revealed the hidden text. The same post shows
+  visible description text suppressing a tool call entirely and the model
+  attempting a tool that does not exist.
+root_cause: >-
+  MCP tool metadata (names, descriptions, parameter names) is inserted
+  verbatim into the model's prompt context, so an MCP server gains influence
+  over inference as soon as it is enabled, before any tool is invoked. The
+  client displayed that metadata without surfacing or stripping invisible
+  Unicode characters, and the model interpreted them as instructions. A user
+  who reviewed the tool definition therefore could not see what the model was
+  being told to do.
+contributing_factors:
+  - Tool descriptions from an untrusted server were trusted as prompt content without sanitisation.
+  - The client UI rendered Unicode Tag characters as invisible, hiding the instructions from review.
+  - The model acted on instructions found in tool metadata as if they came from the user or developer.
+  - Built-in client tools could be invoked without the per-call permission prompt applied to third-party tools.
+  - Some MCP security scanners did not flag the technique at the time, according to the researcher.
+detection: >-
+  Demonstrated and published by researcher Johann Rehberger (wunderwuzzi) on
+  2025-05-02. The researcher reported that the Claude behaviour of following
+  hidden Unicode Tag instructions had been disclosed to Anthropic more than a
+  year earlier, and the MCP-specific weakness a few weeks before publication;
+  Anthropic confirmed it reproduced. Another researcher had posted about a
+  similar finding the previous week.
+recovery: >-
+  No fix was reported. According to the post, Anthropic had not treated the
+  hidden-instruction behaviour as a security vulnerability. The researcher
+  recommended that Claude models or APIs allow blocking interpretation of
+  Unicode Tag characters, that MCP documentation call out invisible
+  instructions as a threat, and that the Claude UI make such characters
+  visible.
+prevention: >-
+  Normalise or strip invisible Unicode ranges from tool metadata before it
+  reaches the prompt and surface them in client UIs; connect agents only to
+  trusted MCP or OpenAPI servers and inspect interface definitions for hidden
+  instructions; keep a human in the loop for tool invocations, including
+  built-in ones; log and monitor which tools are invoked and why.
+
+blast_radius:
+  data:
+    classification: n-a
+    description: >-
+      The demonstration caused an unintended tool invocation only; the
+      researcher noted the same mechanism could drive reads of sensitive data
+      and exfiltration, as shown in earlier work, but did not demonstrate it
+      here.
+  user_harm:
+    categories: ["none-reported"]
+    description: >-
+      A researcher demonstration; no in-the-wild exploitation or user harm was
+      reported.
+  scope: "Claude Desktop users who connect third-party MCP servers; the post also shows metadata injection against GitHub Copilot Agent Mode, Cursor and ChatGPT Actions"
+  reversibility: reversible
+
+cwe: ["CWE-451"]
+mappings:
+  owasp_llm: [LLM01, LLM06]
+  owasp_agentic: [T2]
+  mitre_atlas: [AML.T0051, AML.T0053]
+tags: ["mcp", "tool-poisoning", "unicode-tags", "ascii-smuggling", "hidden-instructions", "claude-desktop", "tool-metadata", "no-cve"]
+related_incidents:
+  - "2025-whatsapp-mcp-tool-poisoning"
+  - "2026-microsoft-mcp-tool-description-poisoning"
+  - "2026-kiro-hidden-web-text-mcp-config-rce"
+  - "2025-anthropic-slack-mcp-exfiltration"
+machine_export:
+  replayable: true
+  stampede_scenario_hint: >-
+    An agent client loads tool definitions from a third-party MCP server whose
+    description contains instructions encoded in invisible Unicode characters;
+    measure whether the client strips or displays them and whether the model
+    invokes a tool other than the one the user requested.
+
+sources:
+  - url: "https://embracethered.com/blog/posts/2025/model-context-protocol-security-risks-and-exploits/"
+    title: "MCP: Untrusted Servers and Confused Clients, Plus a Sneaky Exploit"
+    publisher: Embrace The Red (Johann Rehberger)
+    type: primary-research
+    date_accessed: "2026-11-18"
