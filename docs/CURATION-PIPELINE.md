@@ -118,6 +118,13 @@ Edit `scripts/discovery_sources.yaml` — no code change needed:
 - `relevance_keywords` — the vocabulary that scores and filters candidates.
 - `coverage_sources` — the curated external lists the completeness critic diffs against.
 
+## Reports from people
+
+Failures reported through the "Report an agent failure" issue form are not part of this
+pipeline: no workflow reads those issues, and they are triaged by hand as described in
+[`docs/TRIAGE.md`](./TRIAGE.md). The definitions and limits that apply to every record,
+however it was found, are in [`docs/METHODS.md`](./METHODS.md).
+
 ## What the pipeline deliberately does NOT do
 
 - It does not merge, publish, or bypass review (ADR-0008: the human gate is the point).
