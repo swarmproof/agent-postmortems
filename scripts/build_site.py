@@ -38,6 +38,8 @@ REPO = Path(__file__).resolve().parent.parent
 INCIDENTS_DIR = REPO / "incidents"
 OUT = REPO / "site"
 SITE_BASE = os.environ.get("SITE_BASE_URL", "https://swarmproof.github.io/agent-postmortems").rstrip("/")
+REPO_URL = "https://github.com/swarmproof/agent-postmortems"
+RAW_BASE = "https://raw.githubusercontent.com/swarmproof/agent-postmortems/main"
 
 SEVERITY_ORDER = {"critical": 0, "high": 1, "moderate": 2, "low": 3, "informational": 4}
 FRAMEWORKS = yaml.safe_load((REPO / "schema" / "framework-mappings.yaml").read_text())["frameworks"]
@@ -69,7 +71,26 @@ def load_incidents() -> list[dict]:
 
 
 # --------------------------------------------------------------------------- page shell
-def page(title: str, body: str, css_href: str, description: str = "") -> str:
+def json_for_html(obj) -> str:
+    """Compact JSON with <, > and & \\u-escaped, safe inside a <script> element or file."""
+    s = json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+    return s.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
+
+def meta_description(text, limit: int = 200) -> str:
+    """Collapse whitespace and cut at a word boundary so snippets stay readable."""
+    t = " ".join(str(text or "").split())
+    if len(t) <= limit:
+        return t
+    cut = t[: limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:—-")
+    return cut + "…"
+
+
+def page(title: str, body: str, css_href: str, description: str = "", *,
+         canonical: str, og_type: str = "website", og_title: str | None = None,
+         jsonld: dict | None = None) -> str:
+    social_title = esc(og_title or title)
+    ld = (f'\n<script type="application/ld+json">{json_for_html(jsonld)}</script>' if jsonld else "")
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -77,6 +98,15 @@ def page(title: str, body: str, css_href: str, description: str = "") -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(description)}">
+<link rel="canonical" href="{esc(canonical)}">
+<meta property="og:type" content="{esc(og_type)}">
+<meta property="og:site_name" content="agent-postmortems">
+<meta property="og:title" content="{social_title}">
+<meta property="og:description" content="{esc(description)}">
+<meta property="og:url" content="{esc(canonical)}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{social_title}">
+<meta name="twitter:description" content="{esc(description)}">{ld}
 <link rel="stylesheet" href="{css_href}">
 <link rel="alternate" type="application/rss+xml" title="agent-postmortems" href="{SITE_BASE}/feed.xml">
 </head>
@@ -285,8 +315,27 @@ def render_index(recs: list[dict]) -> str:
 </section>
 <script src="search.js" defer></script>
 """
-    return page("agent-postmortems — AI-agent failure database", body, "style.css",
-                "A structured, sourced database of real AI-agent failures.")
+    description = "A structured, sourced database of real AI-agent failures."
+    return page("agent-postmortems — AI-agent failure database", body, "style.css", description,
+                canonical=f"{SITE_BASE}/", jsonld=dataset_jsonld(description))
+
+
+def dataset_jsonld(description: str) -> dict:
+    """schema.org Dataset limited to facts the repository itself establishes."""
+    return {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "agent-postmortems",
+        "description": description,
+        "url": f"{SITE_BASE}/",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "isAccessibleForFree": True,
+        "distribution": [{
+            "@type": "DataDownload",
+            "encodingFormat": "application/json",
+            "contentUrl": f"{RAW_BASE}/export/incidents.json",
+        }],
+    }
 
 
 # --------------------------------------------------------------------------- incident page
@@ -434,7 +483,8 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
 </article>
 """
     return page(f"{rec.get('title', rid)} — agent-postmortems", body, "../style.css",
-                rec.get("summary", ""))
+                meta_description(rec.get("summary") or rec.get("trigger")),
+                canonical=url, og_type="article", og_title=rec.get("title", rid))
 
 
 # --------------------------------------------------------------------------- feed
