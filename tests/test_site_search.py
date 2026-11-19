@@ -109,7 +109,7 @@ def test_index_includes_prevention_text_and_system_fields():
 
 
 def test_index_is_text_only_and_compact():
-    allowed = {"id", "t", "k", "b", "sev", "type", "year", "conf", "auto", "vendor", "classes", "tools"}
+    allowed = {"id", "t", "k", "b", "d", "sev", "type", "year", "conf", "auto", "vendor", "classes", "tools"}
     for r in INDEX["records"]:
         assert set(r) == allowed  # no source objects or other full-record payloads
     payload = bs.search_index_json(RECS)
@@ -247,7 +247,8 @@ def _assert_inert(page: str):
     assert XSS_ATTR not in page and '" onmouseover=' not in page
     assert not re.search(r'href\s*=\s*"\s*(javascript|data):', page, re.I)
     # the only script elements are the ones the generator itself emits
-    assert re.findall(r"<script\b[^>]*>", page) in ([], ['<script src="search.js" defer>'])
+    allowed = {'<script src="search.js" defer>', '<script type="application/ld+json">'}
+    assert set(re.findall(r"<script\b[^>]*>", page)) <= allowed
 
 
 def test_hostile_record_is_schema_valid_so_rendering_must_neutralise_it():

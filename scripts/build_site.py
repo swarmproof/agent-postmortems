@@ -218,6 +218,7 @@ def search_record(rec: dict) -> dict:
         "b": body_tokens(norm_text(*(rec.get(f) for f in SEARCH_BODY_FIELDS))),
         "sev": rec.get("severity") or "",
         "type": rec.get("incident_type") or "",
+        "d": rec.get("date") or "",
         "year": (rec.get("date") or "")[:4],
         "conf": rec.get("confidence") or "",
         "auto": sysm.get("autonomy_level") or "",
@@ -272,6 +273,15 @@ FILTERS = [
 ]
 
 
+# Sort orders offered. Only neutral orders: no ranking by severity or "danger".
+SORTS = [
+    ("", "Best match, else newest"),
+    ("newest", "Newest first (date occurred or disclosed)"),
+    ("oldest", "Oldest first (date occurred or disclosed)"),
+    ("title", "Title, A to Z"),
+]
+
+
 def render_filters(recs: list[dict]) -> str:
     options = facet_options(recs)
     fields = []
@@ -279,14 +289,23 @@ def render_filters(recs: list[dict]) -> str:
         opts = "".join(f'<option value="{esc(v)}">{esc(v)}</option>' for v in options[param])
         fields.append(f'<div class="f"><label for="f-{param}">{label}</label>'
                       f'<select id="f-{param}" name="{param}"><option value="">{all_text}</option>{opts}</select></div>')
+    sorts = "".join(f'<option value="{v}">{label}</option>' for v, label in SORTS)
     return f"""<form class="filters" id="filters" role="search" aria-label="Search and filter incidents" hidden>
   <div class="f f-q"><label for="q">Search</label>
     <input type="search" id="q" name="q" autocomplete="off" spellcheck="false" aria-describedby="q-hint"
       placeholder="Title, cause, prevention, vendor, tool, CVE, tag…"></div>
-  {''.join(fields)}
-  <div class="f f-actions"><button type="button" class="clear">Clear all</button></div>
-  <p id="q-hint" class="hint">Every word must match. Title matches rank first, then tags, IDs and system names,
-  then body text. Filters combine with each other and with the search. Press <kbd>/</kbd> to search.</p>
+  <div class="f f-sort"><label for="sort">Sort</label>
+    <select id="sort" name="sort" aria-describedby="sort-hint">{sorts}</select></div>
+  <details class="facets" id="facets">
+    <summary>Filters <span id="facet-count"></span></summary>
+    <div class="facet-grid">
+      {''.join(fields)}
+      <div class="f f-actions"><button type="button" class="clear">Clear search and filters</button></div>
+    </div>
+    <p id="q-hint" class="hint">Every word must match. Title matches rank first, then tags, IDs and system names,
+    then body text. Filters combine with each other and with the search. Press <kbd>/</kbd> to search.</p>
+    <p id="sort-hint" class="hint">Dates are when an incident occurred or was first publicly disclosed.</p>
+  </details>
 </form>
 <p id="count" class="count" role="status" aria-live="polite"></p>
 <div id="empty" class="empty" hidden>
@@ -557,20 +576,26 @@ h1 { font-size:28px; line-height:1.25; margin:8px 0 12px; }
 h2 { font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:28px 0 8px; }
 .intro p { color:var(--fg); }
 [hidden] { display:none !important; }
-.filters { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px 10px; margin:20px 0 8px; }
+.filters { display:grid; grid-template-columns:1fr; gap:8px 10px; margin:20px 0 8px; }
+@media (min-width: 720px) { .filters { grid-template-columns:1fr 280px; } }
+.facets { grid-column:1 / -1; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+.facets > summary { cursor:pointer; padding:8px 10px; font-size:14px; font-weight:600; }
+.facets[open] > summary { border-bottom:1px solid var(--line); }
+.facet-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px 10px; padding:10px; }
+.facets .hint { padding:0 10px 8px; }
+#facet-count { color:var(--muted); font-weight:400; }
 .filters .f { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .filters label { font-size:12px; font-weight:600; color:var(--muted); }
 .filters input, .filters select, .filters button, .empty button { width:100%; min-width:0; padding:7px 9px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; font-size:14px; }
 .filters button, .empty button { cursor:pointer; width:auto; }
-.filters .f-q { grid-column:1 / -1; }
 .filters .f-q input { font-size:16px; }
 .filters .f-actions { justify-content:flex-end; }
-.hint { grid-column:1 / -1; margin:0; color:var(--muted); font-size:12px; }
+.hint { margin:0; color:var(--muted); font-size:12px; }
 kbd { font:12px ui-monospace,SFMono-Regular,Menlo,monospace; padding:0 4px; border:1px solid var(--line); border-radius:4px; }
 .count { color:var(--muted); font-size:13px; margin:0 0 10px; min-height:1.6em; }
 .empty { padding:20px 16px; border:1px dashed var(--line); border-radius:12px; text-align:center; }
 .empty p { margin:0 0 10px; }
-a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .card:focus-visible { border-color:var(--accent); }
 .cards { display:flex; flex-direction:column; gap:10px; }
 .card { display:block; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--fg); }
@@ -669,14 +694,29 @@ function search(records, query, filters) {
   return hits.map(function (h) { return h.id; });
 }
 
-var api = { norm: norm, terms: terms, search: search, FACETS: FACETS };
+// Neutral orders only (never by severity). Ties fall back to incident id.
+var SORTS = ['newest', 'oldest', 'title'];
+function sortIds(records, ids, sort) {
+  if (SORTS.indexOf(sort) < 0) return ids;
+  var by = {};
+  records.forEach(function (r) { by[r.id] = r; });
+  function c(x, y) { return x < y ? -1 : x > y ? 1 : 0; }
+  function alpha(t) { return t.replace(/^[^\p{L}\p{N}]+/u, ''); }  // ignore leading quotes
+  var key = { newest: function (a, b) { return c(b.d, a.d); },
+              oldest: function (a, b) { return c(a.d, b.d); },
+              title: function (a, b) { return c(alpha(a.t), alpha(b.t)); } }[sort];
+  return ids.slice().sort(function (x, y) { return key(by[x], by[y]) || c(x, y); });
+}
+
+var api = { norm: norm, terms: terms, search: search, sortIds: sortIds, FACETS: FACETS, SORTS: SORTS };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 if (typeof document === 'undefined') return;
 
 var list = document.getElementById('cards'), form = document.getElementById('filters');
 if (!list || !form) return;
 var count = document.getElementById('count'), empty = document.getElementById('empty');
-var q = form.elements.namedItem('q');
+var q = form.elements.namedItem('q'), sortSel = form.elements.namedItem('sort');
+var facets = document.getElementById('facets'), facetCount = document.getElementById('facet-count');
 var cards = new Map(), defaultOrder = [];
 list.querySelectorAll('.card[data-id]').forEach(function (el) { cards.set(el.dataset.id, el); defaultOrder.push(el.dataset.id); });
 var records = null;
@@ -684,19 +724,21 @@ var records = null;
 function state() {
   var f = {};
   for (var p in FACETS) f[p] = form.elements.namedItem(p).value;
-  return { q: q.value, f: f };
+  return { q: q.value, f: f, sort: sortSel.value };
 }
 function syncUrl(st) {
   var sp = new URLSearchParams();
   if (norm(st.q)) sp.set('q', norm(st.q));
   for (var p in FACETS) if (st.f[p]) sp.set(p, st.f[p]);
+  if (st.sort) sp.set('sort', st.sort);
   var qs = sp.toString();
   history.replaceState(null, '', (qs ? '?' + qs : location.pathname) + location.hash);
 }
 function render() {
-  var st = state(), ids = search(records, st.q, st.f), shown = new Set(ids);
-  var active = !!norm(st.q) || Object.keys(st.f).some(function (p) { return st.f[p]; });
-  var order = norm(st.q) ? ids.concat(defaultOrder.filter(function (id) { return !shown.has(id); })) : defaultOrder;
+  var st = state(), ids = sortIds(records, search(records, st.q, st.f), st.sort), shown = new Set(ids);
+  var nFacets = Object.keys(st.f).filter(function (p) { return st.f[p]; }).length;
+  var active = !!norm(st.q) || nFacets > 0;
+  var order = ids.concat(defaultOrder.filter(function (id) { return !shown.has(id); }));
   var frag = document.createDocumentFragment();
   order.forEach(function (id) { var el = cards.get(id); if (el) { el.hidden = !shown.has(id); frag.appendChild(el); } });
   list.appendChild(frag);
@@ -704,6 +746,7 @@ function render() {
     ? ids.length + ' of ' + cards.size + (cards.size === 1 ? ' incident matches' : ' incidents match')
     : 'Showing all ' + cards.size + ' incidents';
   empty.hidden = ids.length > 0;
+  facetCount.textContent = nFacets ? '(' + nFacets + ' active)' : '';
   syncUrl(st);
 }
 function fromUrl() {
@@ -714,6 +757,8 @@ function fromUrl() {
     sel.value = v;
     if (sel.value !== v) sel.value = '';  // unknown value in a shared link: ignore it
   }
+  sortSel.value = sp.get('sort') || '';
+  if (sortSel.value !== (sp.get('sort') || '')) sortSel.value = '';
 }
 function clearAll() {
   q.value = '';
@@ -737,6 +782,7 @@ fetch(list.dataset.index)
     records = data.records;
     form.addEventListener('input', render);
     form.addEventListener('change', render);
+    facets.open = window.matchMedia('(min-width: 720px)').matches;  // collapsed on narrow screens
     form.hidden = false;
     fromUrl();
     render();
