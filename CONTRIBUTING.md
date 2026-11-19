@@ -33,7 +33,7 @@ Thanks for helping build **agent-postmortems** — part of the [Swarm Proof tool
 - Report factually; name systems as data, never as targets. No blame adjectives (CI lints for these).
 - Root causes are **systemic, not personal** (blameless post-mortem style).
 - Never identify harmed individuals beyond what public sources already published.
-- If a vendor disputes a record, we add their response as a `vendor-response` source and set `confidence: disputed` — sourced incidents are never deleted (ADR-0008).
+- If a vendor or other named party responds to a record, their public reply is added as a `vendor-response` source. A sourced error is corrected; where the sources genuinely conflict, `confidence` is set to `disputed`. Sourced incidents are never deleted (ADR-0008).
 
 ### Disputing a record
 
