@@ -79,7 +79,7 @@ def page(title: str, body: str, css_href: str, description: str = "") -> str:
 <body>
 <header class="site-head">
   <a class="brand" href="{'.' if css_href == 'style.css' else '..'}/">agent-postmortems</a>
-  <span class="tagline">a structured database of real AI-agent failures</span>
+  <span class="tagline">a structured database of AI-agent incidents and hazards</span>
 </header>
 <main>
 {body}
@@ -132,13 +132,18 @@ def render_index(recs: list[dict]) -> str:
   <div class="card-chain">{esc(chain_str(r))}</div>
 </a>""")
 
+    n_incident = sum(1 for r in recs if r.get("incident_type") == "incident")
+    n_hazard = sum(1 for r in recs if r.get("incident_type") == "hazard")
     body = f"""
 <section class="intro">
   <h1>Agent incident post-mortems</h1>
-  <p>{len(recs)} sourced, structured post-mortems of real AI-agent failures — prompt injection,
-  tool misuse, data exfiltration, sandbox escapes, cost blowups, and more. Every record follows
+  <p>{len(recs)} sourced records: {n_incident} realized incidents and {n_hazard} demonstrated hazards
+  of AI agents — prompt injection, tool misuse, data exfiltration, sandbox escapes, cost blowups,
+  and more. Every record follows
   <a href="https://github.com/swarmproof/agent-postmortems/blob/main/SCHEMA.md">one schema</a> and
   cites public sources. <a href="{SITE_BASE}/feed.xml">RSS</a>.</p>
+  <p class="limits">Records come from public reporting, which is not a representative prevalence
+  sample; counts do not measure how often agents fail and are not a vendor safety ranking.</p>
 </section>
 <section class="filters" aria-label="Filters">
   <input type="search" id="q" placeholder="Search title…" aria-label="Search">
@@ -175,7 +180,7 @@ apply();
 </script>
 """
     return page("agent-postmortems — AI-agent failure database", body, "style.css",
-                "A structured, sourced database of real AI-agent failures.")
+                "A structured, sourced database of AI-agent incidents and demonstrated hazards.")
 
 
 # --------------------------------------------------------------------------- incident page
@@ -228,6 +233,21 @@ def bibtex(rec: dict, url: str) -> str:
             f"  year = {{{year}}},\n"
             f"  howpublished = {{agent-postmortems}},\n"
             f"  url = {{{url}}}\n}}")
+
+
+TYPE_NOTES = {
+    "incident": ("Realized incident", "the cited sources report that harm or an unintended agent action occurred."),
+    "hazard": ("Demonstrated hazard", "a proof of concept, disclosed vulnerability or near-miss, "
+               "recorded without evidence that harm occurred."),
+}
+
+
+def type_note(incident_type) -> str:
+    if incident_type not in TYPE_NOTES:
+        return ""
+    label, text = TYPE_NOTES[incident_type]
+    return (f'<p class="type-note type-note-{esc(incident_type)}">'
+            f'<strong>{esc(label)}</strong>: {esc(text)}</p>')
 
 
 def render_incident(rec: dict, all_ids: set[str]) -> str:
@@ -285,6 +305,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
     {badge('confidence: ' + esc(rec.get('confidence','?')), 'neutral') if rec.get('confidence') else ''}
     {badge('status: ' + esc(rec.get('status','?')), 'neutral') if rec.get('status') else ''}
   </div>
+  {type_note(rec.get('incident_type'))}
   <h1>{esc(rec.get('title', rid))}</h1>
   <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
   {f'<p class="summary">{esc(rec.get("summary"))}</p>' if rec.get('summary') else ''}
@@ -377,6 +398,7 @@ h2 { font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(-
 .badge-type-incident { background:#eef2ff; color:#3538cd; border-color:#cfd6ff; }
 .badge-type-hazard { background:#f2f4f7; color:#475467; border-color:#e0e4ea; }
 .badge-neutral { color:var(--muted); }
+.type-note { font-size:14px; color:var(--muted); margin:0 0 8px; } .limits { color:var(--muted); font-size:14px; }
 @media (prefers-color-scheme: dark) { .badge { background:transparent !important; } }
 .crumb { margin:0 0 12px; font-size:14px; }
 .sub { color:var(--muted); margin:0 0 16px; }
