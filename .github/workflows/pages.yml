@@ -14,8 +14,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # One deploy at a time; a newer push supersedes an in-flight build.
 concurrency:
@@ -41,6 +39,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write      # publish the Pages deployment
+      id-token: write   # OIDC token deploy-pages exchanges with Pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+# Runs on pull requests from forks: read-only token, no write scopes anywhere.
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -54,3 +58,4 @@ jobs:
       # pages.yml workflow does the real build + deploy on main).
       - name: Build site (smoke)
         run: uv run scripts/build_site.py
+

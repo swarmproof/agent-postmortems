@@ -16,8 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
 
 # Share the publish job's group so the two workflows never push to main at the
 # same time. This run queues behind an in-flight publish rather than cancelling
@@ -30,6 +29,9 @@ concurrency:
 jobs:
   links:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # pushes archive_url backfills to main
+      issues: write     # maintains the dead-links issue
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
