@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pyyaml"]
+# dependencies = ["pyyaml", "jsonschema"]
 # ///
 """Generate the corpus-derived blocks in README.md and TAXONOMY.md from the live corpus.
 
@@ -25,8 +25,10 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_exports import load_incidents  # noqa: E402  same record set the export publishes
+
 REPO = Path(__file__).resolve().parent.parent
-INCIDENTS = REPO / "incidents"
 TAXONOMY = REPO / "schema" / "taxonomy.yaml"
 README = REPO / "README.md"
 TAXONOMY_MD = REPO / "TAXONOMY.md"
@@ -39,7 +41,24 @@ EX_END = "<!-- EXAMPLES:END -->"
 
 
 def load_records() -> list[dict]:
-    return [yaml.safe_load(p.read_text()) for p in sorted(INCIDENTS.glob("2*.yaml"))]
+    """The records exactly as export/incidents.json is built from them."""
+    return load_incidents()
+
+
+def corpus_counts(records: list[dict]) -> dict[str, int]:
+    """Record totals by incident_type; the single source for every published count."""
+    return {
+        "total": len(records),
+        "incident": sum(1 for r in records if r.get("incident_type") == "incident"),
+        "hazard": sum(1 for r in records if r.get("incident_type") == "hazard"),
+    }
+
+
+def counts_sentence(counts: dict[str, int]) -> str:
+    return (
+        f"{counts['total']} sourced records: {counts['incident']} realized incidents "
+        f"and {counts['hazard']} demonstrated hazards"
+    )
 
 
 def taxonomy_classes() -> list[str]:
@@ -48,9 +67,6 @@ def taxonomy_classes() -> list[str]:
 
 
 def compute_rows(records: list[dict]) -> str:
-    total = len(records)
-    incidents = sum(1 for r in records if r.get("incident_type") == "incident")
-    hazards = sum(1 for r in records if r.get("incident_type") == "hazard")
     years = [int(str(r["date"])[:4]) for r in records if r.get("date")]
     span = f"{min(years)}–{max(years)}" if years else ""
 
@@ -61,12 +77,11 @@ def compute_rows(records: list[dict]) -> str:
     all_classes = set(taxonomy_classes())
     covered = len(present & all_classes)
 
-    cve = sum(1 for p in INCIDENTS.glob("2*.yaml") if "CVE-" in p.read_text())
+    cve = sum(1 for r in records if r.get("cve"))
 
     return (
         f"{START}\n"
-        f"| **Incidents** | {total} and growing ({span}) — see the live count badge above |\n"
-        f"| **Type** | {incidents} realized incidents · {hazards} demonstrated hazards / near-misses |\n"
+        f"| **Records** | {counts_sentence(corpus_counts(records))} ({span}) |\n"
         f"| **Coverage** | {covered} of {len(all_classes)} failure classes; {cve} CVE-backed |\n"
         f"{END}"
     )
