@@ -58,8 +58,10 @@ jobs:
           case "$MAX_CANDIDATES" in ''|*[!0-9]*) echo "::error::max_candidates must be a number"; exit 1;; esac
           uv run scripts/discover_incidents.py --json candidates.json --limit "$MAX_CANDIDATES"
 
+      # Exact version (the publisher's stable tag when pinned) so a run never
+      # picks up an unreviewed release; bump deliberately.
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code@2.1.311
 
       - name: Draft incidents from candidates
         env:
