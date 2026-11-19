@@ -60,9 +60,13 @@ jobs:
           [ -n "$ok" ] || { echo "publish failed after retries"; exit 1; }
 
       # Alarm if the corpus and its export ever diverge (e.g. a build-side drop).
+      # This is the export-drift gate: main right after a publish is the one
+      # place committed exports must equal a rebuild. Pull requests do not
+      # commit exports, so the same check there would fail every incident PR.
       - name: Verify export is in sync with the corpus
         run: |
-          inc=$(ls incidents/2*.yaml | wc -l | tr -d ' ')
+          uv run scripts/build_exports.py --check
+          inc=$(find incidents -maxdepth 1 -name '2*.yaml' | wc -l | tr -d ' ')
           exp=$(python3 -c "import json;print(json.load(open('export/incidents.json'))['count'])")
           echo "incident files: $inc  export count: $exp"
           [ "$inc" = "$exp" ] || { echo "::error::export count ($exp) != incident files ($inc)"; exit 1; }
