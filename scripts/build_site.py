@@ -8,7 +8,7 @@
 Reads incidents/*.yaml and emits a self-contained static site to site/:
   site/index.html          browsable index with client-side filters + search
   site/<incident_id>/index.html   per-incident permalink page + "Cite this"
-  site/feed.xml            RSS feed of the most recently published incidents
+  site/feed.xml            RSS feed of incidents, newest first
   site/style.css           shared styles (light/dark)
 
 No backend, no build framework — plain HTML/CSS + a little vanilla JS for the
@@ -397,8 +397,10 @@ def render_feed(recs: list[dict], built: datetime.datetime | None = None,
       2. the record's earliest sources[].date_accessed, for builds without usable
          history or for a file not yet committed;
       3. the build time.
-    Items are the FEED_LIMIT most recently published, newest first, ties broken
-    by incident_id, so a newly added older incident still reaches subscribers.
+    Items are the FEED_LIMIT records with the latest incident `date`, in that
+    order (ties keep filename order, as load_incidents returns them). Selection
+    and order are unchanged from earlier feeds; only the dates are publication
+    times, so pubDate is not monotonic across items.
 
     lastBuildDate is the build time (SOURCE_DATE_EPOCH when set).
 
@@ -412,7 +414,8 @@ def render_feed(recs: list[dict], built: datetime.datetime | None = None,
     def pub(r: dict) -> datetime.datetime:
         return published.get(r["incident_id"]) or first_accessed(r) or built
 
-    ordered = sorted(recs, key=lambda r: (pub(r), r["incident_id"]), reverse=True)
+    # Stable sort: re-sorting load_incidents() output is a no-op.
+    ordered = sorted(recs, key=lambda r: r.get("date") or "", reverse=True)
     items = []
     for r in ordered[:FEED_LIMIT]:
         link = f"{SITE_BASE}/{r['incident_id']}/"

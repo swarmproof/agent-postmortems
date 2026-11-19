@@ -38,8 +38,35 @@ def test_corpus_feed_parses_with_rfc822_dates():
     root, items = _items(bs.render_feed(recs, built=BUILT))
     assert len(items) == min(bs.FEED_LIMIT, len(recs))
     assert _aware(root.findtext("./channel/lastBuildDate")) == BUILT
-    pubs = [_aware(i.findtext("pubDate")) for i in items]
-    assert pubs == sorted(pubs, reverse=True), "items must be newest-published first"
+    for i in items:
+        _aware(i.findtext("pubDate"))
+
+
+def test_selection_is_latest_incident_dates():
+    # Items are the FEED_LIMIT records with the latest incident `date`, newest
+    # first, ties in filename order: the rule earlier feeds used. Rebuilt here
+    # straight from the YAML so it does not lean on load_incidents.
+    import yaml
+    recs = []
+    for p in sorted((REPO / "incidents").glob("*.yaml")):
+        if not p.name.startswith("_"):
+            d = yaml.safe_load(p.read_text())
+            recs.append((str(d["date"]), d["incident_id"]))
+    recs.sort(key=lambda x: x[0], reverse=True)
+    expected = [f"{bs.SITE_BASE}/{rid}/" for _, rid in recs[:bs.FEED_LIMIT]]
+    _, items = _items(bs.render_feed(bs.load_incidents(), built=BUILT))
+    assert [i.findtext("guid") for i in items] == expected
+    # Publication time must not affect selection: a record with the oldest
+    # incident date but the newest publication is still left out.
+    n = bs.FEED_LIMIT + 1
+    day0 = datetime.date(2020, 1, 1)
+    synth = [{"incident_id": f"2020-r{k:03d}", "title": "t",
+              "date": (day0 + datetime.timedelta(days=k)).isoformat(), "sources": []} for k in range(n)]
+    oldest = min(synth, key=lambda r: r["date"])["incident_id"]
+    published = {r["incident_id"]: BUILT - datetime.timedelta(days=30) for r in synth}
+    published[oldest] = BUILT
+    ids = [i.findtext("guid") for i in _items(bs.render_feed(synth, built=BUILT, published=published))[1]]
+    assert len(ids) == bs.FEED_LIMIT and f"{bs.SITE_BASE}/{oldest}/" not in ids
 
 
 def test_pubdate_is_publication_not_occurrence():
