@@ -6,6 +6,8 @@
 2099-invalid-extra-field.yaml: fail
 2099-invalid-empty-sources.yaml: fail
 2099-invalid-bare-source.yaml: fail
+2099-invalid-source-url-scheme.yaml: fail
+2099-invalid-archive-url-scheme.yaml: fail
 2099-invalid-bad-class.yaml: fail
 2099-invalid-bad-subclass.yaml: fail
 2099-invalid-other-no-tags.yaml: fail
