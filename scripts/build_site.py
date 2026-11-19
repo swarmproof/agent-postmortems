@@ -24,8 +24,11 @@ from __future__ import annotations
 
 import datetime
 import html
+import json
 import os
+import re
 import shutil
+import unicodedata
 import urllib.parse
 from pathlib import Path
 
@@ -105,6 +108,116 @@ def chain_str(rec: dict) -> str:
         s = fc.get("subclass")
         parts.append(f"{c}/{s}" if s else c)
     return " → ".join(parts)
+
+
+# --------------------------------------------------------------------------- search index
+# The browsable list is rendered server-side; client search loads a compact,
+# text-only index (search-index.json) and only hides/reorders those cards.
+_SCHEMA_PROPS = json.loads((REPO / "schema" / "incident.schema.json").read_text())["properties"]
+CONFIDENCE_VALUES = _SCHEMA_PROPS["confidence"]["enum"]
+AUTONOMY_VALUES = _SCHEMA_PROPS["system"]["properties"]["autonomy_level"]["enum"]
+TOOL_FACET_MIN = 2  # tools used by fewer records stay searchable but are not offered as a filter
+
+# Body fields searched as free text (lowest ranking tier).
+SEARCH_BODY_FIELDS = ("summary", "trigger", "root_cause", "contributing_factors",
+                      "detection", "recovery", "prevention")
+
+
+def norm_text(*parts) -> str:
+    """Lower-case, NFKC-fold and collapse whitespace; mirrors norm() in search.js."""
+    flat: list[str] = []
+    for p in parts:
+        if p is None:
+            continue
+        if isinstance(p, (list, tuple)):
+            flat.extend(str(x) for x in p if x is not None)
+        else:
+            flat.append(str(p))
+    return " ".join(unicodedata.normalize("NFKC", " ".join(flat)).lower().split())
+
+
+EDGE_PUNCT = "()[]{}.,;:!?\"'`«»“”‘’"  # must match EDGE in search.js
+
+
+def body_tokens(text: str) -> str:
+    """Sorted unique words with edge punctuation stripped.
+
+    Body text is matched term-by-term (no phrase matching), so word order and
+    repeats carry no signal; dropping them roughly halves the index size.
+    """
+    return " ".join(sorted({w.strip(EDGE_PUNCT) for w in text.split()} - {""}))
+
+
+def _spaced_variants(values) -> list[str]:
+    """Add 'prompt injection' next to 'prompt-injection' so either spelling matches."""
+    out = []
+    for v in values:
+        if not v:
+            continue
+        v = str(v)
+        out.append(v)
+        if re.search(r"[-_/]", v):
+            out.append(re.sub(r"[-_/]+", " ", v))
+    return out
+
+
+def search_record(rec: dict) -> dict:
+    """One compact index entry: three ranked text tiers plus exact facet values."""
+    sysm = rec.get("system") or {}
+    fcs = rec.get("failure_classes") or []
+    mappings = [i for ids in (rec.get("mappings") or {}).values() for i in (ids or [])]
+    keys = [
+        rec["incident_id"], rec.get("primary_failure_class"), rec.get("attack_vector"),
+        *[fc.get("class") for fc in fcs], *[fc.get("subclass") for fc in fcs],
+        *(rec.get("tags") or []), *(rec.get("cve") or []), *(rec.get("cwe") or []), *mappings,
+        sysm.get("vendor"), sysm.get("framework"),
+        *(sysm.get("models") or []), *(sysm.get("tools") or []),
+    ]
+    return {
+        "id": rec["incident_id"],
+        "t": norm_text(rec.get("title", "")),
+        "k": norm_text(_spaced_variants(keys)),
+        "b": body_tokens(norm_text(*(rec.get(f) for f in SEARCH_BODY_FIELDS))),
+        "sev": rec.get("severity") or "",
+        "type": rec.get("incident_type") or "",
+        "year": (rec.get("date") or "")[:4],
+        "conf": rec.get("confidence") or "",
+        "auto": sysm.get("autonomy_level") or "",
+        "vendor": sysm.get("vendor") or "",
+        "classes": sorted({fc.get("class") for fc in fcs if fc.get("class")}),
+        "tools": sorted({str(t) for t in (sysm.get("tools") or [])}),
+    }
+
+
+def build_search_index(recs: list[dict]) -> dict:
+    """Index records in display order (the same order as the static card list)."""
+    return {"version": 1, "records": [search_record(r) for r in recs]}
+
+
+def search_index_json(recs: list[dict]) -> str:
+    # <, > and & are \u-escaped so the payload stays inert even if ever inlined in HTML.
+    s = json.dumps(build_search_index(recs), ensure_ascii=False, separators=(",", ":"))
+    return s.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
+
+def facet_options(recs: list[dict]) -> dict[str, list[str]]:
+    """Filter values offered in the UI, keyed by URL parameter name."""
+    tool_counts: dict[str, int] = {}
+    for r in recs:
+        for t in {str(t) for t in ((r.get("system") or {}).get("tools") or [])}:
+            tool_counts[t] = tool_counts.get(t, 0) + 1
+    present = lambda f: {f(r) for r in recs} - {"", None}  # noqa: E731
+    return {
+        "class": sorted({fc.get("class") for r in recs for fc in r.get("failure_classes", [])} - {None}),
+        "severity": [s for s in SEVERITY_ORDER if s in present(lambda r: r.get("severity"))],
+        "type": [t for t in ("incident", "hazard") if t in present(lambda r: r.get("incident_type"))],
+        "year": sorted(present(lambda r: (r.get("date") or "")[:4]), reverse=True),
+        "confidence": [c for c in CONFIDENCE_VALUES if c in present(lambda r: r.get("confidence"))],
+        "autonomy": [a for a in AUTONOMY_VALUES
+                     if a in present(lambda r: (r.get("system") or {}).get("autonomy_level"))],
+        "vendor": sorted(present(lambda r: (r.get("system") or {}).get("vendor")), key=str.casefold),
+        "tool": sorted((t for t, n in tool_counts.items() if n >= TOOL_FACET_MIN), key=str.casefold),
+    }
 
 
 # --------------------------------------------------------------------------- index
@@ -417,6 +530,7 @@ def main() -> int:
     OUT.mkdir(parents=True)
     (OUT / "style.css").write_text(CSS)
     (OUT / "index.html").write_text(render_index(recs))
+    (OUT / "search-index.json").write_text(search_index_json(recs))
     (OUT / "feed.xml").write_text(render_feed(recs))
     for r in recs:
         d = OUT / r["incident_id"]
