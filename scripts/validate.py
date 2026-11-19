@@ -12,6 +12,8 @@ Gates:
   G-ID       incident_id unique across corpus + filename == incident_id
   G-NEUTRAL  no blame adjectives in factual fields
   G-DRIFT    SCHEMA.md field table lists exactly the JSON Schema's top-level properties
+  G-EVIDENCE evidence_assessments[] point at values that exist in the record and
+             cite only URLs listed in the record's own sources[]
 
 Usage:
   uv run scripts/validate.py               # validate the whole corpus, all gates
@@ -116,10 +118,62 @@ def gate_neutrality(record: dict) -> list[str]:
     errors = []
     texts = [(f, record.get(f) or "") for f in FACTUAL_FIELDS]
     texts += [("contributing_factors", " ".join(record.get("contributing_factors") or []))]
+    for i, item in enumerate(record.get("evidence_assessments") or []):
+        if isinstance(item, dict):
+            for key in ("claim", "analyst_note", "uncertainty"):
+                if isinstance(item.get(key), str):
+                    texts.append((f"evidence_assessments[{i}].{key}", item[key]))
     for field, text in texts:
         for adj in BANNED_ADJECTIVES:
             if re.search(rf"\b{re.escape(adj)}\b", text, re.IGNORECASE):
                 errors.append(f"G-NEUTRAL: banned adjective '{adj}' in '{field}'")
+    return errors
+
+
+_MISSING = object()
+
+
+def resolve_pointer(doc, pointer: str):
+    """Resolve an RFC 6901 JSON Pointer against doc; return _MISSING if it does not resolve."""
+    if pointer == "":
+        return doc
+    if not pointer.startswith("/"):
+        return _MISSING
+    node = doc
+    for raw in pointer[1:].split("/"):
+        token = raw.replace("~1", "/").replace("~0", "~")
+        if isinstance(node, dict):
+            if token not in node:
+                return _MISSING
+            node = node[token]
+        elif isinstance(node, list):
+            if not re.fullmatch(r"0|[1-9][0-9]*", token) or int(token) >= len(node):
+                return _MISSING
+            node = node[int(token)]
+        else:
+            return _MISSING
+    return node
+
+
+def gate_evidence(record: dict) -> list[str]:
+    """Each evidence assessment must point at a real value and cite only the record's own sources."""
+    errors = []
+    assessments = record.get("evidence_assessments")
+    if not isinstance(assessments, list):
+        return errors
+    known = {s.get("url") for s in record.get("sources") or [] if isinstance(s, dict)}
+    for i, item in enumerate(assessments):
+        if not isinstance(item, dict):
+            continue  # shape errors are reported by G-SCHEMA
+        path = item.get("field_path")
+        if isinstance(path, str):
+            if path == "/evidence_assessments" or path.startswith("/evidence_assessments/"):
+                errors.append(f"G-EVIDENCE: evidence_assessments[{i}]: field_path '{path}' must not point into evidence_assessments")
+            elif resolve_pointer(record, path) is _MISSING:
+                errors.append(f"G-EVIDENCE: evidence_assessments[{i}]: field_path '{path}' does not resolve in this record")
+        for url in item.get("source_urls") or []:
+            if url not in known:
+                errors.append(f"G-EVIDENCE: evidence_assessments[{i}]: source_url '{url}' is not one of this record's sources[].url")
     return errors
 
 
@@ -151,6 +205,7 @@ def validate_file(path: Path, validator, tax_version, classes, seen) -> list[str
     errors += gate_taxonomy(record, tax_version, classes)
     errors += gate_id(record, path, seen)
     errors += gate_neutrality(record)
+    errors += gate_evidence(record)
     return errors
 
 

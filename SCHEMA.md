@@ -50,11 +50,37 @@ Required-core fields are **bold**; everything else is optional but encouraged.
 | `tags` | Free-form tags; **required in practice when `primary_failure_class: other`** |
 | `submitted_by` | Contributor handle (optional) |
 | **`sources`** | **≥1 required.** Structured objects: `url`, `type`, `title`, `publisher`, `date_accessed`, `archive_url`. No rumors. |
+| `evidence_assessments` | Optional claim-level provenance: `{field_path, claim, evidence_status, source_urls, analyst_note, reviewed_at, reviewer, uncertainty}` — see [Claim-level provenance](#claim-level-provenance) |
 | `machine_export` | Export hints: `replayable`, `stampede_scenario_hint`, `costbomb_seed_hint` |
 
 ## The one rule
 
 Every incident needs at least one **public, linkable source**. Report factually. Name systems without editorializing. Hazards (researcher PoCs, near-misses) are recorded but must be labeled `incident_type: hazard`. Disputed records are annotated (`confidence: disputed`), never deleted (ADR-0008).
+
+## Claim-level provenance
+
+`confidence` rates the record as a whole. `evidence_assessments[]` is an optional, finer-grained layer: each entry says how well one specific statement in the record is supported by the record's own sources. It never replaces or silently changes `confidence`.
+
+| Key | Meaning |
+|-----|---------|
+| `field_path` | **Required.** RFC 6901 JSON Pointer to the assessed value in this record, e.g. `/root_cause`, `/blast_radius/cost/amount_usd`, `/failure_classes/0/subclass`. It must resolve in the record and must not point into `evidence_assessments` itself. |
+| `claim` | **Required.** The specific statement being assessed, in neutral words. |
+| `evidence_status` | **Required.** `direct` / `corroborated` / `inferred` / `unknown` / `disputed` (below). |
+| `source_urls` | URLs supporting the claim. Each must equal a `url` already listed in this record's `sources[]`, character for character — add the source to `sources[]` first. |
+| `analyst_note` | Reasoning behind the status. Required for `inferred` and `disputed`. |
+| `reviewed_at` | **Required.** Date the assessment was made (`YYYY-MM-DD`). |
+| `reviewer` | Optional pseudonymous handle (letters, digits, `.`, `_`, `-`). Never a legal name or email address. |
+| `uncertainty` | What remains unestablished, and what evidence would settle it. |
+
+Status meanings:
+
+- **`direct`** — a cited source states it. Needs ≥1 `source_urls`.
+- **`corroborated`** — two or more independent cited sources state it. Needs ≥2 `source_urls`.
+- **`inferred`** — analyst reasoning from cited facts; no source states it. Needs `analyst_note`.
+- **`unknown`** — the sources do not establish it. Use `uncertainty` to say what is missing.
+- **`disputed`** — a cited source or a named party contests it. Needs `analyst_note`; cite the contesting source.
+
+The validator (G-EVIDENCE) rejects an unresolvable `field_path` and any `source_urls` entry not in `sources[]`. Prose in `claim`, `analyst_note` and `uncertainty` is held to the same neutrality lint as the factual fields.
 
 ## What changed vs. v0
 

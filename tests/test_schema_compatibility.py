@@ -80,7 +80,8 @@ def test_live_schema_keeps_every_frozen_property_unchanged():
     """Existing property definitions are untouched; only new optional keys may appear."""
     for name, definition in FROZEN_SCHEMA["properties"].items():
         assert LIVE_SCHEMA["properties"].get(name) == definition, name
-    assert LIVE_SCHEMA["$defs"] == FROZEN_SCHEMA["$defs"]
+    for name, definition in FROZEN_SCHEMA["$defs"].items():
+        assert LIVE_SCHEMA["$defs"].get(name) == definition, name
 
 
 def test_live_schema_required_core_unchanged():
