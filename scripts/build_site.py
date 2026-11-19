@@ -513,6 +513,22 @@ def render_feed(recs: list[dict]) -> str:
 """
 
 
+# --------------------------------------------------------------------------- crawl files
+def render_sitemap(recs: list[dict]) -> str:
+    """Index plus every permalink. lastmod only where the record states last_updated."""
+    urls = [f"  <url><loc>{esc(SITE_BASE)}/</loc></url>"]
+    for r in sorted(recs, key=lambda r: r["incident_id"]):
+        lastmod = f"<lastmod>{esc(r['last_updated'])}</lastmod>" if r.get("last_updated") else ""
+        urls.append(f"  <url><loc>{esc(SITE_BASE)}/{esc(r['incident_id'])}/</loc>{lastmod}</url>")
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            + "\n".join(urls) + "\n</urlset>\n")
+
+
+def render_robots() -> str:
+    return f"User-agent: *\nAllow: /\n\nSitemap: {SITE_BASE}/sitemap.xml\n"
+
+
 CSS = """
 :root { --bg:#fbfbfa; --fg:#1a1a1a; --muted:#666; --card:#fff; --line:#e5e5e3; --accent:#3b5bdb; }
 @media (prefers-color-scheme: dark) {
@@ -731,6 +747,8 @@ def main() -> int:
     (OUT / "index.html").write_text(render_index(recs))
     (OUT / "search-index.json").write_text(search_index_json(recs), encoding="utf-8")
     (OUT / "search.js").write_text(SEARCH_JS, encoding="utf-8")
+    (OUT / "sitemap.xml").write_text(render_sitemap(recs), encoding="utf-8")
+    (OUT / "robots.txt").write_text(render_robots(), encoding="utf-8")
     (OUT / "feed.xml").write_text(render_feed(recs))
     for r in recs:
         d = OUT / r["incident_id"]
