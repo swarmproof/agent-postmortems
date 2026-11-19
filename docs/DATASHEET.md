@@ -302,9 +302,9 @@ deliberately non-executable, and records are descriptions of failures, not explo
   Exports, README statistics and archive snapshots refresh daily at 07:00 UTC and on every
   qualifying push to `main`. Versioned snapshots are released on a CalVer cadence.
 - **Corrections and disputes.** A sourced record is never deleted (ADR-0008). If a vendor
-  or other party contests the facts, the record is downgraded to
-  `confidence: disputed`, their reply is added as a `vendor-response` source, and the
-  dispute becomes part of the record. The process is described in
+  or other party contests the facts, their public reply is added as a `vendor-response`
+  source; an error the source establishes is corrected, and where the sources genuinely
+  conflict the record is set to `confidence: disputed` and carries both accounts. The process is described in
   [`DISPUTES.md`](../DISPUTES.md).
 - **Versioning.** Records carry `schema_version: "1.0"` and `taxonomy_version: "1.0"`;
   the exports carry `export_schema_version: "1.0"`. Breaking changes to any of these are
