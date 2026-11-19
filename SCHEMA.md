@@ -22,8 +22,12 @@ Required-core fields are **bold**; everything else is optional but encouraged.
 | **`incident_id`** | Stable, immutable slug `<year>-<kebab>`, e.g. `2025-whatsapp-mcp-tool-poisoning`; must equal the filename |
 | **`title`** | Neutral, factual one-line title (8–140 chars) |
 | `summary` | Neutral 1–3 sentence factual summary (≤500 chars), no editorializing |
-| **`date`** | When it happened or was first publicly disclosed (`YYYY-MM-DD`) |
+| **`date`** | When it happened or was first publicly disclosed (`YYYY-MM-DD`); which of the two is stated by `temporal_basis` where known — see [Date semantics](#date-semantics) |
 | `last_updated` | Date the record was last revised |
+| `occurred_on` | Date it happened (for a hazard: first demonstrated), `YYYY-MM-DD`; only when a source states it |
+| `disclosed_on` | Date it was first made public by anyone, `YYYY-MM-DD`; only when a source establishes it |
+| `published_on` | Publication date of the principal cited source report, `YYYY-MM-DD` |
+| `temporal_basis` | What `date` represents: `occurred` / `disclosed` / `published` / `unknown` |
 | **`incident_type`** | `incident` (realized harm) or `hazard` (demonstrated PoC / near-miss, OECD-style) |
 | `status` | Report maturity: `preliminary` / `factual` / `final` (NTSB-style) |
 | `confidence` | Sourcing certainty: `reported` / `corroborated` / `confirmed` / `disputed` (VERIS-style) |
@@ -56,6 +60,22 @@ Required-core fields are **bold**; everything else is optional but encouraged.
 ## The one rule
 
 Every incident needs at least one **public, linkable source**. Report factually. Name systems without editorializing. Hazards (researcher PoCs, near-misses) are recorded but must be labeled `incident_type: hazard`. Disputed records are annotated (`confidence: disputed`), never deleted (ADR-0008).
+
+## Date semantics
+
+The required `date` has historically meant "occurred *or* first publicly disclosed", so on its own it does not say which. Four optional fields make that explicit without changing `date`:
+
+- `occurred_on` — when the incident happened; for a hazard, when it was first demonstrated.
+- `disclosed_on` — when it was first made public, by anyone.
+- `published_on` — when the principal cited source report was published.
+- `temporal_basis` — which of those the legacy `date` holds: `occurred`, `disclosed`, `published`, or `unknown`.
+
+Rules:
+
+- **Full dates only** (`YYYY-MM-DD`), exactly like `date`, `last_updated` and `sources[].date_accessed`. When a source gives only a month or a year, leave the field out rather than padding it to the first of the month; record the coarser fact in an `evidence_assessments` entry on `/date` if it matters.
+- **Never inferred.** Each field is set only when a cited source states it. Records without them stay valid, and an absent field means "not recorded", not "unknown to the world".
+- The validator (G-DATES) requires `occurred_on` ≤ `disclosed_on` ≤ `published_on` for whichever are present, and, when `temporal_basis` names a field that is present, that field must equal `date`.
+- `date` stays required and keeps its meaning, so existing sorting, filtering and export stamps are unchanged.
 
 ## Claim-level provenance
 

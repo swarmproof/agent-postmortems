@@ -14,6 +14,8 @@ Gates:
   G-DRIFT    SCHEMA.md field table lists exactly the JSON Schema's top-level properties
   G-EVIDENCE evidence_assessments[] point at values that exist in the record and
              cite only URLs listed in the record's own sources[]
+  G-DATES    occurred_on <= disclosed_on <= published_on, and the field named by
+             temporal_basis, when present, equals the legacy `date`
 
 Usage:
   uv run scripts/validate.py               # validate the whole corpus, all gates
@@ -177,6 +179,29 @@ def gate_evidence(record: dict) -> list[str]:
     return errors
 
 
+DATE_FIELDS = ("occurred_on", "disclosed_on", "published_on")  # chronological order
+_FULL_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+
+
+def gate_dates(record: dict) -> list[str]:
+    """Optional date-semantics fields must be in order and agree with `date` via temporal_basis."""
+    errors = []
+    dates = {f: record[f] for f in DATE_FIELDS
+             if isinstance(record.get(f), str) and _FULL_DATE.fullmatch(record[f])}
+    present = [f for f in DATE_FIELDS if f in dates]
+    for earlier, later in zip(present, present[1:]):
+        if dates[earlier] > dates[later]:
+            errors.append(f"G-DATES: {earlier} '{dates[earlier]}' is after {later} '{dates[later]}'")
+    basis = record.get("temporal_basis")
+    field = f"{basis}_on" if basis in ("occurred", "disclosed", "published") else None
+    if field in dates and dates[field] != record.get("date"):
+        errors.append(
+            f"G-DATES: temporal_basis '{basis}' means date should equal {field}, "
+            f"but date is '{record.get('date')}' and {field} is '{dates[field]}'"
+        )
+    return errors
+
+
 def gate_drift(schema: dict) -> list[str]:
     """SCHEMA.md's Fields table must list exactly the schema's top-level properties."""
     md = SCHEMA_MD.read_text()
@@ -206,6 +231,7 @@ def validate_file(path: Path, validator, tax_version, classes, seen) -> list[str
     errors += gate_id(record, path, seen)
     errors += gate_neutrality(record)
     errors += gate_evidence(record)
+    errors += gate_dates(record)
     return errors
 
 

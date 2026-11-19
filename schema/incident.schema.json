@@ -23,6 +23,14 @@
     "summary": { "type": "string", "maxLength": 500, "description": "Neutral 1–3 sentence factual summary. No editorializing." },
     "date": { "type": "string", "format": "date", "description": "Date the incident occurred or was first publicly disclosed (YYYY-MM-DD)." },
     "last_updated": { "type": "string", "format": "date" },
+    "occurred_on": { "type": "string", "format": "date", "description": "Date the incident happened, or for a hazard the date it was first demonstrated (YYYY-MM-DD). Omit unless a source states it at day precision; never infer." },
+    "disclosed_on": { "type": "string", "format": "date", "description": "Date the incident or hazard was first made public by anyone (YYYY-MM-DD). Omit unless a source establishes it." },
+    "published_on": { "type": "string", "format": "date", "description": "Publication date of the principal cited source report (YYYY-MM-DD). Omit unless the source shows it." },
+    "temporal_basis": {
+      "type": "string",
+      "enum": ["occurred", "disclosed", "published", "unknown"],
+      "description": "What the legacy `date` field represents for this record: the occurrence, first public disclosure, principal source publication, or not established."
+    },
 
     "incident_type": {
       "type": "string",
