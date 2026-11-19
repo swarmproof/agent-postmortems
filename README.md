@@ -1,17 +1,19 @@
 # agent-postmortems
 
-**A structured, public database of real AI-agent failures — and the schema for reporting them.**
+**A structured, public database of AI-agent failures — realized incidents and demonstrated hazards — and the schema for reporting them.**
 
 [![validate](https://github.com/swarmproof/agent-postmortems/actions/workflows/validate.yml/badge.svg)](https://github.com/swarmproof/agent-postmortems/actions/workflows/validate.yml)
-[![incidents](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fswarmproof%2Fagent-postmortems%2Fmain%2Fexport%2Fincidents.json&query=%24.count&label=incidents&color=1f6feb)](https://swarmproof.github.io/agent-postmortems/)
+[![records](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fswarmproof%2Fagent-postmortems%2Fmain%2Fexport%2Fincidents.json&query=%24.count&label=records&color=1f6feb)](https://swarmproof.github.io/agent-postmortems/)
 [![release](https://img.shields.io/github/v/release/swarmproof/agent-postmortems?label=release&color=1f6feb)](https://github.com/swarmproof/agent-postmortems/releases)
 [![site](https://img.shields.io/badge/site-live-2ea043)](https://swarmproof.github.io/agent-postmortems/)
 [![code: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](./LICENSE)
 [![data: CC-BY-4.0](https://img.shields.io/badge/data-CC--BY--4.0-blue)](./LICENSE-DATA)
 
-Agents now take real actions in production — they call tools, spend money, write to databases, browse the web, and run code. They fail in novel but **repeating** ways, yet there is no shared, structured record of those failures. This repo is that record: one rigorous schema, a growing corpus of sourced incidents that conform to it, and the tooling to keep it honest.
+Agents now take real actions in production — they call tools, spend money, write to databases, browse the web, and run code. They fail in novel but **repeating** ways. This repo records those failures in one structured form: one rigorous schema, a growing corpus of sourced records that conform to it, and the tooling to keep it honest. Each record is either a realized incident (harm or an unintended action occurred) or a demonstrated hazard (a researcher proof of concept, disclosed vulnerability or near-miss), and is labelled as such.
 
 **→ Browse and search the corpus at [swarmproof.github.io/agent-postmortems](https://swarmproof.github.io/agent-postmortems/)**
+
+> **Limitations.** Records come from public reporting: disclosures, research write-ups, news and court filings. Public reporting is not a representative prevalence sample — what gets reported depends on disclosure practices, researcher attention and media interest — so counts here do not measure how often agents fail, and comparing vendors by record count is not a safety ranking. Hazards are demonstrations, not evidence of harm in the wild.
 
 ## What's in the corpus
 
