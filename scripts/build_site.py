@@ -119,8 +119,16 @@ def page(title: str, body: str, css_href: str, description: str = "", *,
 {body}
 </main>
 <footer class="site-foot">
-  <span>Data: <a href="https://github.com/swarmproof/agent-postmortems">github.com/swarmproof/agent-postmortems</a></span>
-  <span>Corpus CC-BY-4.0 · code Apache-2.0</span>
+  <nav aria-label="Project">
+    <a href="{REPO_URL}">Source on GitHub</a>
+    <a href="{REPO_URL}/blob/main/docs/METHODS.md">Methods</a>
+    <a href="{REPO_URL}/blob/main/DISPUTES.md">Corrections &amp; disputes</a>
+    <a href="{REPO_URL}/blob/main/CONTRIBUTING.md">Contribute</a>
+    <a href="{REPO_URL}/blob/main/SECURITY.md">Security</a>
+    <a href="{SITE_BASE}/feed.xml">RSS feed</a>
+  </nav>
+  <p>Data <a href="{REPO_URL}/blob/main/LICENSE-DATA">CC-BY-4.0</a> ·
+  code <a href="{REPO_URL}/blob/main/LICENSE">Apache-2.0</a></p>
 </footer>
 </body>
 </html>
@@ -541,7 +549,10 @@ main { max-width:820px; margin:0 auto; padding:0 20px 64px; }
 .site-head { max-width:820px; margin:0 auto; padding:20px; display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; }
 .brand { font-weight:700; font-size:18px; color:var(--fg); }
 .tagline { color:var(--muted); font-size:14px; }
-.site-foot { max-width:820px; margin:0 auto; padding:24px 20px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.site-foot { max-width:820px; margin:0 auto; padding:24px 20px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+.site-foot nav { display:flex; flex-wrap:wrap; gap:6px 16px; margin-bottom:8px; }
+.site-foot nav a { padding:4px 0; }
+.site-foot p { margin:0; }
 h1 { font-size:28px; line-height:1.25; margin:8px 0 12px; }
 h2 { font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:28px 0 8px; }
 .intro p { color:var(--fg); }
