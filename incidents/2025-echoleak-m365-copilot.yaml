@@ -8,6 +8,7 @@ summary: >-
   exfiltrate context with no user click. Disclosed by Aim Security and fixed
   server-side; Microsoft reported no evidence of exploitation in the wild.
 date: "2025-06-11"
+last_updated: "2026-11-19"
 incident_type: hazard
 status: final
 confidence: confirmed
@@ -39,10 +40,12 @@ causation:
   timing: post-deployment
 
 trigger: >-
-  A crafted email containing a hidden prompt payload (e.g. white-on-white text
-  or an HTML comment) was retained by Copilot. When the user later asked Copilot
-  a normal question, the RAG engine retrieved the email and executed the hidden
-  instructions, exfiltrating context without any user click.
+  An attacker sent an innocuous-looking, markdown-formatted email whose
+  instructions were phrased as ordinary business content addressed to the
+  recipient rather than to the model. When the user later asked Copilot a normal
+  business question, the RAG engine retrieved the email into context alongside
+  internal data and Copilot followed the embedded instructions, exfiltrating
+  context without any user click.
 root_cause: >-
   Untrusted external content entered the model's trust boundary and was acted on
   as instructions, chaining multiple bypasses (XPIA classifier evasion,
