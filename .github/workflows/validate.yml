@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0   # the link gate diffs a pull request against its base
+          persist-credentials: false
       - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       # G-SCHEMA, G-TAX, G-ID, G-NEUTRAL, G-DRIFT — corpus-wide, fail-closed
@@ -35,9 +36,12 @@ jobs:
       # the records it changes, so a flaky third-party host behind an unrelated
       # record cannot fail it; pushes to main still check the whole corpus.
       - name: Check source links
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            changed=$(git diff --name-only --diff-filter=AM "origin/${{ github.base_ref }}...HEAD" -- 'incidents/*.yaml' | grep -v '/_' || true)
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            changed=$(git diff --name-only --diff-filter=AM "origin/${BASE_REF}...HEAD" -- 'incidents/*.yaml' | grep -v '/_' || true)
             if [ -n "$changed" ]; then
               echo "scoped to changed records:"; echo "$changed"
               echo "$changed" | xargs uv run scripts/check_links.py
