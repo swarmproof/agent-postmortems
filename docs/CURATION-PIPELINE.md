@@ -14,13 +14,13 @@ work; a maintainer decides what becomes an incident.
 ## The parts
 
 ```
-  discover_incidents.py ──┐  DISCOVERY  weekly-discovery.yml  (Mondays, no secrets)
+  discover_incidents.py ──┐  DISCOVERY  discover.yml  (Mondays, no secrets)
   (research feeds, lab     │    find + dedup ──> "Candidate incidents" issue
    disclosures, arXiv,     │
-   Google News, NVD CVE    │  AUTO-DRAFT  weekly-autocurate.yml  (opt-in: ANTHROPIC_API_KEY)
+   Google News, NVD CVE    │  AUTO-DRAFT  autocurate.yml  (opt-in: ANTHROPIC_API_KEY)
    + GitHub advisories)    │    find + dedup ──> Claude drafts v1 YAML ──> validate ──> PR
                            │
-  coverage_gaps.py ────────┘  COMPLETENESS CRITIC  weekly-coverage.yml  (Wednesdays, no secrets)
+  coverage_gaps.py ────────┘  COMPLETENESS CRITIC  coverage.yml  (Wednesdays, no secrets)
   (curated external lists)     diff corpus vs external lists ──> "Coverage gaps" issue
                                                         │
                                        human reviews the issue / PR ──> merges
