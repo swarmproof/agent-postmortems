@@ -26,6 +26,7 @@ import datetime
 import html
 import os
 import shutil
+import urllib.parse
 from pathlib import Path
 
 import yaml
@@ -187,14 +188,26 @@ def prose(label: str, text) -> str:
     return f'<section class="prose"><h2>{esc(label)}</h2><p>{esc(text)}</p></section>' if text else ""
 
 
+def safe_url(url) -> str:
+    """Return the URL only if it is an absolute http(s) link, else ''.
+
+    Source URLs are contributor data; `format: uri` alone admits schemes such as
+    javascript: or data:, which must never become a clickable href.
+    """
+    u = str(url or "").strip()
+    return u if urllib.parse.urlsplit(u).scheme.lower() in ("http", "https") else ""
+
+
 def render_sources(rec: dict) -> str:
     items = []
     for s in rec.get("sources", []):
-        url = s.get("url", "")
-        title = s.get("title") or url
+        url = safe_url(s.get("url"))
+        title = s.get("title") or s.get("url") or ""
         meta = " · ".join(filter(None, [s.get("publisher"), s.get("type")]))
-        arch = f' · <a href="{esc(s.get("archive_url"))}">archived</a>' if s.get("archive_url") else ""
-        items.append(f'<li><a href="{esc(url)}">{esc(title)}</a><span class="src-meta">{esc(meta)}{arch}</span></li>')
+        archive = safe_url(s.get("archive_url"))
+        arch = f' · <a href="{esc(archive)}">archived</a>' if archive else ""
+        link = f'<a href="{esc(url)}">{esc(title)}</a>' if url else esc(title)
+        items.append(f'<li>{link}<span class="src-meta">{esc(meta)}{arch}</span></li>')
     return f'<section class="prose"><h2>Sources</h2><ul class="sources">{"".join(items)}</ul></section>' if items else ""
 
 
