@@ -137,6 +137,7 @@ sources:
     publisher: NBC News
     type: news
     date_accessed: "2026-11-16"
+    archive_url: "https://web.archive.org/web/20261119161554/https://www.nbcnews.com/tech/tech-news/google-says-ai-model-gained-unauthorized-access-three-systems-rcna598651"
   - url: "https://www.securityweek.com/google-confirms-gemini-ai-breached-three-firms/"
     title: "Google Confirms Gemini AI Breached Three Firms"
     publisher: SecurityWeek
