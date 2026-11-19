@@ -102,6 +102,8 @@ Status meanings:
 
 The validator (G-EVIDENCE) rejects an unresolvable `field_path` and any `source_urls` entry not in `sources[]`. Prose in `claim`, `analyst_note` and `uncertainty` is held to the same neutrality lint as the factual fields.
 
+Both extensions — provenance and date semantics — are optional and additive within v1. [ADR-0011](./adr/0011-optional-provenance-and-date-semantics-in-v1.md) records the compatibility evidence, the export behaviour, and the effect on readers that validate against an older copy of the schema.
+
 ## What changed vs. v0
 
 v0 was 11 flat fields with a single `failure_class` enum and bare-string sources. v1 keeps all 11 (renamed/nested where noted) and adds the optional body:
