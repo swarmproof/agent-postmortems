@@ -78,9 +78,12 @@ jobs:
             const { owner, repo } = context.repo;
             const today = new Date().toISOString().slice(0, 10);
             const title = 'Dead source links';
-            const existing = await github.rest.issues.listForRepo({
-              owner, repo, state: 'open', labels: 'link-rot',
-            });
+            // Only touch the digest this workflow owns: opened by the Actions bot,
+            // with this exact title. A human-opened issue carrying the same label
+            // is never overwritten (or closed); a new digest is opened instead.
+            const existing = { data: (await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', labels: 'link-rot', per_page: 100,
+            })).filter(i => !i.pull_request && i.user?.login === 'github-actions[bot]' && i.title === title) };
             if (dead.length) {
               const lines = dead.map(d =>
                 `- [\`${d.id}\`](https://github.com/${owner}/${repo}/blob/main/incidents/${d.id}.yaml) ${d.url} (${d.detail})`);
