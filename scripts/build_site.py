@@ -23,9 +23,13 @@ Usage:
 from __future__ import annotations
 
 import datetime
+import email.utils
 import html
 import os
+import re
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import yaml
@@ -336,25 +340,120 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
 
 
 # --------------------------------------------------------------------------- feed
-def render_feed(recs: list[dict]) -> str:
-    latest = recs[0]["date"] if recs else ""
+FEED_LIMIT = 50
+# Characters XML 1.0 forbids even when escaped (C0 controls except tab/LF/CR).
+_XML_ILLEGAL = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
+
+
+def xml_text(x) -> str:
+    """Escape a value for XML character data or attributes, dropping illegal chars."""
+    return esc(_XML_ILLEGAL.sub("", str(x if x is not None else "")))
+
+
+def rfc822(dt: datetime.datetime) -> str:
+    """RFC 822 / RSS 2.0 date in GMT. Naive datetimes are rejected, not guessed."""
+    if dt.tzinfo is None:
+        raise ValueError("feed datetimes must be timezone-aware")
+    return email.utils.format_datetime(dt.astimezone(datetime.timezone.utc), usegmt=True)
+
+
+def build_time() -> datetime.datetime:
+    """Build time for lastBuildDate: SOURCE_DATE_EPOCH when set, else now (UTC)."""
+    epoch = os.environ.get("SOURCE_DATE_EPOCH")
+    if epoch:
+        return datetime.datetime.fromtimestamp(int(epoch), tz=datetime.timezone.utc)
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+def git_first_added(repo: Path = REPO) -> dict[str, datetime.datetime]:
+    """Map incident_id -> time its file first landed on the mainline.
+
+    Walks first-parent history and diffs each commit (merges included) against its
+    first parent, so a file added on a pull-request branch is dated by the merge
+    that published it, not by the earlier branch commit. Renames are not followed:
+    an id is published under its current filename. Returns {} when history is not
+    usable: no git, not a work tree, or a shallow clone (the shallow boundary
+    commit would appear to add every file at once).
+    """
+    def git(*args: str) -> str:
+        return subprocess.run(["git", "-C", str(repo), *args], check=True,
+                              capture_output=True, text=True).stdout
+    try:
+        if git("rev-parse", "--is-shallow-repository").strip() != "false":
+            print("feed: shallow clone, falling back to in-record dates", file=sys.stderr)
+            return {}
+        log = git("log", "--first-parent", "--diff-merges=first-parent", "--no-renames",
+                  "--diff-filter=A", "--name-only", "--format=@%ct", "--", "incidents/")
+    except (OSError, subprocess.CalledProcessError):
+        return {}
+    added: dict[str, datetime.datetime] = {}
+    ts = None
+    for line in log.splitlines():
+        if line.startswith("@"):
+            ts = datetime.datetime.fromtimestamp(int(line[1:]), tz=datetime.timezone.utc)
+        elif line.endswith(".yaml") and ts is not None:
+            rid = Path(line).stem
+            # log is newest-first; keep overwriting so the earliest add wins
+            added[rid] = ts
+    return added
+
+
+def first_accessed(rec: dict) -> datetime.datetime | None:
+    """Earliest sources[].date_accessed at 00:00 UTC (set at curation, never rewritten)."""
+    days = sorted(s["date_accessed"] for s in rec.get("sources", []) if s.get("date_accessed"))
+    if not days:
+        return None
+    d = datetime.date.fromisoformat(days[0])
+    return datetime.datetime(d.year, d.month, d.day, tzinfo=datetime.timezone.utc)
+
+
+def render_feed(recs: list[dict], built: datetime.datetime | None = None,
+                published: dict[str, datetime.datetime] | None = None) -> str:
+    """RSS 2.0 feed of the most recently published records.
+
+    pubDate is when a record was first published in this registry, NOT when the
+    incident happened (that is the record's `date`). Source, in order:
+      1. the commit that first added incidents/<id>.yaml on the mainline
+         (git_first_added; needs full history, hence fetch-depth: 0 in CI);
+      2. the record's earliest sources[].date_accessed, for builds without usable
+         history or for a file not yet committed;
+      3. the build time.
+    Items are the FEED_LIMIT records with the latest incident `date`, in that
+    order (ties keep filename order, as load_incidents returns them). Selection
+    and order are unchanged from earlier feeds; only the dates are publication
+    times, so pubDate is not monotonic across items.
+
+    lastBuildDate is the build time (SOURCE_DATE_EPOCH when set).
+
+    <guid> is the incident permalink, unchanged from earlier builds so existing
+    subscribers are not re-notified; it depends only on SITE_BASE and the id.
+    """
+    built = built or build_time()
+    if published is None:
+        published = git_first_added()
+
+    def pub(r: dict) -> datetime.datetime:
+        return published.get(r["incident_id"]) or first_accessed(r) or built
+
+    # Stable sort: re-sorting load_incidents() output is a no-op.
+    ordered = sorted(recs, key=lambda r: r.get("date") or "", reverse=True)
     items = []
-    for r in recs[:50]:
+    for r in ordered[:FEED_LIMIT]:
         link = f"{SITE_BASE}/{r['incident_id']}/"
         items.append(f"""  <item>
-    <title>{esc(r.get('title', r['incident_id']))}</title>
-    <link>{esc(link)}</link>
-    <guid isPermaLink="true">{esc(link)}</guid>
-    <pubDate>{esc(r.get('date',''))}</pubDate>
-    <description>{esc(r.get('summary',''))}</description>
+    <title>{xml_text(r.get('title', r['incident_id']))}</title>
+    <link>{xml_text(link)}</link>
+    <guid isPermaLink="true">{xml_text(link)}</guid>
+    <pubDate>{rfc822(pub(r))}</pubDate>
+    <description>{xml_text(r.get('summary',''))}</description>
   </item>""")
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
 <channel>
   <title>agent-postmortems</title>
-  <link>{SITE_BASE}/</link>
+  <link>{xml_text(SITE_BASE)}/</link>
   <description>A structured database of real AI-agent failures.</description>
-  <lastBuildDate>{esc(latest)}</lastBuildDate>
+  <lastBuildDate>{rfc822(built)}</lastBuildDate>
 {chr(10).join(items)}
 </channel>
 </rss>
