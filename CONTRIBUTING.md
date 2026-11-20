@@ -3,6 +3,7 @@
 Thanks for helping build **agent-postmortems** — part of the [Swarm Proof toolkit](https://github.com/swarmproof).
 
 ## Ways to contribute
+- **Report an agent failure** — no YAML needed. Use the [Report an agent failure](https://github.com/swarmproof/agent-postmortems/issues/new/choose) issue form with at least one public source; a maintainer turns it into a record. Writing the record yourself (below) is the faster route if you are comfortable with YAML.
 - **Good first issues** — look for the `good-first-issue` label. A few are seeded to get you started.
 - **Bug reports** — open an issue with a minimal reproduction.
 - **Features & discussion** — open an issue before a large PR so we can align on direction.
@@ -32,11 +33,19 @@ Thanks for helping build **agent-postmortems** — part of the [Swarm Proof tool
 - Report factually; name systems as data, never as targets. No blame adjectives (CI lints for these).
 - Root causes are **systemic, not personal** (blameless post-mortem style).
 - Never identify harmed individuals beyond what public sources already published.
-- If a vendor disputes a record, we add their response as a `vendor-response` source and set `confidence: disputed` — sourced incidents are never deleted (ADR-0008).
+- If a vendor or other named party responds to a record, their public reply is added as a `vendor-response` source. A sourced error is corrected; where the sources genuinely conflict, `confidence` is set to `disputed`. Sourced incidents are never deleted (ADR-0008).
 
 ### Disputing a record
 
 A named party who contests the facts of a record follows the process in [`DISPUTES.md`](./DISPUTES.md). The dispute becomes part of the record; the record itself is annotated, never removed.
+
+### Security and personal data
+
+A record that carries a runnable payload or personal data beyond its sources, or a vulnerability in the tooling, is reported under [`SECURITY.md`](./SECURITY.md), not in a public issue.
+
+### Method and triage
+
+[`docs/METHODS.md`](./docs/METHODS.md) explains how records are found and reviewed, the incident/hazard and confidence definitions, what `date` means, and the limits of the corpus. Maintainers handle issue-form reports with [`docs/TRIAGE.md`](./docs/TRIAGE.md); nothing is published without a human reviewing its sources.
 
 ## Principles
 - **Provider-agnostic** — no hard dependency on a single model vendor.
