@@ -15,12 +15,12 @@ on:
         default: "5"
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   guard:
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       enabled: ${{ steps.check.outputs.enabled }}
     steps:
@@ -36,18 +36,32 @@ jobs:
     needs: guard
     if: needs.guard.outputs.enabled == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write        # create-pull-request pushes the review branch
+      pull-requests: write   # and opens the review PR
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-node@v4
+      # The drafting agent reads untrusted web content and has Bash, so the job
+      # token is not left in .git/config for it; create-pull-request
+      # authenticates with its own token input.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
 
       - name: Discover candidates
-        run: uv run scripts/discover_incidents.py --json candidates.json --limit "${{ github.event.inputs.max_candidates || 5 }}"
+        env:
+          MAX_CANDIDATES: ${{ github.event.inputs.max_candidates || '5' }}
+        run: |
+          case "$MAX_CANDIDATES" in ''|*[!0-9]*) echo "::error::max_candidates must be a number"; exit 1;; esac
+          uv run scripts/discover_incidents.py --json candidates.json --limit "$MAX_CANDIDATES"
 
+      # Exact version (the publisher's stable tag when pinned) so a run never
+      # picks up an unreviewed release; bump deliberately.
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code@2.1.311
 
       - name: Draft incidents from candidates
         env:
@@ -57,18 +71,27 @@ jobs:
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch" \
             --permission-mode acceptEdits
 
+      # The agent may only add files under incidents/. Anything else it changed
+      # or created (validators, schema, tool config, candidates.json) is reset
+      # first, so the gates below run the committed tooling, not edited copies.
+      - name: Discard changes outside incidents/
+        run: |
+          git checkout HEAD -- . ':(exclude)incidents'
+          git clean -ffdx -- . ':(exclude)incidents'
+
       - name: Validate drafts (fail-closed)
         run: |
           uv run scripts/validate.py
           uv run scripts/check_links.py
 
       - name: Open review PR
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
         with:
           branch: bot/incident-candidates
           title: "Auto-drafted incident candidates for review"
           commit-message: "feat(corpus): auto-drafted incident candidates"
           labels: needs-review
+          add-paths: incidents/*.yaml
           delete-branch: true
           body: |
             Auto-drafted by `weekly-autocurate` from the discovery feed. **Do not merge

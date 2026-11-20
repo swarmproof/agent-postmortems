@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 # Newest run wins: exports are regenerated from the latest main, so an in-flight
 # run is safe to cancel — the superseding run rebuilds the full, current corpus.
@@ -25,12 +25,14 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # pushes the regenerated exports to main
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: main
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       # Regenerate archives + exports from the LATEST main and push. The export
       # is a generated file, so we never rebase/merge it (that conflicts); instead
@@ -58,9 +60,13 @@ jobs:
           [ -n "$ok" ] || { echo "publish failed after retries"; exit 1; }
 
       # Alarm if the corpus and its export ever diverge (e.g. a build-side drop).
+      # This is the export-drift gate: main right after a publish is the one
+      # place committed exports must equal a rebuild. Pull requests do not
+      # commit exports, so the same check there would fail every incident PR.
       - name: Verify export is in sync with the corpus
         run: |
-          inc=$(ls incidents/2*.yaml | wc -l | tr -d ' ')
+          uv run scripts/build_exports.py --check
+          inc=$(find incidents -maxdepth 1 -name '2*.yaml' | wc -l | tr -d ' ')
           exp=$(python3 -c "import json;print(json.load(open('export/incidents.json'))['count'])")
           echo "incident files: $inc  export count: $exp"
           [ "$inc" = "$exp" ] || { echo "::error::export count ($exp) != incident files ($inc)"; exit 1; }

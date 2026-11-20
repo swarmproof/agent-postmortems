@@ -16,8 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
 
 # Share the publish job's group so the two workflows never push to main at the
 # same time. This run queues behind an in-flight publish rather than cancelling
@@ -30,12 +29,15 @@ concurrency:
 jobs:
   links:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # pushes archive_url backfills to main
+      issues: write     # maintains the dead-links issue
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: main
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       # Probe the whole corpus and backfill archives from the LATEST main, then
       # fast-forward push the new archive_url values. Same reset/rebuild/push
@@ -65,7 +67,7 @@ jobs:
       # prints "FAIL [incident_id] url (detail)"). One reused issue, labelled
       # link-rot, lists them; when none remain, the issue is closed with a note.
       - name: Open, update or close the dead-links issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const fs = require('fs');
@@ -76,9 +78,12 @@ jobs:
             const { owner, repo } = context.repo;
             const today = new Date().toISOString().slice(0, 10);
             const title = 'Dead source links';
-            const existing = await github.rest.issues.listForRepo({
-              owner, repo, state: 'open', labels: 'link-rot',
-            });
+            // Only touch the digest this workflow owns: opened by the Actions bot,
+            // with this exact title. A human-opened issue carrying the same label
+            // is never overwritten (or closed); a new digest is opened instead.
+            const existing = { data: (await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', labels: 'link-rot', per_page: 100,
+            })).filter(i => !i.pull_request && i.user?.login === 'github-actions[bot]' && i.title === title) };
             if (dead.length) {
               const lines = dead.map(d =>
                 `- [\`${d.id}\`](https://github.com/${owner}/${repo}/blob/main/incidents/${d.id}.yaml) ${d.url} (${d.detail})`);
