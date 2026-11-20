@@ -12,11 +12,13 @@ the live export is `https://raw.githubusercontent.com/swarmproof/agent-postmorte
 ## Motivation
 
 **Why was the dataset created?** AI agents take real actions (tool calls, code
-execution, payments, browsing, messaging) and fail in novel but repeating ways, and there
-was no shared, structured, machine-validated record of those failures. The corpus is that
-record: one schema ([`SCHEMA.md`](../SCHEMA.md)), one versioned failure taxonomy
-([`TAXONOMY.md`](../TAXONOMY.md)), and sourced records that conform to both, so failures
-can be compared, counted, cited, and replayed as test scenarios.
+execution, payments, browsing, messaging) and fail in novel but repeating ways. Broader
+AI incident databases cover AI harms of every kind; this corpus is scoped to failures in
+which an agent took or recommended an action, covering both realized incidents and
+demonstrated hazards, recorded against one schema ([`SCHEMA.md`](../SCHEMA.md)) and one
+versioned failure taxonomy ([`TAXONOMY.md`](../TAXONOMY.md)) and validated by machine, so
+records can be compared, counted and cited, and exported as scenario hints for testing
+tools.
 
 **Who created it, and who funded it?** Created and maintained by the Swarm Proof
 toolkit maintainer (see [`CITATION.cff`](../CITATION.cff)) as an unfunded open-source
