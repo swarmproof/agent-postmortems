@@ -344,6 +344,25 @@ def test_flagship_id_without_evidence_keeps_the_standard_layout():
     assert rec["incident_id"] in bs.FLAGSHIP_IDS and not bs.is_flagship(rec)
     page = bs.render_incident(rec, page_ids(rec))
     assert 'class="incident case"' not in page and "<h2>Dates</h2>" not in page
+    assert page.count('class="date-note"') == 1
+
+
+@pytest.mark.parametrize("kind, phrase", [("incident", "when it occurred"), ("hazard", "when it was first demonstrated")])
+def test_legacy_date_note_explains_the_ambiguous_date(kind, phrase):
+    rec = synthetic("2099-legacy-date", kind)
+    note = bs.legacy_date_note(rec)
+    assert phrase in note and "first publicly disclosed" in note and "does not say which" in note
+    assert f'href="{bs.METHODS_DATE_URL}"' in note and bs.METHODS_DATE_URL.endswith("#what-date-means-and-its-limits")
+    assert bs.render_incident(rec, page_ids(rec)).count(note) == 1
+    rec["temporal_basis"] = "disclosed"
+    rec["disclosed_on"] = rec["date"]
+    assert bs.legacy_date_note(rec) == ""  # pages with date-basis fields explain dates in the Dates block
+
+
+def test_every_legacy_corpus_page_has_the_date_note_and_provenance_pages_do_not():
+    for r in RECS:
+        n = bs.render_incident(r, IDS).count('class="date-note"')
+        assert n == (0 if bs.has_provenance(r) else 1), r["incident_id"]
 
 
 def _baseline_module(ref: str, tmp: Path):
@@ -354,7 +373,7 @@ def _baseline_module(ref: str, tmp: Path):
     return _load("build_site_baseline", tmp / "scripts" / "build_site.py")
 
 
-def test_records_without_new_fields_render_exactly_as_the_baseline(tmp_path):
+def test_legacy_pages_differ_from_the_baseline_only_by_the_date_note(tmp_path):
     ref = os.environ.get("SITE_BASELINE_REF", "registry/integration")
     if subprocess.run(["git", "rev-parse", "--verify", "--quiet", ref + "^{commit}"], cwd=REPO,
                       capture_output=True).returncode != 0:
@@ -363,7 +382,10 @@ def test_records_without_new_fields_render_exactly_as_the_baseline(tmp_path):
     legacy = [r for r in RECS if not bs.has_provenance(r)]
     assert legacy
     for r in legacy:
-        assert bs.render_incident(r, IDS) == base.render_incident(r, IDS), r["incident_id"]
+        now, before = bs.render_incident(r, IDS), base.render_incident(r, IDS)
+        note = bs.legacy_date_note(r)
+        # the only change on a legacy page is the one-line date note after the id/date line
+        assert now.count(note) == 1 and now.replace(note, "", 1) == before, r["incident_id"]
 
 
 def test_json_export_only_for_flagship_pages(tmp_path, monkeypatch):
@@ -401,7 +423,7 @@ def test_real_flagship_pages_render_the_flagship_layout(rid):
     assert rid in bs.FLAGSHIP_IDS and rec.get("evidence_assessments") and bs.is_flagship(rec)
     page = bs.render_incident(rec, IDS)
     assert 'class="incident case"' in page and ">Coverage and limitations</h2>" in page
-    assert '<a href="incident.json">' in page
+    assert '<a href="incident.json">' in page and 'class="date-note"' not in page
 
 
 def _row(page: str, label: str) -> str:

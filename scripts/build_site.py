@@ -505,6 +505,18 @@ def evidence_note(rec: dict, pointer: str, with_uncertainty: bool = False) -> st
     return f'<span class="ev-tag">Evidence: {labels}.{extra}</span>'
 
 
+METHODS_DATE_URL = f"{REPO_URL}/blob/main/docs/METHODS.md#what-date-means-and-its-limits"
+
+
+def legacy_date_note(rec: dict) -> str:
+    """One-line explanation of the ambiguous legacy date, for records without date-basis fields."""
+    if has_provenance(rec):
+        return ""
+    happened = "it was first demonstrated" if rec.get("incident_type") == "hazard" else "it occurred"
+    return (f'<p class="date-note">This date is when {happened} or when it was first publicly disclosed; '
+            f'the record does not say which. <a href="{METHODS_DATE_URL}">About dates</a></p>')
+
+
 def has_provenance(rec: dict) -> bool:
     return any(rec.get(f) for f in PROVENANCE_FIELDS)
 
@@ -810,7 +822,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
   </div>
   {type_note(rec.get('incident_type'))}
   <h1>{esc(rec.get('title', rid))}</h1>
-  <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
+  <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>{legacy_date_note(rec)}
   {f'<p class="summary">{esc(rec.get("summary"))}</p>' if rec.get('summary') else ''}{render_provenance(rec)}
 
   <section class="prose"><h2>System</h2><dl class="kvs">{sys_rows}</dl></section>
@@ -1071,6 +1083,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .evidence-assessment .claim { border-left-style:dashed; border-left-color:var(--muted); }
 .evidence-open .claim { border-left-style:dotted; border-left-color:var(--muted); }
 .status { font-weight:600; color:var(--fg); }
+.date-note { color:var(--muted); font-size:13px; margin:-10px 0 16px; }
 .ev-tag { display:block; color:var(--muted); font-size:13px; margin-top:2px; }
 .narrative h3, .prose h3 { font-size:15px; margin:14px 0 4px; }
 .test-status { color:var(--muted); font-size:14px; cursor:default; }
