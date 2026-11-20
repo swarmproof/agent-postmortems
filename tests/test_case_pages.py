@@ -3,10 +3,9 @@
 Self-contained (no conftest). Run with:
   uv run --with pytest --with pyyaml --with jsonschema pytest -q tests/test_case_pages.py
 
-Flagship evidence data is curated separately, so these tests use fixture records:
-real corpus records with evidence assessments added that restate only what the
-record already says and cite only its own sources. Fixtures are never written to
-incidents/.
+Layout and rendering tests use synthetic records (built on tests/fixtures/2099-valid-full.yaml)
+under synthetic ids that are added to FLAGSHIP_IDS for the test run, so they do not depend on
+corpus content. Separate tests check the real flagship records.
 """
 from __future__ import annotations
 
@@ -46,54 +45,77 @@ HOSTILE = '<script>alert(1)</script> " onmouseover="alert(2)'
 
 
 # --------------------------------------------------------------------------- fixtures
-def bare(rid: str) -> dict:
-    """A corpus record with any curated provenance fields removed, so fixtures control them."""
-    rec = copy.deepcopy(BY_ID[rid])
-    for f in (*bs.PROVENANCE_FIELDS, "last_updated"):
-        rec.pop(f, None)
+PRIMARY, NEWS, VENDOR = ("https://example.com/fixture-primary", "https://example.com/fixture-news",
+                         "https://example.com/fixture-vendor")
+FLAGSHIP_FIXTURE_ID = "2099-flagship-incident"
+HAZARD_FIXTURE_ID = "2099-flagship-hazard"
+FIXTURE_IDS = frozenset({FLAGSHIP_FIXTURE_ID, HAZARD_FIXTURE_ID})
+
+
+@pytest.fixture(autouse=True)
+def fixture_flagships(monkeypatch):
+    """Treat the synthetic fixture ids as flagships, alongside the real ones."""
+    monkeypatch.setattr(bs, "FLAGSHIP_IDS", bs.FLAGSHIP_IDS | FIXTURE_IDS)
+
+
+def synthetic(rid: str, incident_type: str = "incident") -> dict:
+    """A schema-valid synthetic record with no provenance fields."""
+    rec = validate.load_yaml(validate.FIXTURES_DIR / "2099-valid-full.yaml")
+    rec.update(incident_id=rid, incident_type=incident_type, related_incidents=[],
+               title=f"Fixture record {rid}")
+    rec.pop("last_updated", None)
+    rec["sources"] = [
+        {"url": PRIMARY, "title": "Fixture primary write-up", "publisher": "Example", "type": "primary-research",
+         "date_accessed": "2099-01-01"},
+        {"url": NEWS, "title": "Fixture news report", "publisher": "Example News", "type": "news",
+         "date_accessed": "2099-01-01"},
+        {"url": VENDOR, "title": "Fixture vendor response", "publisher": "Fixture Corp", "type": "vendor-response",
+         "date_accessed": "2099-01-01"},
+    ]
     return rec
 
 
 def flagship_fixture() -> dict:
-    """The Replit record with one assessment per evidence status (fixture only)."""
-    rec = bare("2025-replit-prod-db-deletion")
-    fortune, register, aiid = (s["url"] for s in rec["sources"])
-    rec["published_on"] = "2025-07-23"
+    """A synthetic incident with one assessment per evidence status."""
+    rec = synthetic(FLAGSHIP_FIXTURE_ID, "incident")
+    rec["published_on"] = "2099-01-03"
     rec["evidence_assessments"] = [
         {"field_path": "/blast_radius/data/description", "evidence_status": "direct",
-         "claim": "A production database was deleted during a test session.",
-         "source_urls": [fortune], "reviewed_at": "2026-11-01", "reviewer": "fixture-reviewer"},
+         "claim": "One fixture record was exposed.",
+         "source_urls": [PRIMARY], "reviewed_at": "2099-02-01", "reviewer": "fixture-reviewer"},
         {"field_path": "/trigger", "evidence_status": "corroborated",
-         "claim": "The deletion happened while a code-and-action freeze was in place.",
-         "source_urls": [fortune, register], "reviewed_at": "2026-11-01"},
+         "claim": "The fixture trigger condition started the run.",
+         "source_urls": [PRIMARY, NEWS], "reviewed_at": "2099-02-01"},
         {"field_path": "/root_cause", "evidence_status": "inferred",
-         "claim": "No enforced approval gate stood between the agent and production data.",
-         "source_urls": [register],
-         "analyst_note": "The sources describe the agent acting without approval; none describes the "
-                         "platform's permission model.",
+         "claim": "No enforced approval gate stood between the agent and the fixture data.",
+         "source_urls": [NEWS],
+         "analyst_note": "The sources describe the action; none describes the permission model.",
          "uncertainty": "A first-party description of the permission model would settle it.",
-         "reviewed_at": "2026-11-02"},
+         "reviewed_at": "2099-02-02"},
         {"field_path": "/recovery", "evidence_status": "disputed",
          "claim": "Rollback was unavailable.",
-         "source_urls": [register],
-         "analyst_note": "The agent stated rollback would not work; the user later restored the data by rollback.",
-         "reviewed_at": "2026-11-02"},
+         "source_urls": [VENDOR],
+         "analyst_note": "The vendor response says a rollback path existed.",
+         "reviewed_at": "2099-02-02"},
         {"field_path": "/detection", "evidence_status": "unknown",
-         "claim": "How the platform's own monitoring responded.",
-         "uncertainty": "No cited source reports platform-side detection.",
-         "reviewed_at": "2026-11-02"},
+         "claim": "How the fixture monitor responded.",
+         "uncertainty": "No cited source reports detection.",
+         "reviewed_at": "2099-02-02"},
     ]
-    assert aiid  # three sources, the third deliberately left uncited
     return rec
 
 
 def hazard_fixture() -> dict:
-    rec = bare("2025-echoleak-m365-copilot")
+    rec = synthetic(HAZARD_FIXTURE_ID, "hazard")
     rec["evidence_assessments"] = [
         {"field_path": "/summary", "evidence_status": "direct", "claim": "The issue was disclosed as a vulnerability.",
-         "source_urls": [rec["sources"][0]["url"]], "reviewed_at": "2026-11-02"},
+         "source_urls": [PRIMARY], "reviewed_at": "2099-02-02"},
     ]
     return rec
+
+
+def page_ids(*recs) -> set[str]:
+    return IDS | {r["incident_id"] for r in recs}
 
 
 def gate_errors(rec: dict) -> list[str]:
@@ -163,7 +185,7 @@ SECTION_FOR = {"direct": "ev-established", "corroborated": "ev-established", "in
 def test_claims_render_under_the_heading_for_their_status(render):
     rec = flagship_fixture()
     if render == "generic":
-        rec["incident_id"] = "2025-not-a-flagship"
+        rec["incident_id"] = "2099-not-a-flagship"
     page = bs.render_incident(rec, IDS | {rec["incident_id"]})
     assert ('class="incident case"' in page) == (render == "flagship")
     got = claims_by_section(page)
@@ -249,9 +271,9 @@ def test_flagship_has_every_case_section_in_reading_order():
     positions = [page.index(f">{h}</h2>") for h in order]
     assert positions == sorted(positions)
     assert "<strong>Realized incident</strong>" in page  # same label as every other incident page
-    url = f"{bs.SITE_BASE}/2025-replit-prod-db-deletion/"
+    url = f"{bs.SITE_BASE}/{FLAGSHIP_FIXTURE_ID}/"
     assert f'<a href="{url}">' in page and '<a href="incident.json">' in page
-    assert "@misc{2025-replit-prod-db-deletion" in page
+    assert "@misc{" + FLAGSHIP_FIXTURE_ID in page
 
 
 def test_hazard_flagship_says_demonstrated_hazard():
@@ -292,15 +314,15 @@ def test_coverage_counts_and_unassessed_fields_follow_the_data():
     cov = page[page.index(">Coverage and limitations</h2>"):]
     cov = cov[: cov.index("</section>")]
     assert "Contributing factors" in cov and "Proposed safeguards" in cov and "Root cause" not in cov
-    assert "Assessments reviewed 2026-11-01 to 2026-11-02." in cov
-    assert "Record confidence: confirmed (first-party/vendor/court-confirmed)." in cov
+    assert "Assessments reviewed 2099-02-01 to 2099-02-02." in cov
+    assert f"Record confidence: {rec['confidence']} ({bs.CONFIDENCE_DEFS[rec['confidence']]})." in cov
 
 
 # --------------------------------------------------------------------------- dates
 def test_dates_are_labelled_by_their_basis():
     rec = flagship_fixture()
     rows = dict(bs.date_rows(rec))
-    assert rows["Principal source published"] == "2025-07-23"
+    assert rows["Principal source published"] == "2099-01-03"
     assert "may be the date it occurred or the date it was first publicly disclosed" in rows["Record date"]
     rec["temporal_basis"] = "disclosed"
     rec["disclosed_on"] = rec["date"]
@@ -310,20 +332,18 @@ def test_dates_are_labelled_by_their_basis():
     hz["occurred_on"] = hz["date"]
     assert "First demonstrated" in dict(bs.date_rows(hz))
     # a record using only date-basis fields still gets the dates block, without evidence sections
-    only_dates = copy.deepcopy(BY_ID["2024-air-canada-chatbot-liability"])
+    only_dates = synthetic("2099-dates-only")
     only_dates["temporal_basis"] = "unknown"
     page = bs.render_incident(only_dates, IDS)
     assert "<h2>Dates</h2>" in page and "may be the date it occurred" in page and 'id="ev-' not in page
 
 
 # --------------------------------------------------------------------------- unchanged pages
-def test_flagship_ids_without_evidence_keep_the_standard_layout():
-    for rid in bs.FLAGSHIP_IDS:
-        rec = BY_ID[rid]
-        if rec.get("evidence_assessments"):
-            continue
-        page = bs.render_incident(rec, IDS)
-        assert 'class="incident case"' not in page and "<h2>Dates</h2>" not in page
+def test_flagship_id_without_evidence_keeps_the_standard_layout():
+    rec = synthetic(FLAGSHIP_FIXTURE_ID)  # a flagship id, but no evidence or date-basis fields
+    assert rec["incident_id"] in bs.FLAGSHIP_IDS and not bs.is_flagship(rec)
+    page = bs.render_incident(rec, page_ids(rec))
+    assert 'class="incident case"' not in page and "<h2>Dates</h2>" not in page
 
 
 def _baseline_module(ref: str, tmp: Path):
@@ -347,16 +367,15 @@ def test_records_without_new_fields_render_exactly_as_the_baseline(tmp_path):
 
 
 def test_json_export_only_for_flagship_pages(tmp_path, monkeypatch):
-    fixture = flagship_fixture()
-    recs = [fixture if r["incident_id"] == fixture["incident_id"] else r for r in RECS]
-    monkeypatch.setattr(bs, "load_incidents", lambda: recs)
+    # a temporary corpus of synthetic records only
+    fixture, hazard, legacy = flagship_fixture(), hazard_fixture(), synthetic("2099-legacy-fixture")
+    monkeypatch.setattr(bs, "load_incidents", lambda: [fixture, hazard, legacy])
     monkeypatch.setattr(bs, "OUT", tmp_path)
     assert bs.main() == 0
     exported = sorted(p.parent.name for p in tmp_path.glob("*/incident.json"))
-    assert exported == sorted(r["incident_id"] for r in recs if bs.is_flagship(r))
-    assert "2025-replit-prod-db-deletion" in exported and len(exported) <= len(bs.FLAGSHIP_IDS)
-    data = json.loads((tmp_path / "2025-replit-prod-db-deletion" / "incident.json").read_text())
-    assert data == fixture
+    assert exported == sorted(FIXTURE_IDS)
+    assert json.loads((tmp_path / FLAGSHIP_FIXTURE_ID / "incident.json").read_text()) == fixture
+    assert (tmp_path / "2099-legacy-fixture" / "index.html").exists()
 
 
 def test_only_source_stated_claims_say_view_source():
@@ -372,7 +391,17 @@ def test_only_source_stated_claims_say_view_source():
 
 
 # --------------------------------------------------------------------------- real flagship records
+REAL_FLAGSHIP_IDS = ("2025-replit-prod-db-deletion", "2025-echoleak-m365-copilot")
 REAL_FLAGSHIPS = [r for r in RECS if bs.is_flagship(r)]
+
+
+@pytest.mark.parametrize("rid", REAL_FLAGSHIP_IDS)
+def test_real_flagship_pages_render_the_flagship_layout(rid):
+    rec = BY_ID[rid]
+    assert rid in bs.FLAGSHIP_IDS and rec.get("evidence_assessments") and bs.is_flagship(rec)
+    page = bs.render_incident(rec, IDS)
+    assert 'class="incident case"' in page and ">Coverage and limitations</h2>" in page
+    assert '<a href="incident.json">' in page
 
 
 def _row(page: str, label: str) -> str:
@@ -399,8 +428,6 @@ def test_real_flagship_states_each_claim_at_its_reviewed_status(rec):
 
 def test_replit_root_cause_is_shown_as_assessment_and_reversibility_as_unknown():
     rec = BY_ID["2025-replit-prod-db-deletion"]
-    if not bs.is_flagship(rec):
-        pytest.skip("Replit record has no evidence data in this checkout")
     page = bs.render_incident(rec, IDS)
     narrative = page[page.index(">How it happened, as recorded</h2>"):]
     root = narrative[narrative.index("<h3>Root cause</h3>"):]
@@ -413,8 +440,6 @@ def test_replit_root_cause_is_shown_as_assessment_and_reversibility_as_unknown()
 
 def test_echoleak_score_shows_both_authorities_and_occurrence_is_not_dated():
     rec = BY_ID["2025-echoleak-m365-copilot"]
-    if not bs.is_flagship(rec):
-        pytest.skip("EchoLeak record has no evidence data in this checkout")
     page = bs.render_incident(rec, IDS)
     sev = _row(page, "Severity")
     assert "9.3" in sev and "7.5" in sev and "NVD" in sev
