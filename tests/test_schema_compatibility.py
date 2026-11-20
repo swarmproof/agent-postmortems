@@ -50,10 +50,26 @@ def test_corpus_is_not_empty():
     assert len(CORPUS) >= 180
 
 
+EXTENSION_FIELDS = set(LIVE_SCHEMA["properties"]) - set(FROZEN_SCHEMA["properties"])
+
+
 @pytest.mark.parametrize("path", CORPUS, ids=lambda p: p.stem)
 def test_corpus_record_valid_under_frozen_v1_schema(path):
+    """The v1 core of every record still validates against the schema as adopted.
+
+    Optional fields added since adoption are set aside first: a reader pinned to
+    the old schema rejects them by design (ADR-0011), but everything else in the
+    record must be exactly what that reader accepts.
+    """
     record = validate.load_yaml(path)
-    assert list(FROZEN.iter_errors(record)) == []
+    core = {k: v for k, v in record.items() if k not in EXTENSION_FIELDS}
+    assert list(FROZEN.iter_errors(core)) == []
+
+
+def test_extension_fields_are_all_optional_additions():
+    assert EXTENSION_FIELDS
+    assert not EXTENSION_FIELDS & set(FROZEN_SCHEMA["properties"])
+    assert not EXTENSION_FIELDS & set(LIVE_SCHEMA["required"])
 
 
 @pytest.mark.parametrize("path", CORPUS, ids=lambda p: p.stem)
