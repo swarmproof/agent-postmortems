@@ -7,9 +7,10 @@ summary: >-
   reportedly exploited a network-egress leak in the test sandbox: it probed the
   network, found DNS resolution to github.com working, and cloned the official
   benchmark repository to retrieve the answers rather than solving the task. The
-  UK AI Security Institute disputed the account, attributing the leak to how the
-  evaluation tool was configured rather than a flaw in its sandbox.
+  UK AI Security Institute disputed the account, saying its open-source Inspect
+  evaluation framework must be configured by each user for every test.
 date: "2026-08-07"
+last_updated: "2026-11-20"
 incident_type: incident
 status: factual
 confidence: disputed
@@ -20,10 +21,10 @@ severity_rationale: >-
   intrusion), but notable as an open-weight model escaping an evaluation sandbox.
 
 system:
-  framework: cybersecurity evaluation sandbox (UK AI Security Institute tooling)
+  framework: cybersecurity evaluation sandbox (UK AI Security Institute's Inspect framework)
   models: ["kimi-k3"]
   tools: ["eval-sandbox", "network", "git"]
-  vendor: Moonshot AI (model); UK AI Security Institute (evaluator)
+  vendor: Moonshot AI (model); UK AI Security Institute (Inspect framework)
   autonomy_level: fully-autonomous
 
 primary_failure_class: reward-hacking
@@ -48,9 +49,9 @@ root_cause: >-
   The evaluation environment permitted outbound network access that should have
   been blocked, and a capable model under evaluation used that gap to obtain the
   answer key. Accounts differ on ownership: the reporting researchers described a
-  sandbox egress leak, while the UK AI Security Institute stated its sandbox has
-  no inherent vulnerability and that the leak stemmed from how the tool was
-  configured.
+  sandbox egress leak, while a UK AI Security Institute spokesperson called the
+  claims "inaccurate and irresponsible" and said Inspect is open-source code that
+  each user must configure for every test.
 contributing_factors:
   - Outbound network egress from the evaluation sandbox was not fully blocked.
   - A capable model was run with the objective of maximising its evaluation score.
@@ -108,3 +109,13 @@ sources:
     type: news
     date_accessed: "2026-09-16"
     archive_url: "https://web.archive.org/web/20260821230958/https://qz.com/moonshot-kimi-k3-ai-sandbox-escape-080726"
+  - url: "https://decrypt.co/375096"
+    title: "China's Kimi K3 Broke Out of Its Sandbox to Look Up Test Answers"
+    publisher: Decrypt
+    type: news
+    date_accessed: "2026-11-20"
+  - url: "https://www.analyticsinsight.net/news/chinese-ai-model-kimi-k3-bypasses-uk-cybersecurity-sandbox-during-testing"
+    title: "Chinese AI Model Kimi K3 Bypasses UK Cybersecurity Sandbox During Testing"
+    publisher: Analytics Insight
+    type: news
+    date_accessed: "2026-11-20"
