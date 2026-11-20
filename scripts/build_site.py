@@ -405,7 +405,7 @@ def render_sources(rec: dict) -> str:
     return f'<section class="prose"><h2>Sources</h2><ul class="sources">{"".join(items)}</ul></section>' if items else ""
 
 
-def render_blast(rec: dict) -> str:
+def render_blast(rec: dict, heading: str = "Blast radius") -> str:
     b = rec.get("blast_radius") or {}
     rows = []
     cost = b.get("cost") or {}
@@ -425,7 +425,7 @@ def render_blast(rec: dict) -> str:
         rows.append(field("Scope", esc(b["scope"])))
     if b.get("reversibility"):
         rows.append(field("Reversibility", esc(b["reversibility"])))
-    return f'<section class="prose"><h2>Blast radius</h2><dl class="kvs">{"".join(rows)}</dl></section>' if rows else ""
+    return f'<section class="prose"><h2>{esc(heading)}</h2><dl class="kvs">{"".join(rows)}</dl></section>' if rows else ""
 
 
 def bibtex(rec: dict, url: str) -> str:
@@ -560,7 +560,182 @@ def render_provenance(rec: dict) -> str:
     return "\n  " + render_dates(rec) + render_evidence(rec)
 
 
+# --------------------------------------------------------------------------- flagship case pages
+# Curated records that get the full investigation layout once they carry
+# claim-level evidence. Without evidence data they render like any other record.
+FLAGSHIP_IDS = frozenset({"2025-replit-prod-db-deletion", "2025-echoleak-m365-copilot"})
+CASE_CALLOUTS = {
+    "incident": ("Reported incident", "public sources report that harm or an unintended agent action occurred."),
+    "hazard": ("Demonstrated hazard", "a proof of concept, disclosed vulnerability or near-miss, "
+               "recorded without evidence that harm occurred."),
+}
+# "reported=single source; corroborated=..." from the schema, so the page and schema agree.
+CONFIDENCE_DEFS = dict(part.strip().split("=", 1) for part in
+                       _SCHEMA_PROPS["confidence"]["description"].rstrip(".").split(";"))
+NARRATIVE_FIELDS = [("trigger", "Trigger"), ("root_cause", "Root cause"),
+                    ("contributing_factors", "Contributing factors"), ("detection", "Detection"),
+                    ("recovery", "Recovery")]
+TEST_STATUS = "Test specification in development"
+
+
+def is_flagship(rec: dict) -> bool:
+    return rec.get("incident_id") in FLAGSHIP_IDS and bool(rec.get("evidence_assessments"))
+
+
+def case_callout(rec: dict) -> str:
+    kind = rec.get("incident_type")
+    if kind not in CASE_CALLOUTS:
+        return ""
+    label, text = CASE_CALLOUTS[kind]
+    return (f'<p class="type-note type-note-{esc(kind)} case-callout">'
+            f'<strong>{esc(label)}</strong>: {esc(text)}</p>')
+
+
+def statuses_for(rec: dict, field_name: str) -> list[str]:
+    """Evidence statuses of assessments attached to a top-level field or anything inside it."""
+    ptr = "/" + field_name
+    return [a["evidence_status"] for a in rec.get("evidence_assessments") or []
+            if a.get("field_path") == ptr or str(a.get("field_path", "")).startswith(ptr + "/")]
+
+
+def render_narrative(rec: dict) -> str:
+    rows = []
+    for key, label in NARRATIVE_FIELDS:
+        value = rec.get(key)
+        if not value:
+            continue
+        text = ("<ul>" + "".join(f"<li>{esc(v)}</li>" for v in value) + "</ul>") if isinstance(value, list) \
+            else f"<p>{esc(value)}</p>"
+        st = statuses_for(rec, key)
+        note = ("Evidence for this field: " + ", ".join(esc(STATUS_LABELS[s]) for s in dict.fromkeys(st))
+                if st else "Not individually assessed; see Coverage and limitations.")
+        rows.append(f'<div class="narrative"><h3>{esc(label)}</h3>{text}<p class="claim-meta">{note}</p></div>')
+    return (f'<section class="prose"><h2>How it happened, as recorded</h2>'
+            f'<p class="ev-intro">The record\'s own account. Its parts carry the evidence status assessed above.</p>'
+            f'{"".join(rows)}</section>') if rows else ""
+
+
+def render_safeguards(rec: dict) -> str:
+    prevention = f"<p>{esc(rec['prevention'])}</p>" if rec.get("prevention") else ""
+    return (f'<section class="prose safeguards"><h2>Proposed safeguards</h2>'
+            f'<p class="ev-intro">For education: general controls suggested by this record. They are not a verified '
+            f'fix, not vendor guidance, and not evidence that the system named here lacks them today.</p>'
+            f'{prevention}'
+            f'<p class="test-status"><span class="test-status-label">Test pattern:</span> {TEST_STATUS}. '
+            f'No runnable test exists for this pattern yet.</p></section>')
+
+
+def render_case_timeline(rec: dict) -> str:
+    dates = "".join(field(label, esc(value)) for label, value in date_rows(rec))
+    events = ""
+    if rec.get("timeline"):
+        lis = "".join(f'<li><span class="tl-at">{esc(e.get("at", ""))}</span> {esc(e.get("event", ""))}</li>'
+                      for e in rec["timeline"])
+        events = f'<h3>Events as recorded</h3><ul class="timeline">{lis}</ul>'
+    return (f'<section class="prose"><h2>Timeline</h2><dl class="kvs">{dates}</dl>{events}'
+            f'<p class="claim-meta">Dates come from the cited sources; the sources are listed below.</p></section>')
+
+
+def render_coverage(rec: dict) -> str:
+    claims = rec.get("evidence_assessments") or []
+    counts = {key: sum(a.get("evidence_status") in sts for a in claims) for key, _, sts, _ in EVIDENCE_GROUPS}
+    unassessed = [label for key, label in NARRATIVE_FIELDS + [("prevention", "Proposed safeguards"),
+                                                             ("blast_radius", "Impact")]
+                  if rec.get(key) and not statuses_for(rec, key)]
+    reviewed = sorted({a["reviewed_at"] for a in claims if a.get("reviewed_at")})
+    conf = rec.get("confidence")
+    items = [
+        f"{len(claims)} statements assessed: {counts['established']} established by sources, "
+        f"{counts['assessment']} assessment, {counts['open']} unknown or contested.",
+        ("Not individually assessed: " + ", ".join(unassessed) + ".") if unassessed else "",
+        f"Assessments reviewed {esc(reviewed[0])}" + (f" to {esc(reviewed[-1])}" if len(reviewed) > 1 else "") + "."
+        if reviewed else "",
+        (f"Record confidence: {esc(conf)} ({esc(CONFIDENCE_DEFS.get(conf, ''))}). "
+         "Claim statuses add detail; they do not change this rating.") if conf else "",
+        f"Based only on the {len(rec.get('sources', []))} public sources cited below. "
+        "Anything they do not report is not represented here.",
+        f'How records are built: <a href="{REPO_URL}/blob/main/docs/METHODS.md">methods</a>. '
+        f'Found an error? <a href="{REPO_URL}/blob/main/DISPUTES.md">Request a correction</a>.',
+    ]
+    lis = "".join(f"<li>{i}</li>" for i in items if i)
+    return f'<section class="prose"><h2>Coverage and limitations</h2><ul>{lis}</ul></section>'
+
+
+def render_flagship(rec: dict, all_ids: set[str]) -> str:
+    rid = rec["incident_id"]
+    url = f"{SITE_BASE}/{rid}/"
+    sysm = rec.get("system") or {}
+    conf = rec.get("confidence")
+    glance = "".join([
+        field("System", esc(" · ".join(filter(None, [sysm.get("framework"), sysm.get("vendor")])))),
+        field("Tools", esc(", ".join(sysm.get("tools", [])))),
+        field("Autonomy", esc(sysm.get("autonomy_level"))),
+        field("Severity", esc(rec.get("severity"))),
+        field("Confidence", esc(f"{conf}: {CONFIDENCE_DEFS.get(conf, '')}") if conf else ""),
+        field("Failure chain", esc(chain_str(rec))),
+    ])
+    yaml_url = f"{REPO_URL}/blob/main/incidents/{rid}.yaml"
+    body = f"""
+<article class="incident case">
+  <p class="crumb"><a href="../">← all incidents</a></p>
+  <div class="badges">
+    {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
+    {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
+    {badge('confidence: ' + esc(conf or '?'), 'neutral') if conf else ''}
+    {badge('status: ' + esc(rec.get('status','?')), 'neutral') if rec.get('status') else ''}
+  </div>
+  {case_callout(rec)}
+  <h1>{esc(rec.get('title', rid))}</h1>
+  <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
+  {f'<section class="prose"><h2>Summary</h2><p class="summary">{esc(rec.get("summary"))}</p></section>' if rec.get('summary') else ''}
+  <section class="prose"><h2>At a glance</h2><dl class="kvs">{glance}</dl></section>
+  {render_evidence(rec)}
+  {render_narrative(rec)}
+  {render_blast(rec, "Impact and reversibility")}
+  {render_safeguards(rec)}
+  {render_case_timeline(rec)}
+  {render_coverage(rec)}
+  <section class="prose"><h2>References</h2><dl class="kvs">{render_references(rec, all_ids)}</dl></section>
+  {render_sources(rec)}
+
+  <section class="cite">
+    <h2>Cite and reuse</h2>
+    <p class="permalink">Permalink: <a href="{url}">{esc(url)}</a></p>
+    <p>Data: <a href="incident.json">this record as JSON</a> · <a href="{esc(yaml_url)}">source YAML</a></p>
+    <pre id="bib">{esc(bibtex(rec, url))}</pre>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('bib').textContent)">Copy BibTeX</button>
+  </section>
+</article>
+"""
+    return page(f"{rec.get('title', rid)} — agent-postmortems", body, "../style.css",
+                meta_description(rec.get("summary") or rec.get("trigger")),
+                canonical=url, og_type="article", og_title=rec.get("title", rid))
+
+
+def render_references(rec: dict, all_ids: set[str]) -> str:
+    mapping_rows = ""
+    for key, label in FRAMEWORK_LABELS.items():
+        ids = (rec.get("mappings") or {}).get(key)
+        if not ids:
+            continue
+        names = FRAMEWORKS[key]["ids"]
+        chips = " ".join(f'<span class="tag" title="{esc(names.get(i, ""))}">{esc(i)}</span>' for i in ids)
+        lbl = f'<a href="{esc(FRAMEWORKS[key]["url"])}">{esc(label)}</a>'
+        mapping_rows += f'<div class="kv"><dt>{lbl}</dt><dd>{chips}</dd></div>'
+    return "".join([
+        field("CVE", " ".join(f'<a href="https://nvd.nist.gov/vuln/detail/{esc(c)}">{esc(c)}</a>' for c in rec.get("cve", []))),
+        field("CWE", esc(", ".join(rec.get("cwe", [])))),
+        mapping_rows,
+        field("Related", " ".join(
+            f'<a href="../{esc(r)}/">{esc(r)}</a>' if r in all_ids else esc(r)
+            for r in rec.get("related_incidents", []))),
+        field("Tags", " ".join(f'<span class="tag">{esc(t)}</span>' for t in rec.get("tags", []))),
+    ])
+
+
 def render_incident(rec: dict, all_ids: set[str]) -> str:
+    if is_flagship(rec):
+        return render_flagship(rec, all_ids)
     rid = rec["incident_id"]
     url = f"{SITE_BASE}/{rid}/"
     sys = rec.get("system") or {}
@@ -578,24 +753,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
         field("Attack vector", esc(rec.get("attack_vector"))),
         field("Causation", esc(" · ".join(f"{k}: {v}" for k, v in caus.items())) if caus else ""),
     ])
-    mapping_rows = ""
-    for key, label in FRAMEWORK_LABELS.items():
-        ids = (rec.get("mappings") or {}).get(key)
-        if not ids:
-            continue
-        names = FRAMEWORKS[key]["ids"]
-        chips = " ".join(f'<span class="tag" title="{esc(names.get(i, ""))}">{esc(i)}</span>' for i in ids)
-        lbl = f'<a href="{esc(FRAMEWORKS[key]["url"])}">{esc(label)}</a>'
-        mapping_rows += f'<div class="kv"><dt>{lbl}</dt><dd>{chips}</dd></div>'
-    xref = "".join([
-        field("CVE", " ".join(f'<a href="https://nvd.nist.gov/vuln/detail/{esc(c)}">{esc(c)}</a>' for c in rec.get("cve", []))),
-        field("CWE", esc(", ".join(rec.get("cwe", [])))),
-        mapping_rows,
-        field("Related", " ".join(
-            f'<a href="../{esc(r)}/">{esc(r)}</a>' if r in all_ids else esc(r)
-            for r in rec.get("related_incidents", []))),
-        field("Tags", " ".join(f'<span class="tag">{esc(t)}</span>' for t in rec.get("tags", []))),
-    ])
+    xref = render_references(rec, all_ids)
     factors = ""
     if rec.get("contributing_factors"):
         lis = "".join(f"<li>{esc(x)}</li>" for x in rec["contributing_factors"])
@@ -878,6 +1036,9 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .evidence-assessment .claim { border-left-style:dashed; border-left-color:var(--muted); }
 .evidence-open .claim { border-left-style:dotted; border-left-color:var(--muted); }
 .status { font-weight:600; color:var(--fg); }
+.narrative h3, .prose h3 { font-size:15px; margin:14px 0 4px; }
+.test-status { color:var(--muted); font-size:14px; cursor:default; }
+.test-status-label { font-weight:600; }
 """
 
 
@@ -1059,6 +1220,8 @@ def main() -> int:
         d = OUT / r["incident_id"]
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(render_incident(r, ids))
+        if is_flagship(r):
+            (d / "incident.json").write_text(json.dumps(r, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     # .nojekyll so GitHub Pages serves files/dirs verbatim
     (OUT / ".nojekyll").write_text("")
     print(f"built site/ — {len(recs)} incidents, index + feed, base {SITE_BASE}")
