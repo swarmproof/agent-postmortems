@@ -342,7 +342,7 @@ def render_index(recs: list[dict]) -> str:
 </section>
 <script src="search.js" defer></script>
 """
-    description = "A structured, sourced database of real AI-agent failures."
+    description = "A structured, sourced database of AI-agent incidents and demonstrated hazards."
     return page("agent-postmortems — AI-agent failure database", body, "style.css", description,
                 canonical=f"{SITE_BASE}/", jsonld=dataset_jsonld(description))
 
