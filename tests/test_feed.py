@@ -38,6 +38,9 @@ def test_corpus_feed_parses_with_rfc822_dates():
     root, items = _items(bs.render_feed(recs, built=BUILT))
     assert len(items) == min(bs.FEED_LIMIT, len(recs))
     assert _aware(root.findtext("./channel/lastBuildDate")) == BUILT
+    # The corpus mixes realized incidents with demonstrated hazards.
+    assert root.findtext("./channel/description") == \
+        "A structured, sourced database of AI-agent incidents and demonstrated hazards."
     for i in items:
         _aware(i.findtext("pubDate"))
 

@@ -431,7 +431,7 @@ def render_feed(recs: list[dict], built: datetime.datetime | None = None,
 <channel>
   <title>agent-postmortems</title>
   <link>{xml_text(SITE_BASE)}/</link>
-  <description>A structured database of real AI-agent failures.</description>
+  <description>A structured, sourced database of AI-agent incidents and demonstrated hazards.</description>
   <lastBuildDate>{rfc822(built)}</lastBuildDate>
 {chr(10).join(items)}
 </channel>
