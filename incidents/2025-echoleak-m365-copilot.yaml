@@ -8,7 +8,7 @@ summary: >-
   exfiltrate context with no user click. Disclosed by Aim Security and fixed
   server-side; Microsoft reported no evidence of exploitation in the wild.
 date: "2025-06-11"
-last_updated: "2026-11-19"
+last_updated: "2026-11-20"
 incident_type: hazard
 status: final
 confidence: confirmed
@@ -108,3 +108,8 @@ sources:
     type: academic
     date_accessed: "2026-07-14"
     archive_url: "https://web.archive.org/web/20260801130914/https://arxiv.org/html/2509.10540v1"
+  - url: "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
+    title: "M365 Copilot Information Disclosure Vulnerability (CVE-2025-32711)"
+    publisher: Microsoft Security Response Center
+    type: vendor-disclosure
+    date_accessed: "2026-11-20"
