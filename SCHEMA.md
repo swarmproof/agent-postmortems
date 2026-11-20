@@ -8,7 +8,7 @@ Machine-validated by [`schema/incident.schema.json`](./schema/incident.schema.js
 
 - **Machine-first, human-readable second.** The record is valid typed data before it is prose; validation is the merge gate.
 - **Small required core, large optional body.** Contribution stays cheap; power fields are opt-in.
-- **Sourcing and neutrality are schema properties**, not just norms: structured `sources[]`, `confidence`, `status`, `incident_type`.
+- **Sourcing and neutrality are schema properties**, not just norms: structured `sources[]`, `confidence`, `status`, `incident_type`. Every `sources[].url` and `archive_url` must be a web link — `http` or `https` with a host; other schemes such as `javascript:`, `data:` or `file:` are rejected. Plain `http` is accepted because some archive snapshots are recorded that way.
 - **One incident = one file** (`incidents/<incident_id>.yaml`), atomic and permalinkable. Unknown top-level fields are rejected (`additionalProperties: false`).
 
 ## Fields
