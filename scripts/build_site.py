@@ -566,11 +566,6 @@ def render_provenance(rec: dict) -> str:
 # Curated records that get the full investigation layout once they carry
 # claim-level evidence. Without evidence data they render like any other record.
 FLAGSHIP_IDS = frozenset({"2025-replit-prod-db-deletion", "2025-echoleak-m365-copilot"})
-CASE_CALLOUTS = {
-    "incident": ("Reported incident", "public sources report that harm or an unintended agent action occurred."),
-    "hazard": ("Demonstrated hazard", "a proof of concept, disclosed vulnerability or near-miss, "
-               "recorded without evidence that harm occurred."),
-}
 # "reported=single source; corroborated=..." from the schema, so the page and schema agree.
 CONFIDENCE_DEFS = dict(part.strip().split("=", 1) for part in
                        _SCHEMA_PROPS["confidence"]["description"].rstrip(".").split(";"))
@@ -585,12 +580,8 @@ def is_flagship(rec: dict) -> bool:
 
 
 def case_callout(rec: dict) -> str:
-    kind = rec.get("incident_type")
-    if kind not in CASE_CALLOUTS:
-        return ""
-    label, text = CASE_CALLOUTS[kind]
-    return (f'<p class="type-note type-note-{esc(kind)} case-callout">'
-            f'<strong>{esc(label)}</strong>: {esc(text)}</p>')
+    """The site-wide incident/hazard note, so every page uses the same labels."""
+    return type_note(rec.get("incident_type"))
 
 
 def statuses_for(rec: dict, field_name: str) -> list[str]:
