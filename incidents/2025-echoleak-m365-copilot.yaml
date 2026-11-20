@@ -9,6 +9,9 @@ summary: >-
   server-side; Microsoft reported no evidence of exploitation in the wild.
 date: "2025-06-11"
 last_updated: "2026-11-20"
+temporal_basis: disclosed
+disclosed_on: "2025-06-11"
+published_on: "2025-06-12"
 incident_type: hazard
 status: final
 confidence: confirmed
@@ -94,6 +97,117 @@ machine_export:
     Untrusted document containing instructions aimed past the classifier enters
     a RAG corpus; on a later unrelated query, measure whether retrieval causes
     the assistant to act on the injected instructions and emit data externally.
+
+evidence_assessments:
+  - field_path: /summary
+    claim: >-
+      Content processed by Microsoft 365 Copilot could cause it to disclose
+      information over a network; Microsoft tracked this as CVE-2025-32711.
+    evidence_status: corroborated
+    source_urls:
+      - "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
+      - "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+  - field_path: /trigger
+    claim: >-
+      The attack needed no user click: an email phrased as ordinary business
+      content was retrieved into Copilot's context during a later, unrelated
+      query, and Copilot followed its instructions.
+    evidence_status: direct
+    source_urls:
+      - "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
+      - "https://arxiv.org/html/2509.10540v1"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      Both sources derive the attack description from the discoverer, Aim
+      Security; Microsoft's advisory gives only a one-line class description.
+      The exact payload is not published in the cited sources.
+  - field_path: /root_cause
+    claim: >-
+      Exploitation chained four bypasses: evasion of the cross-prompt injection
+      classifier, reference-style Markdown that escaped link redaction,
+      auto-fetched images, and a Teams URL allowed by the content security
+      policy.
+    evidence_status: direct
+    source_urls:
+      - "https://arxiv.org/html/2509.10540v1"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      The arXiv case study is based on the discoverer's public write-up and does
+      not report independent reproduction. Microsoft has not published a
+      technical root cause.
+  - field_path: /incident_type
+    claim: >-
+      A demonstrated hazard: Microsoft reports the vulnerability as not
+      exploited, and no exploitation in the wild has been reported.
+    evidence_status: direct
+    source_urls:
+      - "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
+      - "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
+      - "https://arxiv.org/html/2509.10540v1"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      The Hacker News and arXiv relay Microsoft's statement; absence of reported
+      exploitation is not proof that none occurred.
+  - field_path: /severity_rationale
+    claim: The vulnerability carries a CVSS base score of 9.3 (critical).
+    evidence_status: direct
+    source_urls:
+      - "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
+      - "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      9.3 is Microsoft's score as the CVE numbering authority. NVD's own
+      assessment of the same CVE is 7.5; the NVD entry is not a cited source.
+  - field_path: /recovery
+    claim: >-
+      Microsoft fixed the vulnerability server-side and no customer action was
+      required.
+    evidence_status: corroborated
+    source_urls:
+      - "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
+      - "https://arxiv.org/html/2509.10540v1"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      arXiv dates the server-side fix to May 2025 at month precision only; the
+      exact fix date is not established.
+  - field_path: /disclosed_on
+    claim: >-
+      The vulnerability was first made public on 2025-06-11, through Microsoft's
+      advisory and Aim Labs' disclosure.
+    evidence_status: corroborated
+    source_urls:
+      - "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
+      - "https://arxiv.org/html/2509.10540v1"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+  - field_path: /date
+    claim: >-
+      Aim Labs discovered the vulnerability, built a proof of concept and
+      reported it to Microsoft in January 2025.
+    evidence_status: direct
+    source_urls:
+      - "https://arxiv.org/html/2509.10540v1"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      Month precision only, so occurred_on is not set. A dated disclosure
+      timeline from the discoverer would establish the day.
+  - field_path: /published_on
+    claim: >-
+      The Hacker News report, the principal cited news source, was published on
+      2025-06-12.
+    evidence_status: direct
+    source_urls:
+      - "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
 
 sources:
   - url: "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
