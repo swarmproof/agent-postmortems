@@ -21,7 +21,7 @@ can be compared, counted, cited, and replayed as test scenarios.
 **Who created it, and who funded it?** Created and maintained by the Swarm Proof
 toolkit maintainer (see [`CITATION.cff`](../CITATION.cff)) as an unfunded open-source
 project. Contributors are credited in git history; the schema's `submitted_by` field is
-unused on all 180 records, so authorship is not recoverable per record from the data.
+not set on any record, so authorship is not recoverable per record from the data.
 
 ## Composition
 
