@@ -346,3 +346,15 @@ def test_json_export_only_for_flagship_pages(tmp_path, monkeypatch):
     exported = sorted(p.parent.name for p in tmp_path.glob("*/incident.json"))
     assert exported == ["2025-replit-prod-db-deletion"]
     assert json.loads((tmp_path / exported[0] / "incident.json").read_text()) == fixture
+
+
+def test_only_source_stated_claims_say_view_source():
+    rec = flagship_fixture()
+    page = bs.render_incident(rec, IDS)
+    for sec, nodes in claims_by_section(page).items():
+        for n in nodes:
+            if sec == "ev-established":
+                assert "View source:" in n["text"]
+            else:
+                assert "View source:" not in n["text"]
+    assert "Reasoned from:" in page and "Related source:" in page
