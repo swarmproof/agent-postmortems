@@ -18,6 +18,7 @@ import json
 import os
 import subprocess
 import sys
+import re
 import tarfile
 import io
 from pathlib import Path
@@ -45,9 +46,17 @@ HOSTILE = '<script>alert(1)</script> " onmouseover="alert(2)'
 
 
 # --------------------------------------------------------------------------- fixtures
+def bare(rid: str) -> dict:
+    """A corpus record with any curated provenance fields removed, so fixtures control them."""
+    rec = copy.deepcopy(BY_ID[rid])
+    for f in (*bs.PROVENANCE_FIELDS, "last_updated"):
+        rec.pop(f, None)
+    return rec
+
+
 def flagship_fixture() -> dict:
     """The Replit record with one assessment per evidence status (fixture only)."""
-    rec = copy.deepcopy(BY_ID["2025-replit-prod-db-deletion"])
+    rec = bare("2025-replit-prod-db-deletion")
     fortune, register, aiid = (s["url"] for s in rec["sources"])
     rec["published_on"] = "2025-07-23"
     rec["evidence_assessments"] = [
@@ -79,7 +88,7 @@ def flagship_fixture() -> dict:
 
 
 def hazard_fixture() -> dict:
-    rec = copy.deepcopy(BY_ID["2025-echoleak-m365-copilot"])
+    rec = bare("2025-echoleak-m365-copilot")
     rec["evidence_assessments"] = [
         {"field_path": "/summary", "evidence_status": "direct", "claim": "The issue was disclosed as a vulnerability.",
          "source_urls": [rec["sources"][0]["url"]], "reviewed_at": "2026-11-02"},
@@ -239,16 +248,16 @@ def test_flagship_has_every_case_section_in_reading_order():
              "Cite and reuse"]
     positions = [page.index(f">{h}</h2>") for h in order]
     assert positions == sorted(positions)
-    assert "<strong>Reported incident</strong>" in page
+    assert "<strong>Realized incident</strong>" in page  # same label as every other incident page
     url = f"{bs.SITE_BASE}/2025-replit-prod-db-deletion/"
     assert f'<a href="{url}">' in page and '<a href="incident.json">' in page
     assert "@misc{2025-replit-prod-db-deletion" in page
 
 
-def test_hazard_flagship_says_demonstrated_hazard_not_reported_incident():
+def test_hazard_flagship_says_demonstrated_hazard():
     page = bs.render_incident(hazard_fixture(), IDS)
     assert 'class="incident case"' in page
-    assert "<strong>Demonstrated hazard</strong>" in page and "Reported incident" not in page
+    assert "<strong>Demonstrated hazard</strong>" in page and "Realized incident" not in page
     assert "realized" not in page.lower().replace("no realized", "")  # only the record's own prose may say it
 
 
@@ -344,8 +353,10 @@ def test_json_export_only_for_flagship_pages(tmp_path, monkeypatch):
     monkeypatch.setattr(bs, "OUT", tmp_path)
     assert bs.main() == 0
     exported = sorted(p.parent.name for p in tmp_path.glob("*/incident.json"))
-    assert exported == ["2025-replit-prod-db-deletion"]
-    assert json.loads((tmp_path / exported[0] / "incident.json").read_text()) == fixture
+    assert exported == sorted(r["incident_id"] for r in recs if bs.is_flagship(r))
+    assert "2025-replit-prod-db-deletion" in exported and len(exported) <= len(bs.FLAGSHIP_IDS)
+    data = json.loads((tmp_path / "2025-replit-prod-db-deletion" / "incident.json").read_text())
+    assert data == fixture
 
 
 def test_only_source_stated_claims_say_view_source():
@@ -358,3 +369,56 @@ def test_only_source_stated_claims_say_view_source():
             else:
                 assert "View source:" not in n["text"]
     assert "Reasoned from:" in page and "Related source:" in page
+
+
+# --------------------------------------------------------------------------- real flagship records
+REAL_FLAGSHIPS = [r for r in RECS if bs.is_flagship(r)]
+
+
+def _row(page: str, label: str) -> str:
+    """Text of the <dd> following <dt>label</dt> (first occurrence)."""
+    i = page.index(f"<dt>{label}</dt>")
+    dd = page[i:]
+    dd = dd[dd.index("<dd>") + 4: dd.index("</dd>")]
+    return html.unescape(re.sub(r"<[^>]+>", " ", dd))
+
+
+@pytest.mark.parametrize("rec", REAL_FLAGSHIPS, ids=lambda r: r["incident_id"])
+def test_real_flagship_states_each_claim_at_its_reviewed_status(rec):
+    page = bs.render_incident(rec, IDS)
+    assert 'class="incident case"' in page
+    got = claims_by_section(page)
+    for a in rec["evidence_assessments"]:
+        nodes = [n for n in got[SECTION_FOR[a["evidence_status"]]]
+                 if " ".join(n["text"].split()).startswith(" ".join(a["claim"].split()))]
+        assert len(nodes) == 1, a["claim"]
+        assert bs.STATUS_LABELS[a["evidence_status"]] in nodes[0]["text"]
+        if a.get("uncertainty"):
+            assert " ".join(a["uncertainty"].split())[:60] in " ".join(nodes[0]["text"].split())
+
+
+def test_replit_root_cause_is_shown_as_assessment_and_reversibility_as_unknown():
+    rec = BY_ID["2025-replit-prod-db-deletion"]
+    if not bs.is_flagship(rec):
+        pytest.skip("Replit record has no evidence data in this checkout")
+    page = bs.render_incident(rec, IDS)
+    narrative = page[page.index(">How it happened, as recorded</h2>"):]
+    root = narrative[narrative.index("<h3>Root cause</h3>"):]
+    root = root[: root.index("</div>")]
+    assert "Assessment, not established fact" in root
+    assert not [s for s in ("Stated by a cited source", "Stated by two or more") if s in root]
+    rev = _row(page, "Reversibility")
+    assert "Not established by the cited sources" in rev
+
+
+def test_echoleak_score_shows_both_authorities_and_occurrence_is_not_dated():
+    rec = BY_ID["2025-echoleak-m365-copilot"]
+    if not bs.is_flagship(rec):
+        pytest.skip("EchoLeak record has no evidence data in this checkout")
+    page = bs.render_incident(rec, IDS)
+    sev = _row(page, "Severity")
+    assert "9.3" in sev and "7.5" in sev and "NVD" in sev
+    assert _row(page, "First demonstrated").startswith(bs.NOT_RECORDED)
+    assert "<strong>Demonstrated hazard</strong>" in page
+    mech = next(a for a in rec["evidence_assessments"] if a["field_path"] == "/root_cause")
+    assert "discoverer" in mech["uncertainty"] and "discoverer" in page  # researcher-sourced caveat shown
