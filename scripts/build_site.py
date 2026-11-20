@@ -452,6 +452,114 @@ def type_note(incident_type) -> str:
             f'<strong>{esc(label)}</strong>: {esc(text)}</p>')
 
 
+# --------------------------------------------------------------------------- provenance
+# Optional claim-level evidence and date-basis fields. Pages for records without
+# any of these render exactly as before.
+PROVENANCE_FIELDS = ("evidence_assessments", "temporal_basis", "occurred_on", "disclosed_on", "published_on")
+
+# (css key, heading, statuses, one-line explanation) in reading order.
+EVIDENCE_GROUPS = [
+    ("established", "What the sources establish", ("direct", "corroborated"),
+     "Statements a cited source makes directly, or that two or more independent cited sources make."),
+    ("assessment", "Assessment, not established fact", ("inferred",),
+     "Analyst reasoning from the cited facts. No cited source states these directly."),
+    ("open", "Unknown or contested", ("unknown", "disputed"),
+     "Points the cited sources do not establish, or that a source or named party contests."),
+]
+STATUS_LABELS = {
+    "direct": "Stated by a cited source",
+    "corroborated": "Stated by two or more independent cited sources",
+    "inferred": "Assessment, not established fact",
+    "unknown": "Not established by the cited sources",
+    "disputed": "Disputed",
+}
+TEMPORAL_LABELS = {
+    "occurred": "the date it occurred",
+    "disclosed": "the date it was first publicly disclosed",
+    "published": "the publication date of the principal source",
+}
+
+
+def has_provenance(rec: dict) -> bool:
+    return any(rec.get(f) for f in PROVENANCE_FIELDS)
+
+
+def source_link(rec: dict, url: str) -> str:
+    """Link to one of the record's own sources, labelled by its title. '' if not one of them."""
+    src = next((s for s in rec.get("sources", []) if s.get("url") == url), None)
+    href = safe_url(url)
+    if not src or not href:
+        return ""
+    label = src.get("title") or src.get("publisher") or url
+    return f'<a href="{esc(href)}" rel="noopener">{esc(label)}</a>'
+
+
+def render_claim(rec: dict, a: dict) -> str:
+    status = a.get("evidence_status", "unknown")
+    links = [l for l in (source_link(rec, u) for u in a.get("source_urls") or []) if l]
+    who = f" by {esc(a['reviewer'])}" if a.get("reviewer") else ""
+    parts = [
+        f'<p class="claim-text">{esc(a.get("claim"))}</p>',
+        f'<p class="claim-meta"><span class="status status-{esc(status)}">{esc(STATUS_LABELS.get(status, status))}</span>'
+        f' · about <code>{esc(a.get("field_path"))}</code></p>',
+    ]
+    if links:
+        parts.append(f'<p class="claim-src">View source: {" · ".join(links)}</p>')
+    if a.get("analyst_note"):
+        parts.append(f'<p class="claim-note"><strong>Analyst note:</strong> {esc(a["analyst_note"])}</p>')
+    if a.get("uncertainty"):
+        parts.append(f'<p class="claim-note"><strong>Still uncertain:</strong> {esc(a["uncertainty"])}</p>')
+    parts.append(f'<p class="claim-reviewed">Reviewed {esc(a.get("reviewed_at"))}{who}</p>')
+    return f'<li class="claim claim-{esc(status)}">{"".join(parts)}</li>'
+
+
+def render_evidence(rec: dict) -> str:
+    claims = rec.get("evidence_assessments") or []
+    if not claims:
+        return ""
+    out = []
+    for key, heading, statuses, intro in EVIDENCE_GROUPS:
+        items = [render_claim(rec, a) for a in claims if a.get("evidence_status") in statuses]
+        if items:
+            out.append(f'<section class="prose evidence evidence-{key}" aria-labelledby="ev-{key}">'
+                       f'<h2 id="ev-{key}">{heading}</h2><p class="ev-intro">{intro}</p>'
+                       f'<ul class="claims">{"".join(items)}</ul></section>')
+    return "".join(out)
+
+
+def date_rows(rec: dict) -> list[tuple[str, str]]:
+    """(label, value) for each date the record states, each labelled by what it means."""
+    hazard = rec.get("incident_type") == "hazard"
+    rows = []
+    if rec.get("occurred_on"):
+        rows.append(("First demonstrated" if hazard else "Occurred", rec["occurred_on"]))
+    if rec.get("disclosed_on"):
+        rows.append(("First publicly disclosed", rec["disclosed_on"]))
+    if rec.get("published_on"):
+        rows.append(("Principal source published", rec["published_on"]))
+    basis = TEMPORAL_LABELS.get(rec.get("temporal_basis"))
+    if basis:
+        rows.append(("Record date", f"{rec.get('date', '')} ({basis})"))
+    else:
+        rows.append(("Record date", f"{rec.get('date', '')} (may be the date it occurred or the date it was "
+                                    "first publicly disclosed; the record does not establish which)"))
+    if rec.get("last_updated"):
+        rows.append(("Record last revised", rec["last_updated"]))
+    return rows
+
+
+def render_dates(rec: dict) -> str:
+    rows = "".join(field(label, esc(value)) for label, value in date_rows(rec))
+    return f'<section class="prose"><h2>Dates</h2><dl class="kvs">{rows}</dl></section>'
+
+
+def render_provenance(rec: dict) -> str:
+    """Dates and evidence sections for records that use the optional fields; '' otherwise."""
+    if not has_provenance(rec):
+        return ""
+    return "\n  " + render_dates(rec) + render_evidence(rec)
+
+
 def render_incident(rec: dict, all_ids: set[str]) -> str:
     rid = rec["incident_id"]
     url = f"{SITE_BASE}/{rid}/"
@@ -510,7 +618,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
   {type_note(rec.get('incident_type'))}
   <h1>{esc(rec.get('title', rid))}</h1>
   <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
-  {f'<p class="summary">{esc(rec.get("summary"))}</p>' if rec.get('summary') else ''}
+  {f'<p class="summary">{esc(rec.get("summary"))}</p>' if rec.get('summary') else ''}{render_provenance(rec)}
 
   <section class="prose"><h2>System</h2><dl class="kvs">{sys_rows}</dl></section>
   <section class="prose"><h2>Classification</h2><dl class="kvs">{class_rows}</dl></section>
@@ -759,6 +867,17 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .cite { margin-top:36px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
 .cite pre { overflow-x:auto; background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--line); font-size:13px; }
 .cite button { padding:7px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--fg); cursor:pointer; }
+.ev-intro { color:var(--muted); font-size:14px; }
+.claims { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+.claim { padding:10px 12px; border:1px solid var(--line); border-left-width:4px; border-radius:8px; background:var(--card); overflow-wrap:anywhere; }
+.claim p { margin:0 0 4px; } .claim p:last-child { margin-bottom:0; }
+.claim-text { font-weight:600; }
+.claim-meta, .claim-reviewed { color:var(--muted); font-size:13px; }
+.claim-note, .claim-src { font-size:14px; }
+.evidence-established .claim { border-left-color:var(--accent); }
+.evidence-assessment .claim { border-left-style:dashed; border-left-color:var(--muted); }
+.evidence-open .claim { border-left-style:dotted; border-left-color:var(--muted); }
+.status { font-weight:600; color:var(--fg); }
 """
 
 
