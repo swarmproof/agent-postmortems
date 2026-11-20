@@ -113,9 +113,10 @@ gh release view "$TAG" --json tagName,targetCommitish,assets
 git fetch --tags origin && git rev-list -n1 "$TAG"      # equals $SHA
 ```
 
-The title convention is `agent-postmortems corpus — <tag> (<N> incidents)`; `2026.11.2`
+The title convention is `agent-postmortems corpus — <tag> (<N> records: <X> incidents, <Y> hazards)`,
+where `N` counts every record and `X` and `Y` split it by `incident_type`; `2026.11.2`
 was published with the bare tag as its title and can be corrected with
-`gh release edit 2026.11.2 --title "agent-postmortems corpus — 2026.11.2 (180 incidents)"`.
+`gh release edit 2026.11.2 --title "agent-postmortems corpus — 2026.11.2 (180 records: 101 incidents, 79 hazards)"`.
 
 ## 6. Update CITATION.cff in the same change
 
