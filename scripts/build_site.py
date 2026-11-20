@@ -405,26 +405,32 @@ def render_sources(rec: dict) -> str:
     return f'<section class="prose"><h2>Sources</h2><ul class="sources">{"".join(items)}</ul></section>' if items else ""
 
 
-def render_blast(rec: dict, heading: str = "Blast radius") -> str:
+def render_blast(rec: dict, heading: str = "Blast radius", notes: bool = False) -> str:
     b = rec.get("blast_radius") or {}
     rows = []
+
+    def row(label: str, value: str, part: str) -> str:
+        """A kv row; with notes=True it also states the evidence status of /blast_radius/<part>."""
+        note = evidence_note(rec, "/blast_radius/" + part, with_uncertainty=True) if notes else ""
+        return field(label, value + (" " + note if note else ""))
+
     cost = b.get("cost") or {}
     if cost.get("amount_usd") is not None:
         amt = f"${cost['amount_usd']:,.0f}" + (" (est.)" if cost.get("estimated") else "")
-        rows.append(field("Cost", esc(amt)))
+        rows.append(row("Cost", esc(amt), "cost"))
     data = b.get("data") or {}
     if data.get("description") or data.get("classification"):
         d = esc(data.get("description", ""))
         cls = f' <span class="tag">{esc(data.get("classification"))}</span>' if data.get("classification") else ""
-        rows.append(field("Data", d + cls))
+        rows.append(row("Data", d + cls, "data"))
     uh = b.get("user_harm") or {}
     if uh.get("description") or uh.get("categories"):
         cats = " ".join(f'<span class="tag">{esc(c)}</span>' for c in uh.get("categories", []))
-        rows.append(field("User harm", esc(uh.get("description", "")) + " " + cats))
+        rows.append(row("User harm", esc(uh.get("description", "")) + " " + cats, "user_harm"))
     if b.get("scope"):
-        rows.append(field("Scope", esc(b["scope"])))
+        rows.append(row("Scope", esc(b["scope"]), "scope"))
     if b.get("reversibility"):
-        rows.append(field("Reversibility", esc(b["reversibility"])))
+        rows.append(row("Reversibility", esc(b["reversibility"]), "reversibility"))
     return f'<section class="prose"><h2>{esc(heading)}</h2><dl class="kvs">{"".join(rows)}</dl></section>' if rows else ""
 
 
@@ -482,6 +488,23 @@ TEMPORAL_LABELS = {
 }
 
 
+def assessments_at(rec: dict, pointer: str) -> list[dict]:
+    """Assessments whose field_path is `pointer` or lies inside it."""
+    return [a for a in rec.get("evidence_assessments") or []
+            if a.get("field_path") == pointer or str(a.get("field_path", "")).startswith(pointer + "/")]
+
+
+def evidence_note(rec: dict, pointer: str, with_uncertainty: bool = False) -> str:
+    """The assessed status of a displayed value, so the page never states it more firmly than the review."""
+    found = assessments_at(rec, pointer)
+    if not found:
+        return ""
+    labels = ", ".join(esc(STATUS_LABELS.get(s, s)) for s in dict.fromkeys(a["evidence_status"] for a in found))
+    extra = "".join(f" Still uncertain: {esc(a['uncertainty'])}" for a in found
+                    if with_uncertainty and a.get("uncertainty"))
+    return f'<span class="ev-tag">Evidence: {labels}.{extra}</span>'
+
+
 def has_provenance(rec: dict) -> bool:
     return any(rec.get(f) for f in PROVENANCE_FIELDS)
 
@@ -529,29 +552,44 @@ def render_evidence(rec: dict) -> str:
     return "".join(out)
 
 
-def date_rows(rec: dict) -> list[tuple[str, str]]:
-    """(label, value) for each date the record states, each labelled by what it means."""
+NOT_RECORDED = "Not recorded (no cited source establishes the day)"
+
+
+def dated_fields(rec: dict) -> list[tuple[str, str, str | None]]:
+    """(label, value, JSON pointer or None) for each date, labelled by what it means.
+
+    Occurrence and disclosure are always listed; when absent they say so rather
+    than leaving the reader to assume the record date covers them.
+    """
     hazard = rec.get("incident_type") == "hazard"
-    rows = []
-    if rec.get("occurred_on"):
-        rows.append(("First demonstrated" if hazard else "Occurred", rec["occurred_on"]))
-    if rec.get("disclosed_on"):
-        rows.append(("First publicly disclosed", rec["disclosed_on"]))
+    rows: list[tuple[str, str, str | None]] = [
+        ("First demonstrated" if hazard else "Occurred", rec.get("occurred_on") or NOT_RECORDED, "/occurred_on"),
+        ("First publicly disclosed", rec.get("disclosed_on") or NOT_RECORDED, "/disclosed_on"),
+    ]
     if rec.get("published_on"):
-        rows.append(("Principal source published", rec["published_on"]))
+        rows.append(("Principal source published", rec["published_on"], "/published_on"))
     basis = TEMPORAL_LABELS.get(rec.get("temporal_basis"))
     if basis:
-        rows.append(("Record date", f"{rec.get('date', '')} ({basis})"))
+        rows.append(("Record date", f"{rec.get('date', '')} ({basis})", None))
     else:
         rows.append(("Record date", f"{rec.get('date', '')} (may be the date it occurred or the date it was "
-                                    "first publicly disclosed; the record does not establish which)"))
+                                    "first publicly disclosed; the record does not establish which)", None))
     if rec.get("last_updated"):
-        rows.append(("Record last revised", rec["last_updated"]))
+        rows.append(("Record last revised", rec["last_updated"], None))
     return rows
 
 
+def date_rows(rec: dict) -> list[tuple[str, str]]:
+    return [(label, value) for label, value, _ in dated_fields(rec)]
+
+
+def date_dl(rec: dict) -> str:
+    return "".join(field(label, esc(value) + (" " + evidence_note(rec, ptr) if ptr and rec.get(ptr[1:]) else ""))
+                   for label, value, ptr in dated_fields(rec))
+
+
 def render_dates(rec: dict) -> str:
-    rows = "".join(field(label, esc(value)) for label, value in date_rows(rec))
+    rows = date_dl(rec)
     return f'<section class="prose"><h2>Dates</h2><dl class="kvs">{rows}</dl></section>'
 
 
@@ -586,9 +624,7 @@ def case_callout(rec: dict) -> str:
 
 def statuses_for(rec: dict, field_name: str) -> list[str]:
     """Evidence statuses of assessments attached to a top-level field or anything inside it."""
-    ptr = "/" + field_name
-    return [a["evidence_status"] for a in rec.get("evidence_assessments") or []
-            if a.get("field_path") == ptr or str(a.get("field_path", "")).startswith(ptr + "/")]
+    return [a["evidence_status"] for a in assessments_at(rec, "/" + field_name)]
 
 
 def render_narrative(rec: dict) -> str:
@@ -619,7 +655,7 @@ def render_safeguards(rec: dict) -> str:
 
 
 def render_case_timeline(rec: dict) -> str:
-    dates = "".join(field(label, esc(value)) for label, value in date_rows(rec))
+    dates = date_dl(rec)
     events = ""
     if rec.get("timeline"):
         lis = "".join(f'<li><span class="tl-at">{esc(e.get("at", ""))}</span> {esc(e.get("event", ""))}</li>'
@@ -654,6 +690,11 @@ def render_coverage(rec: dict) -> str:
     return f'<section class="prose"><h2>Coverage and limitations</h2><ul>{lis}</ul></section>'
 
 
+def note_p(rec: dict, pointer: str) -> str:
+    note = evidence_note(rec, pointer, with_uncertainty=True)
+    return f'<p class="claim-meta">{note}</p>' if note else ""
+
+
 def render_flagship(rec: dict, all_ids: set[str]) -> str:
     rid = rec["incident_id"]
     url = f"{SITE_BASE}/{rid}/"
@@ -663,7 +704,8 @@ def render_flagship(rec: dict, all_ids: set[str]) -> str:
         field("System", esc(" · ".join(filter(None, [sysm.get("framework"), sysm.get("vendor")])))),
         field("Tools", esc(", ".join(sysm.get("tools", [])))),
         field("Autonomy", esc(sysm.get("autonomy_level"))),
-        field("Severity", esc(rec.get("severity"))),
+        field("Severity", esc(rec.get("severity")) + (f" — {esc(rec['severity_rationale'])}" if rec.get("severity_rationale") else "")
+              + " " + evidence_note(rec, "/severity_rationale", with_uncertainty=True)),
         field("Confidence", esc(f"{conf}: {CONFIDENCE_DEFS.get(conf, '')}") if conf else ""),
         field("Failure chain", esc(chain_str(rec))),
     ])
@@ -680,11 +722,11 @@ def render_flagship(rec: dict, all_ids: set[str]) -> str:
   {case_callout(rec)}
   <h1>{esc(rec.get('title', rid))}</h1>
   <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
-  {f'<section class="prose"><h2>Summary</h2><p class="summary">{esc(rec.get("summary"))}</p></section>' if rec.get('summary') else ''}
+  {f'<section class="prose"><h2>Summary</h2><p class="summary">{esc(rec.get("summary"))}</p>{note_p(rec, "/summary")}</section>' if rec.get('summary') else ''}
   <section class="prose"><h2>At a glance</h2><dl class="kvs">{glance}</dl></section>
   {render_evidence(rec)}
   {render_narrative(rec)}
-  {render_blast(rec, "Impact and reversibility")}
+  {render_blast(rec, "Impact and reversibility", notes=True)}
   {render_safeguards(rec)}
   {render_case_timeline(rec)}
   {render_coverage(rec)}
@@ -1029,6 +1071,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .evidence-assessment .claim { border-left-style:dashed; border-left-color:var(--muted); }
 .evidence-open .claim { border-left-style:dotted; border-left-color:var(--muted); }
 .status { font-weight:600; color:var(--fg); }
+.ev-tag { display:block; color:var(--muted); font-size:13px; margin-top:2px; }
 .narrative h3, .prose h3 { font-size:15px; margin:14px 0 4px; }
 .test-status { color:var(--muted); font-size:14px; cursor:default; }
 .test-status-label { font-weight:600; }
