@@ -473,6 +473,8 @@ STATUS_LABELS = {
     "unknown": "Not established by the cited sources",
     "disputed": "Disputed",
 }
+# Link lead-in per status: only claims a source states get "View source".
+SOURCE_LEADS = {"direct": "View source", "corroborated": "View source", "inferred": "Reasoned from"}
 TEMPORAL_LABELS = {
     "occurred": "the date it occurred",
     "disclosed": "the date it was first publicly disclosed",
@@ -504,7 +506,7 @@ def render_claim(rec: dict, a: dict) -> str:
         f' · about <code>{esc(a.get("field_path"))}</code></p>',
     ]
     if links:
-        parts.append(f'<p class="claim-src">View source: {" · ".join(links)}</p>')
+        parts.append(f'<p class="claim-src">{SOURCE_LEADS.get(status, "Related source")}: {" · ".join(links)}</p>')
     if a.get("analyst_note"):
         parts.append(f'<p class="claim-note"><strong>Analyst note:</strong> {esc(a["analyst_note"])}</p>')
     if a.get("uncertainty"):
