@@ -330,7 +330,7 @@ def render_index(recs: list[dict]) -> str:
 
     body = f"""
 <section class="intro">
-  <h1>Agent incident post-mortems</h1>
+  <h1>AI-agent incidents and hazards</h1>
   <p>{len(recs)} sourced, structured post-mortems of real AI-agent failures — prompt injection,
   tool misuse, data exfiltration, sandbox escapes, cost blowups, and more. Every record follows
   <a href="https://github.com/swarmproof/agent-postmortems/blob/main/SCHEMA.md">one schema</a> and
