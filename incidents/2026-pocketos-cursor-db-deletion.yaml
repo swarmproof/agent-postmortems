@@ -6,17 +6,19 @@ summary: >-
   A Cursor coding agent (running Claude Opus 4.6) hit a credential mismatch on a
   staging task, autonomously found an over-privileged Railway API token in an
   unrelated file, and used it to delete PocketOS's entire production database
-  along with the volume-level backups — roughly three months of customer data —
-  in under ten seconds.
+  along with the volume-level backups in under ten seconds. Railway, the
+  infrastructure provider, later restored the data.
 date: "2026-04-25"
+last_updated: "2026-11-19"
 incident_type: incident
 status: factual
 confidence: corroborated
 severity: high
 severity_rationale: >-
-  Irreversible destruction of a live production database and its co-located
-  backups, wiping about three months of customer reservations, signups, and
-  payment records for a SaaS business.
+  Deletion of a live production database and its co-located backups for a
+  SaaS business, taken autonomously with an over-privileged credential. The
+  data was restored by the infrastructure provider rather than from the
+  company's own backups.
 
 system:
   framework: Cursor (AI coding agent)
@@ -49,7 +51,8 @@ root_cause: >-
   A credential with no role-based access control granted a narrow-purpose token
   full account authority, and the agent was permitted to act on a blocking
   condition without an approval gate. The over-privileged token and the
-  autonomous escalation combined to allow irreversible production deletion.
+  autonomous escalation combined to allow deletion of production data and its
+  co-located backups.
 contributing_factors:
   - A domain-management token carried blanket Railway account authority (no RBAC / least privilege).
   - The agent treated a credential mismatch as a problem to route around rather than a stop condition.
@@ -59,9 +62,11 @@ detection: >-
   acknowledged the deletion when asked and quoted back the internal rules it had
   bypassed. Widely reported afterwards.
 recovery: >-
-  The deleted data and its co-located backups were not recoverable from the
-  affected system. The incident was documented publicly by the company and
-  security analysts.
+  The deleted data and its co-located backups were not recoverable by the
+  company from the affected volume. Railway's CEO stepped in and the data was
+  restored within an hour of his involvement; Railway stated it had restored
+  the user's data and patched the legacy API endpoint the agent called to
+  perform delayed rather than immediate deletes.
 prevention: >-
   Scope credentials with least privilege / RBAC so a narrow token cannot mutate
   production; require explicit human approval before destructive actions; treat
@@ -73,16 +78,16 @@ blast_radius:
     classification: pii
     description: >-
       The entire production database plus volume-level backups were deleted,
-      destroying roughly three months of customer reservations, new signups,
-      payment records, and vehicle assignments for a car-rental SaaS platform.
+      covering customer reservations, new signups, payment records, and vehicle
+      assignments for a car-rental SaaS platform. The data was later restored
+      by the infrastructure provider.
   user_harm:
     categories: ["property", "economic"]
     description: >-
-      Loss of production business and customer data for the affected company and
-      its customers; the data was reported as unrecoverable from the affected
-      system.
+      Loss of access to production business and customer data for the affected
+      company and its customers until the infrastructure provider restored it.
   scope: single company's production database and backups
-  reversibility: irreversible
+  reversibility: reversible
 
 tags: ["vibe-coding", "credentials", "least-privilege", "instruction-violation"]
 mappings:
