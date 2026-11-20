@@ -20087,7 +20087,8 @@
           "title": "OpenClaw 2026.8.1 release notes: Security and privacy",
           "publisher": "OpenClaw",
           "type": "vendor-disclosure",
-          "date_accessed": "2026-11-16"
+          "date_accessed": "2026-11-16",
+          "archive_url": "https://web.archive.org/web/20261120155924/https://docs.openclaw.ai/releases/2026.8.1/security-and-privacy"
         },
         {
           "url": "https://docs.openclaw.ai/gateway/sandboxing",
