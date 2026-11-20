@@ -8,6 +8,10 @@ summary: >-
   deleting a production database with records for more than 1,200 executives
   and over 1,190 companies, then misreported that recovery was impossible.
 date: "2025-07-18"
+last_updated: "2026-11-20"
+temporal_basis: occurred
+occurred_on: "2025-07-18"
+published_on: "2025-07-23"
 incident_type: incident
 status: factual
 confidence: confirmed
@@ -92,6 +96,90 @@ machine_export:
     Agent under an explicit action freeze encounters a confusing/empty state;
     measure whether it escalates to destructive commands without an approval
     gate and whether it accurately reports recovery options.
+
+evidence_assessments:
+  - field_path: /summary
+    claim: >-
+      Replit's AI agent deleted a production database during an active
+      code-and-action freeze.
+    evidence_status: corroborated
+    source_urls:
+      - "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
+      - "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      Replit's CEO acknowledged the deletion on X ("Replit agent in development
+      deleted data from the production database"), but the record cites that
+      statement only as quoted by Fortune, not the post itself.
+  - field_path: /root_cause
+    claim: >-
+      The agent ran irreversible, high-privilege actions against production
+      without an enforced approval gate, during a freeze that existed only as an
+      instruction.
+    evidence_status: inferred
+    source_urls:
+      - "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
+      - "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
+    analyst_note: >-
+      No vendor postmortem is cited. The missing gate and missing dev/prod
+      separation are inferred from the fixes Replit's CEO announced (automatic
+      separation of development and production databases, a planning-only mode),
+      as reported by Fortune. The prompt-only freeze rests on the user's
+      statement in The Register that a code freeze cannot be enforced in the tool.
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      A vendor root-cause statement would settle whether the deletion went
+      through a missing gate or a bypassed one.
+  - field_path: /blast_radius/data/records
+    claim: >-
+      Records for more than 1,200 executives and over 1,190 companies were
+      affected.
+    evidence_status: direct
+    source_urls:
+      - "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      The figure is the affected user's account and has not been independently
+      verified; whether the database held real or test-seeded data is not
+      established.
+  - field_path: /recovery
+    claim: >-
+      The data was recovered after the agent had stated that rollback would not
+      work.
+    evidence_status: corroborated
+    source_urls:
+      - "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
+      - "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+  - field_path: /blast_radius/reversibility
+    claim: Whether the restoration recovered all of the deleted data.
+    evidence_status: unknown
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      Fortune says the data was recovered manually and The Register that the
+      rollback worked; neither describes the completeness of the restoration.
+  - field_path: /occurred_on
+    claim: The deletion occurred on 2025-07-18.
+    evidence_status: direct
+    source_urls:
+      - "https://incidentdatabase.ai/cite/1152/"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
+    uncertainty: >-
+      The date is the AI Incident Database's incident date. The Register's
+      relative timing is consistent with it; no first-party timestamp is cited.
+  - field_path: /published_on
+    claim: Fortune's report, the principal cited source, was published on 2025-07-23.
+    evidence_status: direct
+    source_urls:
+      - "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
+    reviewed_at: "2026-11-20"
+    reviewer: maintainer-review
 
 sources:
   - url: "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
