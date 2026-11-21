@@ -111,11 +111,12 @@ def page(title: str, body: str, css_href: str, description: str = "", *,
 <link rel="alternate" type="application/rss+xml" title="agent-postmortems" href="{SITE_BASE}/feed.xml">
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">
   <a class="brand" href="{'.' if css_href == 'style.css' else '..'}/">agent-postmortems</a>
   <span class="tagline">a structured database of real AI-agent failures</span>
 </header>
-<main>
+<main id="main" tabindex="-1">
 {body}
 </main>
 <footer class="site-foot">
@@ -576,6 +577,9 @@ h1 { font-size:28px; line-height:1.25; margin:8px 0 12px; }
 h2 { font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:28px 0 8px; }
 .intro p { color:var(--fg); }
 [hidden] { display:none !important; }
+.skip-link { position:absolute; left:8px; top:-48px; z-index:10; padding:8px 12px; border-radius:8px; background:var(--card); color:var(--accent); border:1px solid var(--accent); }
+.skip-link:focus { top:8px; }
+main:focus { outline:none; }
 .filters { display:grid; grid-template-columns:1fr; gap:8px 10px; margin:20px 0 8px; }
 @media (min-width: 720px) { .filters { grid-template-columns:1fr 280px; } }
 .facets { grid-column:1 / -1; border:1px solid var(--line); border-radius:8px; background:var(--card); }

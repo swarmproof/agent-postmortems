@@ -234,3 +234,15 @@ def test_jsonld_payload_cannot_close_its_script_element():
     out = bs.json_for_html({"x": "</script><script>alert(1)</script>&"})
     assert "<" not in out and ">" not in out and "&" not in out
     assert json.loads(out) == {"x": "</script><script>alert(1)</script>&"}
+
+
+# --------------------------------------------------------------------------- accessibility
+def test_every_page_starts_with_a_skip_link_to_main(site):
+    for path, f in pages(site).items():
+        text = f.read_text()
+        body = text[text.index("<body>"):]
+        first_link = re.search(r"<a\b[^>]*>", body).group(0)
+        assert first_link == '<a class="skip-link" href="#main">', path
+        assert text.count('<main id="main" tabindex="-1">') == 1, path
+    css = bs.CSS
+    assert ".skip-link:focus { top:8px; }" in css  # hidden off-screen until focused, then visible
