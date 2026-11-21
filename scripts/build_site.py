@@ -318,10 +318,20 @@ def render_filters(recs: list[dict]) -> str:
 </div>"""
 
 
+CARD_BASIS_LABELS = {"occurred": "Occurred", "disclosed": "Disclosed", "published": "Source published"}
+
+
 def card_date_label(rec: dict) -> str:
-    """What the record's date may mean: the legacy date is occurrence (or, for a hazard,
-    first demonstration) or first public disclosure, without saying which."""
-    return "Demonstrated or disclosed" if rec.get("incident_type") == "hazard" else "Occurred or disclosed"
+    """What the record's date means. With a stated temporal_basis, name it; otherwise the
+    legacy date is occurrence (or, for a hazard, first demonstration) or first public
+    disclosure, without saying which."""
+    hazard = rec.get("incident_type") == "hazard"
+    basis = rec.get("temporal_basis")
+    if basis == "occurred" and hazard:
+        return "First demonstrated"
+    if basis in CARD_BASIS_LABELS:
+        return CARD_BASIS_LABELS[basis]
+    return "Demonstrated or disclosed" if hazard else "Occurred or disclosed"
 
 
 def render_index(recs: list[dict]) -> str:
@@ -412,27 +422,33 @@ def render_sources(rec: dict) -> str:
     return f'<section class="prose"><h2>Sources</h2><ul class="sources">{"".join(items)}</ul></section>' if items else ""
 
 
-def render_blast(rec: dict) -> str:
+def render_blast(rec: dict, heading: str = "Blast radius", notes: bool = False) -> str:
     b = rec.get("blast_radius") or {}
     rows = []
+
+    def row(label: str, value: str, part: str) -> str:
+        """A kv row; with notes=True it also states the evidence status of /blast_radius/<part>."""
+        note = evidence_note(rec, "/blast_radius/" + part, with_uncertainty=True) if notes else ""
+        return field(label, value + (" " + note if note else ""))
+
     cost = b.get("cost") or {}
     if cost.get("amount_usd") is not None:
         amt = f"${cost['amount_usd']:,.0f}" + (" (est.)" if cost.get("estimated") else "")
-        rows.append(field("Cost", esc(amt)))
+        rows.append(row("Cost", esc(amt), "cost"))
     data = b.get("data") or {}
     if data.get("description") or data.get("classification"):
         d = esc(data.get("description", ""))
         cls = f' <span class="tag">{esc(data.get("classification"))}</span>' if data.get("classification") else ""
-        rows.append(field("Data", d + cls))
+        rows.append(row("Data", d + cls, "data"))
     uh = b.get("user_harm") or {}
     if uh.get("description") or uh.get("categories"):
         cats = " ".join(f'<span class="tag">{esc(c)}</span>' for c in uh.get("categories", []))
-        rows.append(field("User harm", esc(uh.get("description", "")) + " " + cats))
+        rows.append(row("User harm", esc(uh.get("description", "")) + " " + cats, "user_harm"))
     if b.get("scope"):
-        rows.append(field("Scope", esc(b["scope"])))
+        rows.append(row("Scope", esc(b["scope"]), "scope"))
     if b.get("reversibility"):
-        rows.append(field("Reversibility", esc(b["reversibility"])))
-    return f'<section class="prose"><h2>Blast radius</h2><dl class="kvs">{"".join(rows)}</dl></section>' if rows else ""
+        rows.append(row("Reversibility", esc(b["reversibility"]), "reversibility"))
+    return f'<section class="prose"><h2>{esc(heading)}</h2><dl class="kvs">{"".join(rows)}</dl></section>' if rows else ""
 
 
 def bibtex(rec: dict, url: str) -> str:
@@ -459,7 +475,331 @@ def type_note(incident_type) -> str:
             f'<strong>{esc(label)}</strong>: {esc(text)}</p>')
 
 
+# --------------------------------------------------------------------------- provenance
+# Optional claim-level evidence and date-basis fields. Pages for records without
+# any of these render exactly as before.
+PROVENANCE_FIELDS = ("evidence_assessments", "temporal_basis", "occurred_on", "disclosed_on", "published_on")
+
+# (css key, heading, statuses, one-line explanation) in reading order.
+EVIDENCE_GROUPS = [
+    ("established", "What the sources establish", ("direct", "corroborated"),
+     "Statements a cited source makes directly, or that two or more independent cited sources make."),
+    ("assessment", "Assessment, not established fact", ("inferred",),
+     "Analyst reasoning from the cited facts. No cited source states these directly."),
+    ("open", "Unknown or contested", ("unknown", "disputed"),
+     "Points the cited sources do not establish, or that a source or named party contests."),
+]
+STATUS_LABELS = {
+    "direct": "Stated by a cited source",
+    "corroborated": "Stated by two or more independent cited sources",
+    "inferred": "Assessment, not established fact",
+    "unknown": "Not established by the cited sources",
+    "disputed": "Disputed",
+}
+# Link lead-in per status: only claims a source states get "View source".
+SOURCE_LEADS = {"direct": "View source", "corroborated": "View source", "inferred": "Reasoned from"}
+TEMPORAL_LABELS = {
+    "occurred": "the date it occurred",
+    "disclosed": "the date it was first publicly disclosed",
+    "published": "the publication date of the principal source",
+}
+
+
+def assessments_at(rec: dict, pointer: str) -> list[dict]:
+    """Assessments whose field_path is `pointer` or lies inside it."""
+    return [a for a in rec.get("evidence_assessments") or []
+            if a.get("field_path") == pointer or str(a.get("field_path", "")).startswith(pointer + "/")]
+
+
+def evidence_note(rec: dict, pointer: str, with_uncertainty: bool = False) -> str:
+    """The assessed status of a displayed value, so the page never states it more firmly than the review."""
+    found = assessments_at(rec, pointer)
+    if not found:
+        return ""
+    labels = ", ".join(esc(STATUS_LABELS.get(s, s)) for s in dict.fromkeys(a["evidence_status"] for a in found))
+    extra = "".join(f" Still uncertain: {esc(a['uncertainty'])}" for a in found
+                    if with_uncertainty and a.get("uncertainty"))
+    return f'<span class="ev-tag">Evidence: {labels}.{extra}</span>'
+
+
+METHODS_DATE_URL = f"{REPO_URL}/blob/main/docs/METHODS.md#what-date-means-and-its-limits"
+
+
+def legacy_date_note(rec: dict) -> str:
+    """One-line explanation of the ambiguous legacy date, for records without date-basis fields."""
+    if has_provenance(rec):
+        return ""
+    happened = "it was first demonstrated" if rec.get("incident_type") == "hazard" else "it occurred"
+    return (f'<p class="date-note">This date is when {happened} or when it was first publicly disclosed; '
+            f'the record does not say which. <a href="{METHODS_DATE_URL}">About dates</a></p>')
+
+
+def has_provenance(rec: dict) -> bool:
+    return any(rec.get(f) for f in PROVENANCE_FIELDS)
+
+
+def source_link(rec: dict, url: str) -> str:
+    """Link to one of the record's own sources, labelled by its title. '' if not one of them."""
+    src = next((s for s in rec.get("sources", []) if s.get("url") == url), None)
+    href = safe_url(url)
+    if not src or not href:
+        return ""
+    label = src.get("title") or src.get("publisher") or url
+    return f'<a href="{esc(href)}" rel="noopener">{esc(label)}</a>'
+
+
+def render_claim(rec: dict, a: dict) -> str:
+    status = a.get("evidence_status", "unknown")
+    links = [l for l in (source_link(rec, u) for u in a.get("source_urls") or []) if l]
+    who = f" by {esc(a['reviewer'])}" if a.get("reviewer") else ""
+    parts = [
+        f'<p class="claim-text">{esc(a.get("claim"))}</p>',
+        f'<p class="claim-meta"><span class="status status-{esc(status)}">{esc(STATUS_LABELS.get(status, status))}</span>'
+        f' · about <code>{esc(a.get("field_path"))}</code></p>',
+    ]
+    if links:
+        parts.append(f'<p class="claim-src">{SOURCE_LEADS.get(status, "Related source")}: {" · ".join(links)}</p>')
+    if a.get("analyst_note"):
+        parts.append(f'<p class="claim-note"><strong>Analyst note:</strong> {esc(a["analyst_note"])}</p>')
+    if a.get("uncertainty"):
+        parts.append(f'<p class="claim-note"><strong>Still uncertain:</strong> {esc(a["uncertainty"])}</p>')
+    parts.append(f'<p class="claim-reviewed">Reviewed {esc(a.get("reviewed_at"))}{who}</p>')
+    return f'<li class="claim claim-{esc(status)}">{"".join(parts)}</li>'
+
+
+def render_evidence(rec: dict) -> str:
+    claims = rec.get("evidence_assessments") or []
+    if not claims:
+        return ""
+    out = []
+    for key, heading, statuses, intro in EVIDENCE_GROUPS:
+        items = [render_claim(rec, a) for a in claims if a.get("evidence_status") in statuses]
+        if items:
+            out.append(f'<section class="prose evidence evidence-{key}" aria-labelledby="ev-{key}">'
+                       f'<h2 id="ev-{key}">{heading}</h2><p class="ev-intro">{intro}</p>'
+                       f'<ul class="claims">{"".join(items)}</ul></section>')
+    return "".join(out)
+
+
+NOT_RECORDED = "Not recorded (no cited source establishes the day)"
+
+
+def dated_fields(rec: dict) -> list[tuple[str, str, str | None]]:
+    """(label, value, JSON pointer or None) for each date, labelled by what it means.
+
+    Occurrence and disclosure are always listed; when absent they say so rather
+    than leaving the reader to assume the record date covers them.
+    """
+    hazard = rec.get("incident_type") == "hazard"
+    rows: list[tuple[str, str, str | None]] = [
+        ("First demonstrated" if hazard else "Occurred", rec.get("occurred_on") or NOT_RECORDED, "/occurred_on"),
+        ("First publicly disclosed", rec.get("disclosed_on") or NOT_RECORDED, "/disclosed_on"),
+    ]
+    if rec.get("published_on"):
+        rows.append(("Principal source published", rec["published_on"], "/published_on"))
+    basis = TEMPORAL_LABELS.get(rec.get("temporal_basis"))
+    if basis:
+        rows.append(("Record date", f"{rec.get('date', '')} ({basis})", None))
+    else:
+        rows.append(("Record date", f"{rec.get('date', '')} (may be the date it occurred or the date it was "
+                                    "first publicly disclosed; the record does not establish which)", None))
+    if rec.get("last_updated"):
+        rows.append(("Record last revised", rec["last_updated"], None))
+    return rows
+
+
+def date_rows(rec: dict) -> list[tuple[str, str]]:
+    return [(label, value) for label, value, _ in dated_fields(rec)]
+
+
+def date_dl(rec: dict) -> str:
+    return "".join(field(label, esc(value) + (" " + evidence_note(rec, ptr) if ptr and rec.get(ptr[1:]) else ""))
+                   for label, value, ptr in dated_fields(rec))
+
+
+def render_dates(rec: dict) -> str:
+    rows = date_dl(rec)
+    return f'<section class="prose"><h2>Dates</h2><dl class="kvs">{rows}</dl></section>'
+
+
+def render_provenance(rec: dict) -> str:
+    """Dates and evidence sections for records that use the optional fields; '' otherwise."""
+    if not has_provenance(rec):
+        return ""
+    return "\n  " + render_dates(rec) + render_evidence(rec)
+
+
+# --------------------------------------------------------------------------- flagship case pages
+# Curated records that get the full investigation layout once they carry
+# claim-level evidence. Without evidence data they render like any other record.
+FLAGSHIP_IDS = frozenset({"2025-replit-prod-db-deletion", "2025-echoleak-m365-copilot"})
+# "reported=single source; corroborated=..." from the schema, so the page and schema agree.
+CONFIDENCE_DEFS = dict(part.strip().split("=", 1) for part in
+                       _SCHEMA_PROPS["confidence"]["description"].rstrip(".").split(";"))
+NARRATIVE_FIELDS = [("trigger", "Trigger"), ("root_cause", "Root cause"),
+                    ("contributing_factors", "Contributing factors"), ("detection", "Detection"),
+                    ("recovery", "Recovery")]
+TEST_STATUS = "Test specification in development"
+
+
+def is_flagship(rec: dict) -> bool:
+    return rec.get("incident_id") in FLAGSHIP_IDS and bool(rec.get("evidence_assessments"))
+
+
+def case_callout(rec: dict) -> str:
+    """The site-wide incident/hazard note, so every page uses the same labels."""
+    return type_note(rec.get("incident_type"))
+
+
+def statuses_for(rec: dict, field_name: str) -> list[str]:
+    """Evidence statuses of assessments attached to a top-level field or anything inside it."""
+    return [a["evidence_status"] for a in assessments_at(rec, "/" + field_name)]
+
+
+def render_narrative(rec: dict) -> str:
+    rows = []
+    for key, label in NARRATIVE_FIELDS:
+        value = rec.get(key)
+        if not value:
+            continue
+        text = ("<ul>" + "".join(f"<li>{esc(v)}</li>" for v in value) + "</ul>") if isinstance(value, list) \
+            else f"<p>{esc(value)}</p>"
+        st = statuses_for(rec, key)
+        note = ("Evidence for this field: " + ", ".join(esc(STATUS_LABELS[s]) for s in dict.fromkeys(st))
+                if st else "Not individually assessed; see Coverage and limitations.")
+        rows.append(f'<div class="narrative"><h3>{esc(label)}</h3>{text}<p class="claim-meta">{note}</p></div>')
+    return (f'<section class="prose"><h2>How it happened, as recorded</h2>'
+            f'<p class="ev-intro">The record\'s own account. Its parts carry the evidence status assessed above.</p>'
+            f'{"".join(rows)}</section>') if rows else ""
+
+
+def render_safeguards(rec: dict) -> str:
+    prevention = f"<p>{esc(rec['prevention'])}</p>" if rec.get("prevention") else ""
+    return (f'<section class="prose safeguards"><h2>Proposed safeguards</h2>'
+            f'<p class="ev-intro">For education: general controls suggested by this record. They are not a verified '
+            f'fix, not vendor guidance, and not evidence that the system named here lacks them today.</p>'
+            f'{prevention}'
+            f'<p class="test-status"><span class="test-status-label">Test pattern:</span> {TEST_STATUS}. '
+            f'No runnable test exists for this pattern yet.</p></section>')
+
+
+def render_case_timeline(rec: dict) -> str:
+    dates = date_dl(rec)
+    events = ""
+    if rec.get("timeline"):
+        lis = "".join(f'<li><span class="tl-at">{esc(e.get("at", ""))}</span> {esc(e.get("event", ""))}</li>'
+                      for e in rec["timeline"])
+        events = f'<h3>Events as recorded</h3><ul class="timeline">{lis}</ul>'
+    return (f'<section class="prose"><h2>Timeline</h2><dl class="kvs">{dates}</dl>{events}'
+            f'<p class="claim-meta">Dates come from the cited sources; the sources are listed below.</p></section>')
+
+
+def render_coverage(rec: dict) -> str:
+    claims = rec.get("evidence_assessments") or []
+    counts = {key: sum(a.get("evidence_status") in sts for a in claims) for key, _, sts, _ in EVIDENCE_GROUPS}
+    unassessed = [label for key, label in NARRATIVE_FIELDS + [("prevention", "Proposed safeguards"),
+                                                             ("blast_radius", "Impact")]
+                  if rec.get(key) and not statuses_for(rec, key)]
+    reviewed = sorted({a["reviewed_at"] for a in claims if a.get("reviewed_at")})
+    conf = rec.get("confidence")
+    items = [
+        f"{len(claims)} statements assessed: {counts['established']} established by sources, "
+        f"{counts['assessment']} assessment, {counts['open']} unknown or contested.",
+        ("Not individually assessed: " + ", ".join(unassessed) + ".") if unassessed else "",
+        f"Assessments reviewed {esc(reviewed[0])}" + (f" to {esc(reviewed[-1])}" if len(reviewed) > 1 else "") + "."
+        if reviewed else "",
+        (f"Record confidence: {esc(conf)} ({esc(CONFIDENCE_DEFS.get(conf, ''))}). "
+         "Claim statuses add detail; they do not change this rating.") if conf else "",
+        f"Based only on the {len(rec.get('sources', []))} public sources cited below. "
+        "Anything they do not report is not represented here.",
+        f'How records are built: <a href="{REPO_URL}/blob/main/docs/METHODS.md">methods</a>. '
+        f'Found an error? <a href="{REPO_URL}/blob/main/DISPUTES.md">Request a correction</a>.',
+    ]
+    lis = "".join(f"<li>{i}</li>" for i in items if i)
+    return f'<section class="prose"><h2>Coverage and limitations</h2><ul>{lis}</ul></section>'
+
+
+def note_p(rec: dict, pointer: str) -> str:
+    note = evidence_note(rec, pointer, with_uncertainty=True)
+    return f'<p class="claim-meta">{note}</p>' if note else ""
+
+
+def render_flagship(rec: dict, all_ids: set[str]) -> str:
+    rid = rec["incident_id"]
+    url = f"{SITE_BASE}/{rid}/"
+    sysm = rec.get("system") or {}
+    conf = rec.get("confidence")
+    glance = "".join([
+        field("System", esc(" · ".join(filter(None, [sysm.get("framework"), sysm.get("vendor")])))),
+        field("Tools", esc(", ".join(sysm.get("tools", [])))),
+        field("Autonomy", esc(sysm.get("autonomy_level"))),
+        field("Severity", esc(rec.get("severity")) + (f" — {esc(rec['severity_rationale'])}" if rec.get("severity_rationale") else "")
+              + " " + evidence_note(rec, "/severity_rationale", with_uncertainty=True)),
+        field("Confidence", esc(f"{conf}: {CONFIDENCE_DEFS.get(conf, '')}") if conf else ""),
+        field("Failure chain", esc(chain_str(rec))),
+    ])
+    yaml_url = f"{REPO_URL}/blob/main/incidents/{rid}.yaml"
+    body = f"""
+<article class="incident case">
+  <p class="crumb"><a href="../">← all incidents</a></p>
+  <div class="badges">
+    {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
+    {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
+    {badge('confidence: ' + esc(conf or '?'), 'neutral') if conf else ''}
+    {badge('status: ' + esc(rec.get('status','?')), 'neutral') if rec.get('status') else ''}
+  </div>
+  {case_callout(rec)}
+  <h1>{esc(rec.get('title', rid))}</h1>
+  <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
+  {f'<section class="prose"><h2>Summary</h2><p class="summary">{esc(rec.get("summary"))}</p>{note_p(rec, "/summary")}</section>' if rec.get('summary') else ''}
+  <section class="prose"><h2>At a glance</h2><dl class="kvs">{glance}</dl></section>
+  {render_evidence(rec)}
+  {render_narrative(rec)}
+  {render_blast(rec, "Impact and reversibility", notes=True)}
+  {render_safeguards(rec)}
+  {render_case_timeline(rec)}
+  {render_coverage(rec)}
+  <section class="prose"><h2>References</h2><dl class="kvs">{render_references(rec, all_ids)}</dl></section>
+  {render_sources(rec)}
+
+  <section class="cite">
+    <h2>Cite and reuse</h2>
+    <p class="permalink">Permalink: <a href="{url}">{esc(url)}</a></p>
+    <p>Data: <a href="incident.json">this record as JSON</a> · <a href="{esc(yaml_url)}">source YAML</a></p>
+    <pre id="bib">{esc(bibtex(rec, url))}</pre>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('bib').textContent)">Copy BibTeX</button>
+  </section>
+</article>
+"""
+    return page(f"{rec.get('title', rid)} — agent-postmortems", body, "../style.css",
+                meta_description(rec.get("summary") or rec.get("trigger")),
+                canonical=url, og_type="article", og_title=rec.get("title", rid))
+
+
+def render_references(rec: dict, all_ids: set[str]) -> str:
+    mapping_rows = ""
+    for key, label in FRAMEWORK_LABELS.items():
+        ids = (rec.get("mappings") or {}).get(key)
+        if not ids:
+            continue
+        names = FRAMEWORKS[key]["ids"]
+        chips = " ".join(f'<span class="tag" title="{esc(names.get(i, ""))}">{esc(i)}</span>' for i in ids)
+        lbl = f'<a href="{esc(FRAMEWORKS[key]["url"])}">{esc(label)}</a>'
+        mapping_rows += f'<div class="kv"><dt>{lbl}</dt><dd>{chips}</dd></div>'
+    return "".join([
+        field("CVE", " ".join(f'<a href="https://nvd.nist.gov/vuln/detail/{esc(c)}">{esc(c)}</a>' for c in rec.get("cve", []))),
+        field("CWE", esc(", ".join(rec.get("cwe", [])))),
+        mapping_rows,
+        field("Related", " ".join(
+            f'<a href="../{esc(r)}/">{esc(r)}</a>' if r in all_ids else esc(r)
+            for r in rec.get("related_incidents", []))),
+        field("Tags", " ".join(f'<span class="tag">{esc(t)}</span>' for t in rec.get("tags", []))),
+    ])
+
+
 def render_incident(rec: dict, all_ids: set[str]) -> str:
+    if is_flagship(rec):
+        return render_flagship(rec, all_ids)
     rid = rec["incident_id"]
     url = f"{SITE_BASE}/{rid}/"
     sys = rec.get("system") or {}
@@ -477,24 +817,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
         field("Attack vector", esc(rec.get("attack_vector"))),
         field("Causation", esc(" · ".join(f"{k}: {v}" for k, v in caus.items())) if caus else ""),
     ])
-    mapping_rows = ""
-    for key, label in FRAMEWORK_LABELS.items():
-        ids = (rec.get("mappings") or {}).get(key)
-        if not ids:
-            continue
-        names = FRAMEWORKS[key]["ids"]
-        chips = " ".join(f'<span class="tag" title="{esc(names.get(i, ""))}">{esc(i)}</span>' for i in ids)
-        lbl = f'<a href="{esc(FRAMEWORKS[key]["url"])}">{esc(label)}</a>'
-        mapping_rows += f'<div class="kv"><dt>{lbl}</dt><dd>{chips}</dd></div>'
-    xref = "".join([
-        field("CVE", " ".join(f'<a href="https://nvd.nist.gov/vuln/detail/{esc(c)}">{esc(c)}</a>' for c in rec.get("cve", []))),
-        field("CWE", esc(", ".join(rec.get("cwe", [])))),
-        mapping_rows,
-        field("Related", " ".join(
-            f'<a href="../{esc(r)}/">{esc(r)}</a>' if r in all_ids else esc(r)
-            for r in rec.get("related_incidents", []))),
-        field("Tags", " ".join(f'<span class="tag">{esc(t)}</span>' for t in rec.get("tags", []))),
-    ])
+    xref = render_references(rec, all_ids)
     factors = ""
     if rec.get("contributing_factors"):
         lis = "".join(f"<li>{esc(x)}</li>" for x in rec["contributing_factors"])
@@ -516,8 +839,8 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
   </div>
   {type_note(rec.get('incident_type'))}
   <h1>{esc(rec.get('title', rid))}</h1>
-  <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
-  {f'<p class="summary">{esc(rec.get("summary"))}</p>' if rec.get('summary') else ''}
+  <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>{legacy_date_note(rec)}
+  {f'<p class="summary">{esc(rec.get("summary"))}</p>' if rec.get('summary') else ''}{render_provenance(rec)}
 
   <section class="prose"><h2>System</h2><dl class="kvs">{sys_rows}</dl></section>
   <section class="prose"><h2>Classification</h2><dl class="kvs">{class_rows}</dl></section>
@@ -769,6 +1092,22 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .cite { margin-top:36px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
 .cite pre { overflow-x:auto; background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--line); font-size:13px; }
 .cite button { padding:7px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--fg); cursor:pointer; }
+.ev-intro { color:var(--muted); font-size:14px; }
+.claims { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+.claim { padding:10px 12px; border:1px solid var(--line); border-left-width:4px; border-radius:8px; background:var(--card); overflow-wrap:anywhere; }
+.claim p { margin:0 0 4px; } .claim p:last-child { margin-bottom:0; }
+.claim-text { font-weight:600; }
+.claim-meta, .claim-reviewed { color:var(--muted); font-size:13px; }
+.claim-note, .claim-src { font-size:14px; }
+.evidence-established .claim { border-left-color:var(--accent); }
+.evidence-assessment .claim { border-left-style:dashed; border-left-color:var(--muted); }
+.evidence-open .claim { border-left-style:dotted; border-left-color:var(--muted); }
+.status { font-weight:600; color:var(--fg); }
+.date-note { color:var(--muted); font-size:13px; margin:-10px 0 16px; }
+.ev-tag { display:block; color:var(--muted); font-size:13px; margin-top:2px; }
+.narrative h3, .prose h3 { font-size:15px; margin:14px 0 4px; }
+.test-status { color:var(--muted); font-size:14px; cursor:default; }
+.test-status-label { font-weight:600; }
 """
 
 
@@ -950,6 +1289,8 @@ def main() -> int:
         d = OUT / r["incident_id"]
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(render_incident(r, ids))
+        if is_flagship(r):
+            (d / "incident.json").write_text(json.dumps(r, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     # .nojekyll so GitHub Pages serves files/dirs verbatim
     (OUT / ".nojekyll").write_text("")
     print(f"built site/ — {len(recs)} incidents, index + feed, base {SITE_BASE}")
