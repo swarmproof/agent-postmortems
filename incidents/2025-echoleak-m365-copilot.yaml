@@ -103,7 +103,7 @@ sources:
     date_accessed: "2026-07-14"
     archive_url: "https://web.archive.org/web/20260826092442/https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
   - url: "https://arxiv.org/html/2509.10540v1"
-    title: "Analysis of the EchoLeak zero-click prompt-injection vulnerability"
+    title: "EchoLeak: The First Real-World Zero-Click Prompt Injection Exploit in a Production LLM System"
     publisher: arXiv
     type: academic
     date_accessed: "2026-07-14"

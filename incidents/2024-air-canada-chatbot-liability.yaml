@@ -8,6 +8,7 @@ summary: >-
   Tribunal (Moffatt v. Air Canada) held the airline liable for the chatbot's
   negligent misrepresentation and awarded CAD 812.02.
 date: "2024-02-14"
+last_updated: "2026-11-20"
 incident_type: incident
 status: final
 confidence: confirmed
@@ -58,14 +59,17 @@ prevention: >-
 
 blast_radius:
   cost:
-    amount_usd: 812
+    amount_usd: null
+    estimated: false
   user_harm:
     categories: ["economic", "legal-regulatory"]
     affected_count: 1
     description: >-
       The customer relied on the incorrect advice and did not receive the
-      expected fare treatment; the tribunal awarded CAD 812.02 in damages and
-      fees.
+      expected fare treatment. The Canadian tribunal awarded 812.02 Canadian
+      dollars in damages and court fees (Forbes; CBC reports $812 covering the
+      fare difference). No US-dollar amount is reported, so amount_usd is left
+      empty rather than converted.
   scope: single customer; precedent for chatbot liability
   reversibility: reversible
 
