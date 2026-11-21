@@ -6,7 +6,7 @@
 """Corpus validator — the CI gatekeeper for agent-postmortems.
 
 Gates:
-  G-SCHEMA   record matches schema/incident.schema.json
+  G-SCHEMA   record matches schema/incident.schema.json; source url/archive_url are http(s)
   G-TAX      classes/subclasses exist in schema/taxonomy.yaml at a known version;
              failure_classes[0] == primary_failure_class; 'other' requires tags
   G-ID       incident_id unique across corpus + filename == incident_id
@@ -28,6 +28,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
@@ -78,6 +79,29 @@ def gate_schema(record: dict, validator: Draft202012Validator) -> list[str]:
         f"G-SCHEMA: {'/'.join(str(p) for p in e.absolute_path) or '<root>'}: {e.message}"
         for e in validator.iter_errors(record)
     ]
+
+
+def gate_source_urls(record: dict) -> list[str]:
+    """sources[].url and archive_url must be web links: http(s) with a host and no userinfo.
+    `format: uri` alone admits javascript:, data:, file: and similar schemes, and a
+    userinfo prefix (https://trusted.example@other.example/) disguises the real host."""
+    errors = []
+    for i, src in enumerate(record.get("sources") or []):
+        if not isinstance(src, dict):
+            continue  # shape errors are reported by G-SCHEMA
+        for key in ("url", "archive_url"):
+            value = src.get(key)
+            if value is None:
+                continue
+            try:
+                parts = urlsplit(value) if isinstance(value, str) else None
+            except ValueError:
+                parts = None
+            if not parts or parts.scheme.lower() not in ("http", "https") or not parts.hostname:
+                errors.append(f"G-SCHEMA: sources/{i}/{key}: {value!r} is not an http(s) URL with a host")
+            elif "@" in parts.netloc:
+                errors.append(f"G-SCHEMA: sources/{i}/{key}: {value!r} contains userinfo ('@' before the host)")
+    return errors
 
 
 def gate_taxonomy(record: dict, tax_version: str, classes: dict[str, set[str]]) -> list[str]:
@@ -227,6 +251,7 @@ def validate_file(path: Path, validator, tax_version, classes, seen) -> list[str
     if not isinstance(record, dict):
         return ["G-SCHEMA: record is not a mapping"]
     errors = gate_schema(record, validator)
+    errors += gate_source_urls(record)
     errors += gate_taxonomy(record, tax_version, classes)
     errors += gate_id(record, path, seen)
     errors += gate_neutrality(record)
