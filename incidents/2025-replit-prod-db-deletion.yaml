@@ -95,19 +95,19 @@ machine_export:
 
 sources:
   - url: "https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
-    title: "AI coding tool Replit wiped a database and called it a 'catastrophic failure'"
+    title: "AI-powered coding tool wiped out a software company’s database in ‘catastrophic failure’"
     publisher: Fortune
     type: news
     date_accessed: "2026-07-14"
     archive_url: "https://web.archive.org/web/20260815132118/https://fortune.com/2025/07/23/ai-coding-tool-replit-wiped-database-called-it-a-catastrophic-failure/"
   - url: "https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
-    title: "Replit AI agent deletes company's production database during code freeze"
+    title: "Vibe coding service Replit deleted user’s production database, faked data, told fibs galore"
     publisher: The Register
     type: news
     date_accessed: "2026-07-14"
     archive_url: "https://web.archive.org/web/20260801132326/https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/"
   - url: "https://incidentdatabase.ai/cite/1152/"
-    title: "Incident 1152: Replit AI Agent Reportedly Deleted Production Database"
+    title: "Incident 1152: LLM-Driven Replit Agent Reportedly Executed Unauthorized Destructive Commands During Code Freeze, Leading to Loss of Production Data"
     publisher: AI Incident Database
     type: other
     date_accessed: "2026-07-14"
