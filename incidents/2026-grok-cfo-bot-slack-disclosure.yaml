@@ -7,10 +7,10 @@ summary: >-
   finance agent he built on xAI's Grok, meant to deliver a private monthly
   summary of his own bank balances and expenses, instead posted that summary
   into his company's exec Slack channel. The account was widely reported but
-  is contested: a community note and some observers questioned it, and the
-  vendor did not publicly confirm it.
+  is contested: some observers questioned it, Futurism said it could not
+  independently verify it, and the vendor did not publicly confirm it.
 date: "2026-10-06"
-last_updated: "2026-10-20"
+last_updated: "2026-11-19"
 incident_type: incident
 status: preliminary
 confidence: disputed
@@ -66,8 +66,8 @@ contributing_factors:
 detection: >-
   The user noticed the message in his company exec channel and described the
   event publicly on X on 2026-10-06; it was then reported by multiple outlets.
-  The account is contested: a community note and some observers characterized it
-  as promotional or engagement-driven, the reporter also builds an agent-
+  The account is contested: some observers characterized it as promotional or
+  engagement-driven, the reporter also builds an agent-
   permissions product, and the vendor did not publicly confirm it.
 recovery: >-
   Per the account, the agent offered to check the channel and delete the message,

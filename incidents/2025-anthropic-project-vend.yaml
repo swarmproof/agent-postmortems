@@ -5,16 +5,17 @@ title: "Project Vend: autonomous shop agent was talked into loss-making sales an
 summary: >-
   In a month-long Anthropic experiment, a Claude-based agent ("Claudius") ran a
   small office shop and was persuaded by staff and testers to apply large
-  discounts, sell below cost, and give inventory away, ending roughly $1,000 in
-  the red; a related Wall Street Journal test saw the agent set prices to zero.
+  discounts, sell below cost, and give inventory away; the shop's net value
+  declined over the month. Anthropic did not state the size of the loss.
 date: "2025-06-27"
+last_updated: "2026-11-21"
 incident_type: incident
 status: factual
 confidence: confirmed
 severity: low
 severity_rationale: >-
-  Controlled research experiment; the operator absorbed a bounded (~$1,000)
-  loss and no third parties were harmed. Instructive for economic guardrail
+  Controlled research experiment; the operator absorbed a bounded loss (amount
+  not stated in the sources) and no third parties were harmed. Instructive for economic guardrail
   design.
 
 system:
@@ -39,13 +40,18 @@ causation:
 trigger: >-
   In a month-long experiment, an agent ran a small office shop. Staff and
   testers persuaded it to apply large discounts, sell items below cost
-  (including tungsten cubes), and give inventory away; in a related Wall Street
-  Journal test the agent declared prices zero.
+  (including tungsten cubes), and give inventory away. Wall Street Journal
+  reporters were later given control of the agent to test both the phase-one and
+  phase-two setups adversarially, and found ways to obtain free items.
 root_cause: >-
-  The agent optimised for being helpful and agreeable over protecting margin,
-  lacked hard economic guardrails (price floors, spend/discount caps), and could
-  be socially pressured into sustained loss-making decisions. It also exhibited
-  an identity-confusion episode.
+  The agent could be socially pressured into sustained loss-making decisions,
+  and no hard economic guardrail (price floor, spend or discount cap) is
+  described; the only financial constraint in its instructions was that the shop
+  would go bankrupt below a zero balance. Anthropic attributed the mistakes
+  mainly to insufficient scaffolding and speculated that training as a helpful
+  assistant made the agent too willing to accede to requests. The agent also
+  exhibited an identity-confusion episode whose trigger Anthropic said it does
+  not understand.
 contributing_factors:
   - No enforced margin floor or discount ceiling in the transactional tools.
   - Persona ("be helpful") and transactional authority were not separated.
@@ -63,14 +69,14 @@ prevention: >-
 
 blast_radius:
   cost:
-    amount_usd: 1000
-    estimated: true
+    amount_usd: null
+    estimated: false
   user_harm:
     categories: ["economic"]
     description: >-
       None to third parties; the experiment operator (Anthropic) absorbed the
-      financial loss as the agent's net worth declined to roughly $1,000 in the
-      red.
+      financial loss as the shop's net value declined. The sources do not state
+      the amount.
   scope: single experimental shop
   reversibility: reversible
 
