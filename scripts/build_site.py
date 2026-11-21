@@ -741,7 +741,7 @@ def render_flagship(rec: dict, all_ids: set[str]) -> str:
     yaml_url = f"{REPO_URL}/blob/main/incidents/{rid}.yaml"
     body = f"""
 <article class="incident case">
-  <p class="crumb"><a href="../">← all incidents</a></p>
+  <p class="crumb"><a href="../">← all records</a></p>
   <div class="badges">
     {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
     {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
