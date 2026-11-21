@@ -262,6 +262,17 @@ def test_index_card_dates_name_their_ambiguous_basis(site):
     text = (site / "index.html").read_text()
     spans = re.findall(r'<span class="card-date">(.*?)</span>', text)
     assert len(spans) == len(RECS)
+    stated = {"occurred": "Occurred", "disclosed": "Disclosed", "published": "Source published"}
     for rec, span in zip(RECS, spans):  # cards are in record order
-        label = "Demonstrated or disclosed" if rec["incident_type"] == "hazard" else "Occurred or disclosed"
+        hazard = rec["incident_type"] == "hazard"
+        basis = rec.get("temporal_basis")
+        if basis == "occurred" and hazard:
+            label = "First demonstrated"
+        elif basis in stated:
+            label = stated[basis]
+        else:  # legacy or unknown basis: the date's meaning is ambiguous, and the label says so
+            label = "Demonstrated or disclosed" if hazard else "Occurred or disclosed"
         assert span == f'{label}: <time datetime="{rec["date"]}">{rec["date"]}</time>', rec["incident_id"]
+    by_id = dict(zip([r["incident_id"] for r in RECS], spans))
+    assert by_id["2025-replit-prod-db-deletion"].startswith("Occurred: ")  # temporal_basis: occurred
+    assert by_id["2025-echoleak-m365-copilot"].startswith("Disclosed: ")  # temporal_basis: disclosed

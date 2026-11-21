@@ -318,10 +318,20 @@ def render_filters(recs: list[dict]) -> str:
 </div>"""
 
 
+CARD_BASIS_LABELS = {"occurred": "Occurred", "disclosed": "Disclosed", "published": "Source published"}
+
+
 def card_date_label(rec: dict) -> str:
-    """What the record's date may mean: the legacy date is occurrence (or, for a hazard,
-    first demonstration) or first public disclosure, without saying which."""
-    return "Demonstrated or disclosed" if rec.get("incident_type") == "hazard" else "Occurred or disclosed"
+    """What the record's date means. With a stated temporal_basis, name it; otherwise the
+    legacy date is occurrence (or, for a hazard, first demonstration) or first public
+    disclosure, without saying which."""
+    hazard = rec.get("incident_type") == "hazard"
+    basis = rec.get("temporal_basis")
+    if basis == "occurred" and hazard:
+        return "First demonstrated"
+    if basis in CARD_BASIS_LABELS:
+        return CARD_BASIS_LABELS[basis]
+    return "Demonstrated or disclosed" if hazard else "Occurred or disclosed"
 
 
 def render_index(recs: list[dict]) -> str:
