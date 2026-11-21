@@ -63,6 +63,22 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@2.1.311
 
+      # Git config and hooks the agent could plant to run code in later git
+      # calls (the reset below, create-pull-request's commit). The digest is a
+      # step output, which the agent cannot rewrite, unlike a file on disk.
+      - name: Record git config and hooks
+        id: gitstate
+        run: |
+          gitstate() {
+            for f in .git/config "$HOME/.gitconfig" "${XDG_CONFIG_HOME:-$HOME/.config}/git/config" /etc/gitconfig; do
+              printf '%s ' "$f"; if [ -e "$f" ]; then sha256sum < "$f"; else echo absent; fi
+            done
+            find .git/hooks .git/info \( -type f -o -type l \) -print | LC_ALL=C sort | while read -r f; do
+              printf '%s %s ' "$f" "$(readlink "$f")"; sha256sum < "$f"
+            done
+          }
+          echo "digest=$(gitstate | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
       - name: Draft incidents from candidates
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -74,10 +90,27 @@ jobs:
       # The agent may only add files under incidents/. Anything else it changed
       # or created (validators, schema, tool config, candidates.json) is reset
       # first, so the gates below run the committed tooling, not edited copies.
+      # Checked before the reset, whose git checkout would itself fire a
+      # planted post-checkout hook; hooks are also disabled for the reset.
       - name: Discard changes outside incidents/
+        env:
+          BEFORE: ${{ steps.gitstate.outputs.digest }}
         run: |
-          git checkout HEAD -- . ':(exclude)incidents'
-          git clean -ffdx -- . ':(exclude)incidents'
+          gitstate() {
+            for f in .git/config "$HOME/.gitconfig" "${XDG_CONFIG_HOME:-$HOME/.config}/git/config" /etc/gitconfig; do
+              printf '%s ' "$f"; if [ -e "$f" ]; then sha256sum < "$f"; else echo absent; fi
+            done
+            find .git/hooks .git/info \( -type f -o -type l \) -print | LC_ALL=C sort | while read -r f; do
+              printf '%s %s ' "$f" "$(readlink "$f")"; sha256sum < "$f"
+            done
+          }
+          after=$(gitstate | sha256sum | cut -d' ' -f1)
+          if [ -z "$BEFORE" ] || [ "$after" != "$BEFORE" ]; then
+            echo "::error::git config or hooks changed during drafting; refusing to continue"
+            exit 1
+          fi
+          git -c core.hooksPath=/dev/null checkout HEAD -- . ':(exclude)incidents'
+          git -c core.hooksPath=/dev/null clean -ffdx -- . ':(exclude)incidents'
 
       - name: Validate drafts (fail-closed)
         run: |
