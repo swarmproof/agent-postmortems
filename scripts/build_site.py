@@ -252,7 +252,7 @@ def render_filters(recs: list[dict]) -> str:
 </form>
 <p id="count" class="count" role="status" aria-live="polite"></p>
 <div id="empty" class="empty" hidden>
-  <p>No incidents match this search and these filters.</p>
+  <p>No records match this search and these filters.</p>
   <button type="button" class="clear">Clear search and filters</button>
 </div>"""
 
@@ -280,7 +280,7 @@ def render_index(recs: list[dict]) -> str:
   cites public sources. <a href="{SITE_BASE}/feed.xml">RSS</a>.</p>
 </section>
 {render_filters(recs)}
-<section class="cards" id="cards" aria-label="Incidents" data-index="search-index.json">
+<section class="cards" id="cards" aria-label="Records" data-index="search-index.json">
 {''.join(rows)}
 </section>
 <script src="search.js" defer></script>
@@ -401,7 +401,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
 
     body = f"""
 <article class="incident">
-  <p class="crumb"><a href="../">← all incidents</a></p>
+  <p class="crumb"><a href="../">← all records</a></p>
   <div class="badges">
     {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
     {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
@@ -624,8 +624,8 @@ function render() {
   order.forEach(function (id) { var el = cards.get(id); if (el) { el.hidden = !shown.has(id); frag.appendChild(el); } });
   list.appendChild(frag);
   count.textContent = active
-    ? ids.length + ' of ' + cards.size + (cards.size === 1 ? ' incident matches' : ' incidents match')
-    : 'Showing all ' + cards.size + ' incidents';
+    ? ids.length + ' of ' + cards.size + (cards.size === 1 ? ' record matches' : ' records match')
+    : 'Showing all ' + cards.size + ' records';
   empty.hidden = ids.length > 0;
   syncUrl(st);
 }
@@ -665,7 +665,7 @@ fetch(list.dataset.index)
     render();
   })
   .catch(function () {
-    count.textContent = 'Search is unavailable here; all ' + cards.size + ' incidents are listed below.';
+    count.textContent = 'Search is unavailable here; all ' + cards.size + ' records are listed below.';
   });
 })();
 """

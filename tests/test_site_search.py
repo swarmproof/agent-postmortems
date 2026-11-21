@@ -289,3 +289,20 @@ def test_safe_url_allows_only_http_and_https():
     for bad in ("javascript:alert(1)", " JavaScript:alert(1)", "data:text/html,x", "vbscript:x",
                 "//example.com", "/relative", "", None):
         assert bs.safe_url(bad) == ""
+
+
+def test_list_wording_says_records_because_the_list_includes_hazards():
+    assert {r.get("incident_type") for r in RECS} >= {"incident", "hazard"}
+    page = bs.render_index(RECS)
+    assert "No records match this search and these filters." in page
+    assert 'aria-label="Records"' in page
+    js = bs.SEARCH_JS
+    for s in ("' record matches'", "' records match'", "'Showing all ' + cards.size + ' records'",
+              "' records are listed below.'"):
+        assert s in js, s
+    for old in ("incidents match", "incident matches", "' incidents'", "incidents are listed"):
+        assert old not in js, old
+    assert "No incidents match" not in page and 'aria-label="Incidents"' not in page
+    rec = next(r for r in RECS if r.get("incident_type") == "hazard")
+    record_page = bs.render_incident(rec, {r["incident_id"] for r in RECS})
+    assert "← all records</a>" in record_page and "all incidents" not in record_page
