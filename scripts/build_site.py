@@ -315,13 +315,19 @@ def render_filters(recs: list[dict]) -> str:
 </div>"""
 
 
+def card_date_label(rec: dict) -> str:
+    """What the record's date may mean: the legacy date is occurrence (or, for a hazard,
+    first demonstration) or first public disclosure, without saying which."""
+    return "Demonstrated or disclosed" if rec.get("incident_type") == "hazard" else "Occurred or disclosed"
+
+
 def render_index(recs: list[dict]) -> str:
     rows = []
     for r in recs:
         rid = r["incident_id"]
         rows.append(f"""<a class="card" href="{esc(rid)}/" data-id="{esc(rid)}">
   <div class="card-head">
-    <span class="card-date">{esc(r.get('date',''))}</span>
+    <span class="card-date">{esc(card_date_label(r))}: <time datetime="{esc(r.get('date',''))}">{esc(r.get('date',''))}</time></span>
     {badge(r.get('incident_type','?'), 'type-' + esc(r.get('incident_type','')))}
     {badge(r.get('severity','?'), 'sev-' + esc(r.get('severity','')))}
   </div>
@@ -604,7 +610,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .cards { display:flex; flex-direction:column; gap:10px; }
 .card { display:block; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--fg); }
 .card:hover { border-color:var(--accent); text-decoration:none; }
-.card-head { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+.card-head { display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; margin-bottom:6px; }
 .card-date { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
 .card-title { font-weight:600; font-size:16px; line-height:1.4; margin:0; color:var(--fg); text-transform:none; letter-spacing:normal; }
 .card-chain { color:var(--muted); font-size:13px; margin-top:4px; }
