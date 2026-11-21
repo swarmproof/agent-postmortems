@@ -325,7 +325,7 @@ def render_index(recs: list[dict]) -> str:
     {badge(r.get('incident_type','?'), 'type-' + esc(r.get('incident_type','')))}
     {badge(r.get('severity','?'), 'sev-' + esc(r.get('severity','')))}
   </div>
-  <div class="card-title">{esc(r.get('title', rid))}</div>
+  <h2 class="card-title">{esc(r.get('title', rid))}</h2>
   <div class="card-chain">{esc(chain_str(r))}</div>
 </a>""")
 
@@ -606,7 +606,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .card:hover { border-color:var(--accent); text-decoration:none; }
 .card-head { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
 .card-date { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
-.card-title { font-weight:600; }
+.card-title { font-weight:600; font-size:16px; line-height:1.4; margin:0; color:var(--fg); text-transform:none; letter-spacing:normal; }
 .card-chain { color:var(--muted); font-size:13px; margin-top:4px; }
 .badges { display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 8px; }
 .badge { font-size:12px; font-weight:600; padding:2px 8px; border-radius:999px; border:1px solid var(--line); white-space:nowrap; }

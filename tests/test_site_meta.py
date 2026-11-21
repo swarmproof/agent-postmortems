@@ -246,3 +246,13 @@ def test_every_page_starts_with_a_skip_link_to_main(site):
         assert text.count('<main id="main" tabindex="-1">') == 1, path
     css = bs.CSS
     assert ".skip-link:focus { top:8px; }" in css  # hidden off-screen until focused, then visible
+
+
+def test_index_result_cards_have_one_heading_each(site):
+    text = (site / "index.html").read_text()
+    cards = re.findall(r'<a class="card"[^>]*>(.*?)</a>', text, re.S)
+    assert len(cards) == len(RECS)
+    for c in cards:
+        assert len(re.findall(r"<h2 class=\"card-title\">", c)) == 1
+    levels = [int(h) for h in re.findall(r"<h([1-6])\b", text)]
+    assert levels.count(1) == 1 and levels[0] == 1 and all(b - a <= 1 for a, b in zip(levels, levels[1:]))
