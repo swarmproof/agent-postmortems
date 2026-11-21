@@ -1,0 +1,58 @@
+schema_version: "1.0"
+incident_id: 2099-invalid-evidence-unknown-source
+title: "Fixture: record with claim-level evidence assessments"
+date: "2099-01-01"
+incident_type: incident
+confidence: corroborated
+system:
+  framework: fixture
+primary_failure_class: runaway-loop
+failure_classes:
+  - class: runaway-loop
+    subclass: retry-storm
+trigger: "A fixture trigger condition."
+root_cause: "A fixture systemic root cause."
+detection: "Noticed by a fixture monitor."
+recovery: "Stopped by a fixture kill switch."
+prevention: "A fixture loop budget."
+blast_radius:
+  cost:
+    amount_usd: 100
+  scope: "none - test fixture"
+sources:
+  - url: "https://example.com/fixture-primary"
+    type: primary-research
+  - url: "https://example.com/fixture-news"
+    type: news
+  - url: "https://example.com/fixture-vendor"
+    type: vendor-response
+evidence_assessments:
+  - field_path: /trigger
+    claim: "The loop was started by the fixture trigger condition."
+    evidence_status: direct
+    source_urls: ["https://example.com/not-a-cited-source"]
+    reviewed_at: "2099-01-02"
+    reviewer: fixture-reviewer
+  - field_path: /blast_radius/cost/amount_usd
+    claim: "The run cost about 100 USD."
+    evidence_status: corroborated
+    source_urls: ["https://example.com/fixture-primary", "https://example.com/fixture-news"]
+    reviewed_at: "2099-01-02"
+  - field_path: /root_cause
+    claim: "The retry policy had no upper bound."
+    evidence_status: inferred
+    source_urls: ["https://example.com/fixture-primary"]
+    analyst_note: "The source shows unbounded retries in logs but does not name the policy."
+    uncertainty: "A first-party post-mortem naming the retry configuration would settle it."
+    reviewed_at: "2099-01-02"
+  - field_path: /failure_classes/0/subclass
+    claim: "The failure pattern was a retry storm."
+    evidence_status: disputed
+    source_urls: ["https://example.com/fixture-vendor"]
+    analyst_note: "The vendor response attributes the loop to a scheduler fault instead."
+    reviewed_at: "2099-01-02"
+  - field_path: /detection
+    claim: "A monitor noticed the loop."
+    evidence_status: unknown
+    uncertainty: "No cited source says how the loop was noticed."
+    reviewed_at: "2099-01-02"

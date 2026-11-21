@@ -13,3 +13,11 @@
 2099-invalid-bad-slug.yaml: fail
 2099-invalid-filename-mismatch.yaml: fail
 2099-invalid-dupe-id.yaml: fail
+2099-valid-evidence.yaml: pass
+2099-invalid-evidence-unknown-source.yaml: fail
+2099-invalid-evidence-bad-pointer.yaml: fail
+2099-invalid-evidence-direct-no-source.yaml: fail
+2099-valid-dates.yaml: pass
+2099-invalid-dates-order.yaml: fail
+2099-invalid-dates-basis-mismatch.yaml: fail
+2099-invalid-dates-partial.yaml: fail
