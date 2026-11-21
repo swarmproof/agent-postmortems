@@ -234,3 +234,45 @@ def test_jsonld_payload_cannot_close_its_script_element():
     out = bs.json_for_html({"x": "</script><script>alert(1)</script>&"})
     assert "<" not in out and ">" not in out and "&" not in out
     assert json.loads(out) == {"x": "</script><script>alert(1)</script>&"}
+
+
+# --------------------------------------------------------------------------- accessibility
+def test_every_page_starts_with_a_skip_link_to_main(site):
+    for path, f in pages(site).items():
+        text = f.read_text()
+        body = text[text.index("<body>"):]
+        first_link = re.search(r"<a\b[^>]*>", body).group(0)
+        assert first_link == '<a class="skip-link" href="#main">', path
+        assert text.count('<main id="main" tabindex="-1">') == 1, path
+    css = bs.CSS
+    assert ".skip-link:focus { top:8px; }" in css  # hidden off-screen until focused, then visible
+
+
+def test_index_result_cards_have_one_heading_each(site):
+    text = (site / "index.html").read_text()
+    cards = re.findall(r'<a class="card"[^>]*>(.*?)</a>', text, re.S)
+    assert len(cards) == len(RECS)
+    for c in cards:
+        assert len(re.findall(r"<h2 class=\"card-title\">", c)) == 1
+    levels = [int(h) for h in re.findall(r"<h([1-6])\b", text)]
+    assert levels.count(1) == 1 and levels[0] == 1 and all(b - a <= 1 for a, b in zip(levels, levels[1:]))
+
+
+def test_index_card_dates_name_their_ambiguous_basis(site):
+    text = (site / "index.html").read_text()
+    spans = re.findall(r'<span class="card-date">(.*?)</span>', text)
+    assert len(spans) == len(RECS)
+    stated = {"occurred": "Occurred", "disclosed": "Disclosed", "published": "Source published"}
+    for rec, span in zip(RECS, spans):  # cards are in record order
+        hazard = rec["incident_type"] == "hazard"
+        basis = rec.get("temporal_basis")
+        if basis == "occurred" and hazard:
+            label = "First demonstrated"
+        elif basis in stated:
+            label = stated[basis]
+        else:  # legacy or unknown basis: the date's meaning is ambiguous, and the label says so
+            label = "Demonstrated or disclosed" if hazard else "Occurred or disclosed"
+        assert span == f'{label}: <time datetime="{rec["date"]}">{rec["date"]}</time>', rec["incident_id"]
+    by_id = dict(zip([r["incident_id"] for r in RECS], spans))
+    assert by_id["2025-replit-prod-db-deletion"].startswith("Occurred: ")  # temporal_basis: occurred
+    assert by_id["2025-echoleak-m365-copilot"].startswith("Disclosed: ")  # temporal_basis: disclosed
