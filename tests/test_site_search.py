@@ -109,7 +109,7 @@ def test_index_includes_prevention_text_and_system_fields():
 
 
 def test_index_is_text_only_and_compact():
-    allowed = {"id", "t", "k", "b", "sev", "type", "year", "conf", "auto", "vendor", "classes", "tools"}
+    allowed = {"id", "t", "k", "b", "d", "sev", "type", "year", "conf", "auto", "vendor", "classes", "tools"}
     for r in INDEX["records"]:
         assert set(r) == allowed  # no source objects or other full-record payloads
     payload = bs.search_index_json(RECS)
@@ -247,7 +247,8 @@ def _assert_inert(page: str):
     assert XSS_ATTR not in page and '" onmouseover=' not in page
     assert not re.search(r'href\s*=\s*"\s*(javascript|data):', page, re.I)
     # the only script elements are the ones the generator itself emits
-    assert re.findall(r"<script\b[^>]*>", page) in ([], ['<script src="search.js" defer>'])
+    allowed = {'<script src="search.js" defer>', '<script type="application/ld+json">'}
+    assert set(re.findall(r"<script\b[^>]*>", page)) <= allowed
 
 
 def test_hostile_record_is_schema_valid_so_rendering_must_neutralise_it():
@@ -289,6 +290,53 @@ def test_safe_url_allows_only_http_and_https():
     for bad in ("javascript:alert(1)", " JavaScript:alert(1)", "data:text/html,x", "vbscript:x",
                 "//example.com", "/relative", "", None):
         assert bs.safe_url(bad) == ""
+
+
+# --------------------------------------------------------------------------- sorting
+def js_sorted(cases: list[tuple[str, dict, str]]) -> list[list[str]]:
+    """Run search() then sortIds() from the shipped search.js for each (query, filters, sort)."""
+    if not NODE:
+        pytest.skip("node is not installed; client sort not executed")
+    import tempfile
+    d = Path(tempfile.mkdtemp())
+    (d / "search.js").write_text(bs.SEARCH_JS, encoding="utf-8")
+    (d / "index.json").write_text(json.dumps(INDEX), encoding="utf-8")
+    (d / "cases.json").write_text(json.dumps(cases), encoding="utf-8")
+    prog = ("const s=require(process.argv[1]+'/search.js'),d=require(process.argv[1]+'/index.json'),"
+            "c=require(process.argv[1]+'/cases.json');process.stdout.write(JSON.stringify("
+            "c.map(([q,f,o])=>s.sortIds(d.records,s.search(d.records,q,f),o))));")
+    out = subprocess.run([NODE, "-e", prog, str(d)], capture_output=True, text=True, check=True)
+    return json.loads(out.stdout)
+
+
+def test_only_neutral_sort_orders_are_offered():
+    values = [v for v, _ in bs.SORTS]
+    assert values == ["", "newest", "oldest", "title"]
+    labels = " ".join(label.lower() for _, label in bs.SORTS)
+    assert not [w for w in ("severity", "danger", "risk", "worst", "impact") if w in labels]
+    for v, label in bs.SORTS:
+        if v in ("newest", "oldest"):
+            assert "occurred or disclosed" in label  # the label states what the date means
+    page = bs.render_index(RECS)
+    assert all(f'<option value="{v}">' in page for v in values)
+
+
+def test_sort_orders_match_independent_expectations():
+    by_date = sorted(RECS, key=lambda r: r["incident_id"])
+    newest = [r["incident_id"] for r in sorted(by_date, key=lambda r: r["date"], reverse=True)]
+    oldest = [r["incident_id"] for r in sorted(by_date, key=lambda r: r["date"])]
+    alpha = lambda r: re.sub(r"^[\W_]+", "", _norm(r["title"]))  # noqa: E731
+    title = [r["incident_id"] for r in sorted(RECS, key=lambda r: (alpha(r), r["incident_id"]))]
+    got = js_sorted([("", {}, "newest"), ("", {}, "oldest"), ("", {}, "title"), ("", {}, ""),
+                     ("database", {}, "oldest"), ("database", {}, ""), ("", {}, "severity")])
+    assert got[0] == newest == [r["incident_id"] for r in RECS]  # newest is the server-rendered order
+    assert got[1] == oldest
+    assert got[2] == title
+    assert got[3] == newest
+    db = expected_ids("database")
+    assert got[4] == [i for i in oldest if i in db]  # sorting reorders matches, never adds or drops
+    assert got[5] != got[4] and set(got[5]) == db  # default with a query stays best match
+    assert got[6] == got[3]  # unknown sort values are ignored
 
 
 def test_list_wording_says_records_because_the_list_includes_hazards():
