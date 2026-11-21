@@ -56,3 +56,9 @@ These requests are declined, with the reason in the issue:
 This project is maintained by volunteers. Disputes are handled in the order received, on a best-effort basis. A well-formed issue with a clear source is normally acknowledged within a week, and a correction with an unambiguous source is usually a small pull request. Disputes where the sources genuinely conflict can take longer, because the outcome is a judgement about what the sources support, not a mechanical edit.
 
 While an issue is open, the record stays as it is. The `confidence` change and the `vendor-response` source land together when the dispute is resolved.
+
+## Related
+
+- [`docs/METHODS.md`](./docs/METHODS.md): how records are sourced and reviewed, the `confidence` legend, and what a record's `date` means.
+- [`SECURITY.md`](./SECURITY.md): a record that exposes personal data or a runnable payload.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md): reporting a new failure or writing a record.
