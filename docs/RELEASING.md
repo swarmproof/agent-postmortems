@@ -127,10 +127,13 @@ Structure, top to bottom:
 
 ```bash
 TAG=2026.11.3
-N=$(python3 -c "import json;print(json.load(open('/tmp/release-assets/manifest.json'))['counts']['records'])")
+M=/tmp/release-assets/manifest.json
+N=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['counts']['records'])" "$M")
+X=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['counts']['incidents'])" "$M")
+Y=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['counts']['hazards'])" "$M")
 gh release create "$TAG" \
   --target "$SHA" \
-  --title "agent-postmortems corpus — $TAG ($N incidents)" \
+  --title "agent-postmortems corpus — $TAG ($N records: $X incidents, $Y hazards)" \
   --notes-file /tmp/release-notes.md \
   /tmp/release-assets/*
 ```
