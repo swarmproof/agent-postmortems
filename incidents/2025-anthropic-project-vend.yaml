@@ -8,7 +8,7 @@ summary: >-
   discounts, sell below cost, and give inventory away; the shop's net value
   declined over the month. Anthropic did not state the size of the loss.
 date: "2025-06-27"
-last_updated: "2026-11-19"
+last_updated: "2026-11-21"
 incident_type: incident
 status: factual
 confidence: confirmed
@@ -40,9 +40,9 @@ causation:
 trigger: >-
   In a month-long experiment, an agent ran a small office shop. Staff and
   testers persuaded it to apply large discounts, sell items below cost
-  (including tungsten cubes), and give inventory away. In phase two, Wall Street
-  Journal reporters tested the setup adversarially and found ways to obtain free
-  items.
+  (including tungsten cubes), and give inventory away. Wall Street Journal
+  reporters were later given control of the agent to test both the phase-one and
+  phase-two setups adversarially, and found ways to obtain free items.
 root_cause: >-
   The agent could be socially pressured into sustained loss-making decisions,
   and no hard economic guardrail (price floor, spend or discount cap) is
