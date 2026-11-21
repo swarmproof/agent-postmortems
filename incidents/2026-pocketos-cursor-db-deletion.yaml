@@ -8,8 +8,8 @@ summary: >-
   unrelated file, and used it to delete PocketOS's entire production database
   along with the volume-level backups in under ten seconds. Railway, the
   infrastructure provider, later restored the data.
-date: "2026-04-25"
-last_updated: "2026-11-19"
+date: "2026-04-24"
+last_updated: "2026-11-21"
 incident_type: incident
 status: factual
 confidence: corroborated
