@@ -114,11 +114,12 @@ def page(title: str, body: str, css_href: str, description: str = "", *,
 <link rel="alternate" type="application/rss+xml" title="agent-postmortems" href="{SITE_BASE}/feed.xml">
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">
   <a class="brand" href="{'.' if css_href == 'style.css' else '..'}/">agent-postmortems</a>
   <span class="tagline">a structured database of AI-agent incidents and hazards</span>
 </header>
-<main>
+<main id="main" tabindex="-1">
 {body}
 </main>
 <footer class="site-foot">
@@ -312,9 +313,15 @@ def render_filters(recs: list[dict]) -> str:
 </form>
 <p id="count" class="count" role="status" aria-live="polite"></p>
 <div id="empty" class="empty" hidden>
-  <p>No incidents match this search and these filters.</p>
+  <p>No records match this search and these filters.</p>
   <button type="button" class="clear">Clear search and filters</button>
 </div>"""
+
+
+def card_date_label(rec: dict) -> str:
+    """What the record's date may mean: the legacy date is occurrence (or, for a hazard,
+    first demonstration) or first public disclosure, without saying which."""
+    return "Demonstrated or disclosed" if rec.get("incident_type") == "hazard" else "Occurred or disclosed"
 
 
 def render_index(recs: list[dict]) -> str:
@@ -323,11 +330,11 @@ def render_index(recs: list[dict]) -> str:
         rid = r["incident_id"]
         rows.append(f"""<a class="card" href="{esc(rid)}/" data-id="{esc(rid)}">
   <div class="card-head">
-    <span class="card-date">{esc(r.get('date',''))}</span>
+    <span class="card-date">{esc(card_date_label(r))}: <time datetime="{esc(r.get('date',''))}">{esc(r.get('date',''))}</time></span>
     {badge(r.get('incident_type','?'), 'type-' + esc(r.get('incident_type','')))}
     {badge(r.get('severity','?'), 'sev-' + esc(r.get('severity','')))}
   </div>
-  <div class="card-title">{esc(r.get('title', rid))}</div>
+  <h2 class="card-title">{esc(r.get('title', rid))}</h2>
   <div class="card-chain">{esc(chain_str(r))}</div>
 </a>""")
 
@@ -335,7 +342,7 @@ def render_index(recs: list[dict]) -> str:
     n_hazard = sum(1 for r in recs if r.get("incident_type") == "hazard")
     body = f"""
 <section class="intro">
-  <h1>Agent incident post-mortems</h1>
+  <h1>AI-agent incidents and hazards</h1>
   <p>{len(recs)} sourced records: {n_incident} realized incidents and {n_hazard} demonstrated hazards
   of AI agents — prompt injection, tool misuse, data exfiltration, sandbox escapes, cost blowups,
   and more. Every record follows
@@ -345,7 +352,7 @@ def render_index(recs: list[dict]) -> str:
   sample; counts do not measure how often agents fail and are not a vendor safety ranking.</p>
 </section>
 {render_filters(recs)}
-<section class="cards" id="cards" aria-label="Incidents" data-index="search-index.json">
+<section class="cards" id="cards" aria-label="Records" data-index="search-index.json">
 {''.join(rows)}
 </section>
 <script src="search.js" defer></script>
@@ -813,7 +820,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
 
     body = f"""
 <article class="incident">
-  <p class="crumb"><a href="../">← all incidents</a></p>
+  <p class="crumb"><a href="../">← all records</a></p>
   <div class="badges">
     {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
     {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
@@ -1008,6 +1015,9 @@ h1 { font-size:28px; line-height:1.25; margin:8px 0 12px; }
 h2 { font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:28px 0 8px; }
 .intro p { color:var(--fg); }
 [hidden] { display:none !important; }
+.skip-link { position:absolute; left:8px; top:-48px; z-index:10; padding:8px 12px; border-radius:8px; background:var(--card); color:var(--accent); border:1px solid var(--accent); }
+.skip-link:focus { top:8px; }
+main:focus { outline:none; }
 .filters { display:grid; grid-template-columns:1fr; gap:8px 10px; margin:20px 0 8px; }
 @media (min-width: 720px) { .filters { grid-template-columns:1fr 280px; } }
 .facets { grid-column:1 / -1; border:1px solid var(--line); border-radius:8px; background:var(--card); }
@@ -1032,9 +1042,9 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .cards { display:flex; flex-direction:column; gap:10px; }
 .card { display:block; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--fg); }
 .card:hover { border-color:var(--accent); text-decoration:none; }
-.card-head { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+.card-head { display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; margin-bottom:6px; }
 .card-date { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
-.card-title { font-weight:600; }
+.card-title { font-weight:600; font-size:16px; line-height:1.4; margin:0; color:var(--fg); text-transform:none; letter-spacing:normal; }
 .card-chain { color:var(--muted); font-size:13px; margin-top:4px; }
 .badges { display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 8px; }
 .badge { font-size:12px; font-weight:600; padding:2px 8px; border-radius:999px; border:1px solid var(--line); white-space:nowrap; }
@@ -1201,8 +1211,8 @@ function render() {
   order.forEach(function (id) { var el = cards.get(id); if (el) { el.hidden = !shown.has(id); frag.appendChild(el); } });
   list.appendChild(frag);
   count.textContent = active
-    ? ids.length + ' of ' + cards.size + (cards.size === 1 ? ' incident matches' : ' incidents match')
-    : 'Showing all ' + cards.size + ' incidents';
+    ? ids.length + ' of ' + cards.size + (cards.size === 1 ? ' record matches' : ' records match')
+    : 'Showing all ' + cards.size + ' records';
   empty.hidden = ids.length > 0;
   facetCount.textContent = nFacets ? '(' + nFacets + ' active)' : '';
   syncUrl(st);
@@ -1246,7 +1256,7 @@ fetch(list.dataset.index)
     render();
   })
   .catch(function () {
-    count.textContent = 'Search is unavailable here; all ' + cards.size + ' incidents are listed below.';
+    count.textContent = 'Search is unavailable here; all ' + cards.size + ' records are listed below.';
   });
 })();
 """

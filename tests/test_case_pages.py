@@ -373,6 +373,22 @@ def _baseline_module(ref: str, tmp: Path):
     return _load("build_site_baseline", tmp / "scripts" / "build_site.py")
 
 
+# Page-shell changes made on the site branches this one is stacked on (skip link, main
+# landmark target, list wording). Applied to the baseline so the comparison isolates what
+# this branch changes on legacy pages. Each is a no-op when the baseline already has it.
+SHELL_UPDATES = [
+    ("<body>\n<header", '<body>\n<a class="skip-link" href="#main">Skip to content</a>\n<header'),
+    ("<main>\n", '<main id="main" tabindex="-1">\n'),
+    ('<a href="../">← all incidents</a>', '<a href="../">← all records</a>'),
+]
+
+
+def shell_updated(page: str) -> str:
+    for old, new in SHELL_UPDATES:
+        page = page.replace(old, new)
+    return page
+
+
 def test_legacy_pages_differ_from_the_baseline_only_by_the_date_note(tmp_path):
     ref = os.environ.get("SITE_BASELINE_REF", "registry/integration")
     if subprocess.run(["git", "rev-parse", "--verify", "--quiet", ref + "^{commit}"], cwd=REPO,
@@ -382,9 +398,9 @@ def test_legacy_pages_differ_from_the_baseline_only_by_the_date_note(tmp_path):
     legacy = [r for r in RECS if not bs.has_provenance(r)]
     assert legacy
     for r in legacy:
-        now, before = bs.render_incident(r, IDS), base.render_incident(r, IDS)
+        now, before = bs.render_incident(r, IDS), shell_updated(base.render_incident(r, IDS))
         note = bs.legacy_date_note(r)
-        # the only change on a legacy page is the one-line date note after the id/date line
+        # beyond the shared page-shell updates, the only change is the date note after the id/date line
         assert now.count(note) == 1 and now.replace(note, "", 1) == before, r["incident_id"]
 
 

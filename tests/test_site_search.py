@@ -337,3 +337,20 @@ def test_sort_orders_match_independent_expectations():
     assert got[4] == [i for i in oldest if i in db]  # sorting reorders matches, never adds or drops
     assert got[5] != got[4] and set(got[5]) == db  # default with a query stays best match
     assert got[6] == got[3]  # unknown sort values are ignored
+
+
+def test_list_wording_says_records_because_the_list_includes_hazards():
+    assert {r.get("incident_type") for r in RECS} >= {"incident", "hazard"}
+    page = bs.render_index(RECS)
+    assert "No records match this search and these filters." in page
+    assert 'aria-label="Records"' in page
+    js = bs.SEARCH_JS
+    for s in ("' record matches'", "' records match'", "'Showing all ' + cards.size + ' records'",
+              "' records are listed below.'"):
+        assert s in js, s
+    for old in ("incidents match", "incident matches", "' incidents'", "incidents are listed"):
+        assert old not in js, old
+    assert "No incidents match" not in page and 'aria-label="Incidents"' not in page
+    rec = next(r for r in RECS if r.get("incident_type") == "hazard")
+    record_page = bs.render_incident(rec, {r["incident_id"] for r in RECS})
+    assert "← all records</a>" in record_page and "all incidents" not in record_page
