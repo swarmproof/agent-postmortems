@@ -440,6 +440,7 @@ def test_real_flagship_pages_render_the_flagship_layout(rid):
     page = bs.render_incident(rec, IDS)
     assert 'class="incident case"' in page and ">Coverage and limitations</h2>" in page
     assert '<a href="incident.json">' in page and 'class="date-note"' not in page
+    assert "← all records</a>" in page and "all incidents" not in page
 
 
 def _row(page: str, label: str) -> str:
