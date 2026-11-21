@@ -36,6 +36,9 @@ import yaml
 
 # Reuse the discovery helpers (same directory is on sys.path when run directly).
 from discover_incidents import fetch, load_corpus, parse_rss_items, score, tokenize, url_key
+import issue_markdown as md
+
+CVE_ID = re.compile(r"CVE-\d{4}-\d{4,}")
 
 SOURCES_FILE = Path(__file__).resolve().parent / "discovery_sources.yaml"
 CVE_RE = re.compile(r"CVE-\d{4}-\d+", re.IGNORECASE)
@@ -119,18 +122,21 @@ def find_gaps(limit: int) -> tuple[list[dict], int]:
 
 
 def emit_markdown(gaps: list[dict], total: int) -> str:
+    # Dates, titles and URLs come from third-party lists and land in a public
+    # issue: render them through issue_markdown, never raw.
     if not gaps:
         return "_No new candidate incidents to review this week._\n"
-    lines = [f"**{total}** candidate incident(s) to review for the corpus "
-             f"(showing newest {len(gaps)}). Each is a candidate to draft from "
-             "`incidents/_TEMPLATE.yaml`; some may be surveys or reports rather than "
-             "incidents — triage before drafting.\n"]
+    header = (f"**{total}** candidate incident(s) to review for the corpus "
+              f"(showing newest {len(gaps)}). Each is a candidate to draft from "
+              "`incidents/_TEMPLATE.yaml`; some may be surveys or reports rather than "
+              "incidents — triage before drafting.\n")
+    lines = []
     for g in gaps:
-        cves = (" · " + ", ".join(sorted(g["cves"]))) if g["cves"] else ""
-        title = f"[{g['title']}]({g['url']})" if g.get("url") else g["title"]
-        lines.append(f"- [ ] **{g['date']}** — {title}{cves}")
-    return "\n".join(lines) + "\n"
-
+        cves = sorted(c for c in g["cves"] if CVE_ID.fullmatch(c))
+        cve_txt = (" · " + ", ".join(cves)) if cves else ""
+        url = f" {md.link(g['url'])}" if g.get("url") else ""
+        lines.append(f"- [ ] {md.code(g['date'], 32)} — {md.code(g['title'])}{url}{cve_txt}")
+    return md.cap(header, lines)
 
 def main() -> int:
     ap = argparse.ArgumentParser()
