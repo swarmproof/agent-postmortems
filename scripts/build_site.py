@@ -24,8 +24,12 @@ from __future__ import annotations
 
 import datetime
 import html
+import json
 import os
+import re
 import shutil
+import unicodedata
+import urllib.parse
 from pathlib import Path
 
 import yaml
@@ -106,23 +110,158 @@ def chain_str(rec: dict) -> str:
     return " → ".join(parts)
 
 
+# --------------------------------------------------------------------------- search index
+# The browsable list is rendered server-side; client search loads a compact,
+# text-only index (search-index.json) and only hides/reorders those cards.
+_SCHEMA_PROPS = json.loads((REPO / "schema" / "incident.schema.json").read_text())["properties"]
+CONFIDENCE_VALUES = _SCHEMA_PROPS["confidence"]["enum"]
+AUTONOMY_VALUES = _SCHEMA_PROPS["system"]["properties"]["autonomy_level"]["enum"]
+TOOL_FACET_MIN = 2  # tools used by fewer records stay searchable but are not offered as a filter
+
+# Body fields searched as free text (lowest ranking tier).
+SEARCH_BODY_FIELDS = ("summary", "trigger", "root_cause", "contributing_factors",
+                      "detection", "recovery", "prevention")
+
+
+def norm_text(*parts) -> str:
+    """Lower-case, NFKC-fold and collapse whitespace; mirrors norm() in search.js."""
+    flat: list[str] = []
+    for p in parts:
+        if p is None:
+            continue
+        if isinstance(p, (list, tuple)):
+            flat.extend(str(x) for x in p if x is not None)
+        else:
+            flat.append(str(p))
+    return " ".join(unicodedata.normalize("NFKC", " ".join(flat)).lower().split())
+
+
+EDGE_PUNCT = "()[]{}.,;:!?\"'`«»“”‘’"  # must match EDGE in search.js
+
+
+def body_tokens(text: str) -> str:
+    """Sorted unique words with edge punctuation stripped.
+
+    Body text is matched term-by-term (no phrase matching), so word order and
+    repeats carry no signal; dropping them roughly halves the index size.
+    """
+    return " ".join(sorted({w.strip(EDGE_PUNCT) for w in text.split()} - {""}))
+
+
+def _spaced_variants(values) -> list[str]:
+    """Add 'prompt injection' next to 'prompt-injection' so either spelling matches."""
+    out = []
+    for v in values:
+        if not v:
+            continue
+        v = str(v)
+        out.append(v)
+        if re.search(r"[-_/]", v):
+            out.append(re.sub(r"[-_/]+", " ", v))
+    return out
+
+
+def search_record(rec: dict) -> dict:
+    """One compact index entry: three ranked text tiers plus exact facet values."""
+    sysm = rec.get("system") or {}
+    fcs = rec.get("failure_classes") or []
+    mappings = [i for ids in (rec.get("mappings") or {}).values() for i in (ids or [])]
+    keys = [
+        rec["incident_id"], rec.get("primary_failure_class"), rec.get("attack_vector"),
+        *[fc.get("class") for fc in fcs], *[fc.get("subclass") for fc in fcs],
+        *(rec.get("tags") or []), *(rec.get("cve") or []), *(rec.get("cwe") or []), *mappings,
+        sysm.get("vendor"), sysm.get("framework"),
+        *(sysm.get("models") or []), *(sysm.get("tools") or []),
+    ]
+    return {
+        "id": rec["incident_id"],
+        "t": norm_text(rec.get("title", "")),
+        "k": norm_text(_spaced_variants(keys)),
+        "b": body_tokens(norm_text(*(rec.get(f) for f in SEARCH_BODY_FIELDS))),
+        "sev": rec.get("severity") or "",
+        "type": rec.get("incident_type") or "",
+        "year": (rec.get("date") or "")[:4],
+        "conf": rec.get("confidence") or "",
+        "auto": sysm.get("autonomy_level") or "",
+        "vendor": sysm.get("vendor") or "",
+        "classes": sorted({fc.get("class") for fc in fcs if fc.get("class")}),
+        "tools": sorted({str(t) for t in (sysm.get("tools") or [])}),
+    }
+
+
+def build_search_index(recs: list[dict]) -> dict:
+    """Index records in display order (the same order as the static card list)."""
+    return {"version": 1, "records": [search_record(r) for r in recs]}
+
+
+def search_index_json(recs: list[dict]) -> str:
+    # <, > and & are \u-escaped so the payload stays inert even if ever inlined in HTML.
+    s = json.dumps(build_search_index(recs), ensure_ascii=False, separators=(",", ":"))
+    return s.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
+
+def facet_options(recs: list[dict]) -> dict[str, list[str]]:
+    """Filter values offered in the UI, keyed by URL parameter name."""
+    tool_counts: dict[str, int] = {}
+    for r in recs:
+        for t in {str(t) for t in ((r.get("system") or {}).get("tools") or [])}:
+            tool_counts[t] = tool_counts.get(t, 0) + 1
+    present = lambda f: {f(r) for r in recs} - {"", None}  # noqa: E731
+    return {
+        "class": sorted({fc.get("class") for r in recs for fc in r.get("failure_classes", [])} - {None}),
+        "severity": [s for s in SEVERITY_ORDER if s in present(lambda r: r.get("severity"))],
+        "type": [t for t in ("incident", "hazard") if t in present(lambda r: r.get("incident_type"))],
+        "year": sorted(present(lambda r: (r.get("date") or "")[:4]), reverse=True),
+        "confidence": [c for c in CONFIDENCE_VALUES if c in present(lambda r: r.get("confidence"))],
+        "autonomy": [a for a in AUTONOMY_VALUES
+                     if a in present(lambda r: (r.get("system") or {}).get("autonomy_level"))],
+        "vendor": sorted(present(lambda r: (r.get("system") or {}).get("vendor")), key=str.casefold),
+        "tool": sorted((t for t, n in tool_counts.items() if n >= TOOL_FACET_MIN), key=str.casefold),
+    }
+
+
 # --------------------------------------------------------------------------- index
+# (URL parameter, visible label, "all" option text) for each filter, in display order.
+FILTERS = [
+    ("class", "Failure class", "All classes"),
+    ("severity", "Severity", "All severities"),
+    ("type", "Type", "Incident &amp; hazard"),
+    ("year", "Year", "All years"),
+    ("confidence", "Confidence", "Any confidence"),
+    ("autonomy", "Autonomy", "Any autonomy"),
+    ("vendor", "Vendor", "All vendors"),
+    ("tool", "Tool", "All tools"),
+]
+
+
+def render_filters(recs: list[dict]) -> str:
+    options = facet_options(recs)
+    fields = []
+    for param, label, all_text in FILTERS:
+        opts = "".join(f'<option value="{esc(v)}">{esc(v)}</option>' for v in options[param])
+        fields.append(f'<div class="f"><label for="f-{param}">{label}</label>'
+                      f'<select id="f-{param}" name="{param}"><option value="">{all_text}</option>{opts}</select></div>')
+    return f"""<form class="filters" id="filters" role="search" aria-label="Search and filter incidents" hidden>
+  <div class="f f-q"><label for="q">Search</label>
+    <input type="search" id="q" name="q" autocomplete="off" spellcheck="false" aria-describedby="q-hint"
+      placeholder="Title, cause, prevention, vendor, tool, CVE, tag…"></div>
+  {''.join(fields)}
+  <div class="f f-actions"><button type="button" class="clear">Clear all</button></div>
+  <p id="q-hint" class="hint">Every word must match. Title matches rank first, then tags, IDs and system names,
+  then body text. Filters combine with each other and with the search. Press <kbd>/</kbd> to search.</p>
+</form>
+<p id="count" class="count" role="status" aria-live="polite"></p>
+<div id="empty" class="empty" hidden>
+  <p>No records match this search and these filters.</p>
+  <button type="button" class="clear">Clear search and filters</button>
+</div>"""
+
+
 def render_index(recs: list[dict]) -> str:
-    classes = sorted({fc.get("class") for r in recs for fc in r.get("failure_classes", [])})
-    severities = [s for s in SEVERITY_ORDER if any(r.get("severity") == s for r in recs)]
-    years = sorted({(r.get("date") or "")[:4] for r in recs if r.get("date")}, reverse=True)
-
-    def opts(values):
-        return "".join(f'<option value="{esc(v)}">{esc(v)}</option>' for v in values)
-
     rows = []
     for r in recs:
         rid = r["incident_id"]
-        rclasses = " ".join(sorted({fc.get("class", "") for fc in r.get("failure_classes", [])}))
-        rows.append(f"""<a class="card" href="{esc(rid)}/"
-     data-classes="{esc(rclasses)}" data-severity="{esc(r.get('severity',''))}"
-     data-type="{esc(r.get('incident_type',''))}" data-year="{esc((r.get('date') or '')[:4])}"
-     data-text="{esc((r.get('title','') + ' ' + rid).lower())}">
+        rows.append(f"""<a class="card" href="{esc(rid)}/" data-id="{esc(rid)}">
   <div class="card-head">
     <span class="card-date">{esc(r.get('date',''))}</span>
     {badge(r.get('incident_type','?'), 'type-' + esc(r.get('incident_type','')))}
@@ -140,39 +279,11 @@ def render_index(recs: list[dict]) -> str:
   <a href="https://github.com/swarmproof/agent-postmortems/blob/main/SCHEMA.md">one schema</a> and
   cites public sources. <a href="{SITE_BASE}/feed.xml">RSS</a>.</p>
 </section>
-<section class="filters" aria-label="Filters">
-  <input type="search" id="q" placeholder="Search title…" aria-label="Search">
-  <select id="f-class"><option value="">All classes</option>{opts(classes)}</select>
-  <select id="f-sev"><option value="">All severities</option>{opts(severities)}</select>
-  <select id="f-type"><option value="">Incident &amp; hazard</option><option value="incident">incident</option><option value="hazard">hazard</option></select>
-  <select id="f-year"><option value="">All years</option>{opts(years)}</select>
-  <span id="count" class="count"></span>
-</section>
-<section class="cards" id="cards">
+{render_filters(recs)}
+<section class="cards" id="cards" aria-label="Records" data-index="search-index.json">
 {''.join(rows)}
 </section>
-<script>
-const cards = [...document.querySelectorAll('.card')];
-const q = document.getElementById('q'), fClass = document.getElementById('f-class'),
-      fSev = document.getElementById('f-sev'), fType = document.getElementById('f-type'),
-      fYear = document.getElementById('f-year'), count = document.getElementById('count');
-function apply() {{
-  const t = q.value.trim().toLowerCase(), c = fClass.value, s = fSev.value, ty = fType.value, y = fYear.value;
-  let n = 0;
-  for (const el of cards) {{
-    const ok = (!t || el.dataset.text.includes(t))
-      && (!c || el.dataset.classes.split(' ').includes(c))
-      && (!s || el.dataset.severity === s)
-      && (!ty || el.dataset.type === ty)
-      && (!y || el.dataset.year === y);
-    el.style.display = ok ? '' : 'none';
-    if (ok) n++;
-  }}
-  count.textContent = n + ' / ' + cards.length + ' shown';
-}}
-[q, fClass, fSev, fType, fYear].forEach(e => e.addEventListener('input', apply));
-apply();
-</script>
+<script src="search.js" defer></script>
 """
     return page("agent-postmortems — AI-agent failure database", body, "style.css",
                 "A structured, sourced database of real AI-agent failures.")
@@ -187,14 +298,26 @@ def prose(label: str, text) -> str:
     return f'<section class="prose"><h2>{esc(label)}</h2><p>{esc(text)}</p></section>' if text else ""
 
 
+def safe_url(url) -> str:
+    """Return the URL only if it is an absolute http(s) link, else ''.
+
+    Source URLs are contributor data; `format: uri` alone admits schemes such as
+    javascript: or data:, which must never become a clickable href.
+    """
+    u = str(url or "").strip()
+    return u if urllib.parse.urlsplit(u).scheme.lower() in ("http", "https") else ""
+
+
 def render_sources(rec: dict) -> str:
     items = []
     for s in rec.get("sources", []):
-        url = s.get("url", "")
-        title = s.get("title") or url
+        url = safe_url(s.get("url"))
+        title = s.get("title") or s.get("url") or ""
         meta = " · ".join(filter(None, [s.get("publisher"), s.get("type")]))
-        arch = f' · <a href="{esc(s.get("archive_url"))}">archived</a>' if s.get("archive_url") else ""
-        items.append(f'<li><a href="{esc(url)}">{esc(title)}</a><span class="src-meta">{esc(meta)}{arch}</span></li>')
+        archive = safe_url(s.get("archive_url"))
+        arch = f' · <a href="{esc(archive)}">archived</a>' if archive else ""
+        link = f'<a href="{esc(url)}">{esc(title)}</a>' if url else esc(title)
+        items.append(f'<li>{link}<span class="src-meta">{esc(meta)}{arch}</span></li>')
     return f'<section class="prose"><h2>Sources</h2><ul class="sources">{"".join(items)}</ul></section>' if items else ""
 
 
@@ -278,7 +401,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
 
     body = f"""
 <article class="incident">
-  <p class="crumb"><a href="../">← all incidents</a></p>
+  <p class="crumb"><a href="../">← all records</a></p>
   <div class="badges">
     {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
     {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
@@ -356,10 +479,22 @@ main { max-width:820px; margin:0 auto; padding:0 20px 64px; }
 h1 { font-size:28px; line-height:1.25; margin:8px 0 12px; }
 h2 { font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:28px 0 8px; }
 .intro p { color:var(--fg); }
-.filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:20px 0; position:sticky; top:0; background:var(--bg); padding:10px 0; }
-.filters input, .filters select { padding:7px 9px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font-size:14px; }
-.filters #q { flex:1; min-width:160px; }
-.count { color:var(--muted); font-size:13px; margin-left:auto; }
+[hidden] { display:none !important; }
+.filters { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px 10px; margin:20px 0 8px; }
+.filters .f { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.filters label { font-size:12px; font-weight:600; color:var(--muted); }
+.filters input, .filters select, .filters button, .empty button { width:100%; min-width:0; padding:7px 9px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; font-size:14px; }
+.filters button, .empty button { cursor:pointer; width:auto; }
+.filters .f-q { grid-column:1 / -1; }
+.filters .f-q input { font-size:16px; }
+.filters .f-actions { justify-content:flex-end; }
+.hint { grid-column:1 / -1; margin:0; color:var(--muted); font-size:12px; }
+kbd { font:12px ui-monospace,SFMono-Regular,Menlo,monospace; padding:0 4px; border:1px solid var(--line); border-radius:4px; }
+.count { color:var(--muted); font-size:13px; margin:0 0 10px; min-height:1.6em; }
+.empty { padding:20px 16px; border:1px dashed var(--line); border-radius:12px; text-align:center; }
+.empty p { margin:0 0 10px; }
+a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.card:focus-visible { border-color:var(--accent); }
 .cards { display:flex; flex-direction:column; gap:10px; }
 .card { display:block; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--fg); }
 .card:hover { border-color:var(--accent); text-decoration:none; }
@@ -396,6 +531,146 @@ h2 { font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(-
 """
 
 
+# Client search. It never builds HTML from data: cards are rendered server-side
+# (escaped) and this script only hides, shows and reorders them by id. The pure
+# functions are exported for tests (node) via module.exports.
+SEARCH_JS = r"""(function () {
+'use strict';
+var EDGE = '()[]{}.,;:!?"\'`\u00ab\u00bb\u201c\u201d\u2018\u2019'; // must match EDGE_PUNCT in build_site.py
+// URL parameter -> index field. Array fields match by membership; all filters AND.
+var FACETS = { 'class': 'classes', severity: 'sev', type: 'type', year: 'year',
+               confidence: 'conf', autonomy: 'auto', vendor: 'vendor', tool: 'tools' };
+
+function norm(s) {
+  return String(s == null ? '' : s).normalize('NFKC').toLowerCase().split(/\s+/).filter(Boolean).join(' ');
+}
+function stripEdge(w) {
+  var a = 0, b = w.length;
+  while (a < b && EDGE.indexOf(w[a]) >= 0) a++;
+  while (b > a && EDGE.indexOf(w[b - 1]) >= 0) b--;
+  return w.slice(a, b);
+}
+function terms(q) {
+  var out = [];
+  norm(q).split(' ').forEach(function (w) { w = stripEdge(w); if (w && out.indexOf(w) < 0) out.push(w); });
+  return out;
+}
+function facetOk(rec, filters) {
+  for (var p in FACETS) {
+    var want = filters[p];
+    if (!want) continue;
+    var have = rec[FACETS[p]];
+    if (Array.isArray(have) ? have.indexOf(want) < 0 : have !== want) return false;
+  }
+  return true;
+}
+// Every term must match somewhere; each term scores by its best tier: title > keys > body.
+function score(rec, ts) {
+  var s = 0;
+  for (var i = 0; i < ts.length; i++) {
+    var t = ts[i];
+    if (rec.t.indexOf(t) >= 0) s += 100;
+    else if (rec.k.indexOf(t) >= 0) s += 10;
+    else if (rec.b.indexOf(t) >= 0) s += 1;
+    else return -1;
+  }
+  if (ts.length > 1) {
+    var phrase = ts.join(' ');
+    if (rec.t.indexOf(phrase) >= 0) s += 50; else if (rec.k.indexOf(phrase) >= 0) s += 5;
+  }
+  return s;
+}
+// Returns matching ids: ranked when there is a query, otherwise in index (display) order.
+function search(records, query, filters) {
+  var ts = terms(query), hits = [];
+  records.forEach(function (rec, i) {
+    if (!facetOk(rec, filters || {})) return;
+    var s = score(rec, ts);
+    if (s >= 0) hits.push({ id: rec.id, s: s, i: i });
+  });
+  hits.sort(function (a, b) { return b.s - a.s || a.i - b.i; });
+  return hits.map(function (h) { return h.id; });
+}
+
+var api = { norm: norm, terms: terms, search: search, FACETS: FACETS };
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+if (typeof document === 'undefined') return;
+
+var list = document.getElementById('cards'), form = document.getElementById('filters');
+if (!list || !form) return;
+var count = document.getElementById('count'), empty = document.getElementById('empty');
+var q = form.elements.namedItem('q');
+var cards = new Map(), defaultOrder = [];
+list.querySelectorAll('.card[data-id]').forEach(function (el) { cards.set(el.dataset.id, el); defaultOrder.push(el.dataset.id); });
+var records = null;
+
+function state() {
+  var f = {};
+  for (var p in FACETS) f[p] = form.elements.namedItem(p).value;
+  return { q: q.value, f: f };
+}
+function syncUrl(st) {
+  var sp = new URLSearchParams();
+  if (norm(st.q)) sp.set('q', norm(st.q));
+  for (var p in FACETS) if (st.f[p]) sp.set(p, st.f[p]);
+  var qs = sp.toString();
+  history.replaceState(null, '', (qs ? '?' + qs : location.pathname) + location.hash);
+}
+function render() {
+  var st = state(), ids = search(records, st.q, st.f), shown = new Set(ids);
+  var active = !!norm(st.q) || Object.keys(st.f).some(function (p) { return st.f[p]; });
+  var order = norm(st.q) ? ids.concat(defaultOrder.filter(function (id) { return !shown.has(id); })) : defaultOrder;
+  var frag = document.createDocumentFragment();
+  order.forEach(function (id) { var el = cards.get(id); if (el) { el.hidden = !shown.has(id); frag.appendChild(el); } });
+  list.appendChild(frag);
+  count.textContent = active
+    ? ids.length + ' of ' + cards.size + (cards.size === 1 ? ' record matches' : ' records match')
+    : 'Showing all ' + cards.size + ' records';
+  empty.hidden = ids.length > 0;
+  syncUrl(st);
+}
+function fromUrl() {
+  var sp = new URLSearchParams(location.search);
+  q.value = sp.get('q') || '';
+  for (var p in FACETS) {
+    var sel = form.elements.namedItem(p), v = sp.get(p) || '';
+    sel.value = v;
+    if (sel.value !== v) sel.value = '';  // unknown value in a shared link: ignore it
+  }
+}
+function clearAll() {
+  q.value = '';
+  for (var p in FACETS) form.elements.namedItem(p).value = '';
+  render();
+  q.focus();
+}
+
+form.addEventListener('submit', function (e) { e.preventDefault(); });
+document.querySelectorAll('button.clear').forEach(function (b) { b.addEventListener('click', clearAll); });
+document.addEventListener('keydown', function (e) {
+  var tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(tag)) {
+    e.preventDefault(); q.focus();
+  }
+});
+
+fetch(list.dataset.index)
+  .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function (data) {
+    records = data.records;
+    form.addEventListener('input', render);
+    form.addEventListener('change', render);
+    form.hidden = false;
+    fromUrl();
+    render();
+  })
+  .catch(function () {
+    count.textContent = 'Search is unavailable here; all ' + cards.size + ' records are listed below.';
+  });
+})();
+"""
+
+
 def main() -> int:
     recs = load_incidents()
     ids = {r["incident_id"] for r in recs}
@@ -404,6 +679,8 @@ def main() -> int:
     OUT.mkdir(parents=True)
     (OUT / "style.css").write_text(CSS)
     (OUT / "index.html").write_text(render_index(recs))
+    (OUT / "search-index.json").write_text(search_index_json(recs), encoding="utf-8")
+    (OUT / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (OUT / "feed.xml").write_text(render_feed(recs))
     for r in recs:
         d = OUT / r["incident_id"]
