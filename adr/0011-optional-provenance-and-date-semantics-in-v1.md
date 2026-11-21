@@ -28,14 +28,16 @@ Add five optional top-level fields to schema v1. `schema_version` stays `"1.0"`;
 `validate.py` enforces what the schema cannot express: G-EVIDENCE (pointer resolution, source membership) and G-DATES (`occurred_on` ≤ `disclosed_on` ≤ `published_on`; the field named by `temporal_basis`, when present, equals `date`). The neutrality lint covers assessment prose.
 
 ## Compatibility
-Additive optional fields are only acceptable in v1 if they demonstrably break nothing. Verified with the change applied, against a baseline taken before it:
+> **Consumer warning — readers pinned to the pre-change schema.** The schema keeps `additionalProperties: false` (ADR-0007). A consumer that validates records against a copy of `incident.schema.json` taken before this change **will reject every record that uses one of the new fields**, from the first records that adopt them onward. Such a reader must refresh its schema copy or ignore unknown keys. At adoption no record used the new fields, so the corpus as it stood then was unaffected.
 
-- **Records:** all 180 corpus records validate, with validator output identical to the baseline. `tests/test_schema_compatibility.py` validates every record against both the live schema and a frozen copy of the schema as adopted (`tests/compat/incident.schema.v1.0.json`), plus frozen v1 sample records, and asserts every original property and definition is unchanged and the required core is identical.
+Additive optional fields are only acceptable in v1 if they demonstrably break nothing. Verified at adoption, with the change applied, against a baseline taken before it:
+
+- **Records:** all 180 records in the corpus at adoption validate, with validator output identical to the baseline. `tests/test_schema_compatibility.py` validates every record against both the live schema and a frozen copy of the schema as adopted (`tests/compat/incident.schema.v1.0.json`), plus frozen v1 sample records, and asserts every original property and definition is unchanged and the required core is identical.
 - **Fixtures:** every pre-existing fixture passes or fails as before, with the same first error.
-- **Exports:** `export/incidents.json`, `scenarios.json` and `seeds.json` rebuild byte-identical for the current corpus.
+- **Exports:** `export/incidents.json`, `scenarios.json` and `seeds.json` rebuild byte-identical for the corpus at adoption.
 - **In-repo consumers:** the site build is byte-identical; `apply_mappings.py --check`, `gen_readme_stats.py --check` and the SCHEMA.md drift gate pass. With a record that uses every new field, the validator, exporter, mapping tool, stats generator and site build all run cleanly and the mapping tool preserves the new fields when it rewrites the file.
 
-**Known limitation — readers pinned to the old schema.** The schema keeps `additionalProperties: false` (ADR-0007). A consumer that validates records against a copy of `incident.schema.json` taken before this change will reject any record that uses one of the new fields. No current record uses them, so no current data is affected. Once editorial review adds them to a record, such a reader must refresh its schema copy or ignore unknown keys. Records keep `schema_version: "1.0"` because nothing a v1 record could previously express has changed.
+Records keep `schema_version: "1.0"` because nothing a v1 record could previously express has changed; the consumer warning above is the cost of that choice.
 
 ## Exports
 `export/incidents.json` carries each record verbatim, so the new fields pass through as additional keys on the records that have them. That keeps the export a complete copy of the corpus rather than a filtered view. `scenarios.json` and `seeds.json` build their entries from named fields only and are unaffected.
@@ -49,7 +51,7 @@ Additive optional fields are only acceptable in v1 if they demonstrably break no
 - **If `date` is ever narrowed** (for example to always mean occurrence) or a new field becomes required, that is a breaking change. It goes into a v2 schema with a v2 export published alongside 1.0 for a stated deprecation window, plus a mechanical migration script that sets `temporal_basis: unknown` where nothing is recorded and never infers a date.
 
 ## Alternatives rejected
-- **Ship as v2 now.** It would force a version change on every consumer for fields that no record yet uses, and the checks above show v1 can carry them without breaking existing data.
+- **Ship as v2 now.** It would force a version change on every consumer for fields that no record used at adoption, and the checks above show v1 can carry them without breaking existing data.
 - **Change `confidence` per claim or reinterpret it.** That would silently change what published records mean.
 - **Free-form source citations in assessments.** These would bypass link checking and archiving and could cite evidence the record does not show.
 - **Allow partial dates.** This is inconsistent with every existing date field and pushes precision handling onto every reader; leaving the field out is the honest encoding.
