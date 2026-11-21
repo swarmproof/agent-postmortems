@@ -78,8 +78,9 @@ def gate_schema(record: dict, validator: Draft202012Validator) -> list[str]:
 
 
 def gate_source_urls(record: dict) -> list[str]:
-    """sources[].url and archive_url must be web links: http(s) with a host. `format: uri`
-    alone admits javascript:, data:, file: and similar schemes."""
+    """sources[].url and archive_url must be web links: http(s) with a host and no userinfo.
+    `format: uri` alone admits javascript:, data:, file: and similar schemes, and a
+    userinfo prefix (https://trusted.example@other.example/) disguises the real host."""
     errors = []
     for i, src in enumerate(record.get("sources") or []):
         if not isinstance(src, dict):
@@ -94,6 +95,8 @@ def gate_source_urls(record: dict) -> list[str]:
                 parts = None
             if not parts or parts.scheme.lower() not in ("http", "https") or not parts.hostname:
                 errors.append(f"G-SCHEMA: sources/{i}/{key}: {value!r} is not an http(s) URL with a host")
+            elif "@" in parts.netloc:
+                errors.append(f"G-SCHEMA: sources/{i}/{key}: {value!r} contains userinfo ('@' before the host)")
     return errors
 
 

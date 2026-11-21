@@ -94,3 +94,36 @@ def test_every_corpus_source_is_a_web_url():
     assert len(paths) >= 180
     for path in paths:
         assert validate.gate_source_urls(validate.load_yaml(path)) == [], path.name
+
+
+USERINFO = [
+    "https://trusted.example@evil.example/",
+    "https://user:pass@example.com/a",
+    "https://@example.com/a",
+    "http://trusted.example%2F@evil.example/",
+    "https://a@b@evil.example/",
+]
+
+
+@pytest.mark.parametrize("url", USERINFO)
+@pytest.mark.parametrize("key", ["url", "archive_url"])
+def test_userinfo_rejected(key, url):
+    record = record_with(**{key: url})
+    errs = validate.gate_source_urls(record)
+    assert len(errs) == 1 and f"sources/0/{key}" in errs[0] and "userinfo" in errs[0], errs
+
+
+@pytest.mark.parametrize("url", [
+    "https://medium.com/@author/post-title",
+    "https://example.com/search?q=a@b",
+    "https://example.com/page#@anchor",
+    "https://web.archive.org/web/2099/https://user@example.com/x",
+])
+def test_at_sign_outside_the_host_is_accepted(url):
+    assert validate.gate_source_urls(record_with(url=url, archive_url=url)) == []
+
+
+def test_userinfo_fixture_fails_only_on_userinfo():
+    errs = validate.validate_file(validate.FIXTURES_DIR / "2099-invalid-source-url-userinfo.yaml",
+                                  VALIDATOR, *validate.load_taxonomy(), {})
+    assert len(errs) == 1 and "contains userinfo" in errs[0]
