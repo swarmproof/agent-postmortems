@@ -37,6 +37,8 @@ from pathlib import Path
 import requests
 import yaml
 
+import issue_markdown as md
+
 REPO = Path(__file__).resolve().parent.parent
 INCIDENTS_DIR = REPO / "incidents"
 SOURCES_FILE = Path(__file__).resolve().parent / "discovery_sources.yaml"
@@ -261,25 +263,26 @@ def discover(days: int, limit: int) -> list[dict]:
 
 # --------------------------------------------------------------------------- output
 def emit_markdown(cands: list[dict]) -> str:
+    # Titles, sources, dates and URLs come from third-party feeds and land in a
+    # public issue: render them through issue_markdown, never raw.
     if not cands:
         return "_No new candidate incidents found this week._\n"
     fresh = [c for c in cands if not c["likely_duplicate"]]
     dupes = [c for c in cands if c["likely_duplicate"]]
-    lines = [f"Found **{len(fresh)}** new candidate incident(s) "
-             f"(+{len(dupes)} possible duplicates). De-duped against the corpus; "
-             "ranked by relevance. Each needs a human to draft it from "
-             "`incidents/_TEMPLATE.yaml` and open a PR.\n"]
-    for c in fresh:
-        lines.append(f"- [ ] **{c['title']}** — [{c['source']}]({c['url']}) "
-                     f"· relevance {c['relevance']} · {c['date']}")
+    header = (f"Found **{len(fresh)}** new candidate incident(s) "
+              f"(+{len(dupes)} possible duplicates). De-duped against the corpus; "
+              "ranked by relevance. Each needs a human to draft it from "
+              "`incidents/_TEMPLATE.yaml` and open a PR.\n")
+    lines = [f"- [ ] {md.code(c['title'])} — {md.code(c['source'], 80)} {md.link(c['url'])} "
+             f"· relevance {int(c['relevance'])} · {md.code(c['date'], 32)}" for c in fresh]
+    tail = ""
     if dupes:
         lines.append("\n<details><summary>Possible duplicates (verify before "
                      "discarding)</summary>\n")
-        for c in dupes:
-            lines.append(f"- [ ] {c['title']} — [{c['source']}]({c['url']})")
-        lines.append("</details>")
-    return "\n".join(lines) + "\n"
-
+        lines += [f"- [ ] {md.code(c['title'])} — {md.code(c['source'], 80)} {md.link(c['url'])}"
+                  for c in dupes]
+        tail = "</details>"
+    return md.cap(header, lines, tail)
 
 def main() -> int:
     ap = argparse.ArgumentParser()

@@ -178,12 +178,13 @@ def stable_json(doc: dict) -> str:
     return json.dumps(clone, indent=2, ensure_ascii=False, sort_keys=False)
 
 
-def main() -> int:
-    check = "--check" in sys.argv
+def build_artifacts() -> dict[str, dict]:
+    """Build and schema-validate all three exports in memory."""
     incidents = load_incidents()
     tax_v = taxonomy_version(incidents)
     # Deterministic stamp: the newest incident `date` at midnight UTC, NOT the
-    # wall-clock build time, so --check compares equal across machines and runs.
+    # wall-clock build time, so output is a pure function of the corpus and a
+    # rebuild from any checkout is byte-identical (release reproducibility).
     # It is written as both `corpus_as_of` (the honest name) and `generated_at`
     # (kept for the consumers of the 1.0 export contract, ADR-0006).
     stamp = max((r["date"] for r in incidents), default="") + "T00:00:00Z"
@@ -193,13 +194,25 @@ def main() -> int:
         "scenarios": build_scenarios(incidents, tax_v, stamp),
         "seeds": build_seeds(incidents, tax_v, stamp),
     }
+    for name, doc in artifacts.items():
+        validate(name, doc)
+    return artifacts
+
+
+def render(doc: dict) -> str:
+    """The exact bytes written to export/<name>.json."""
+    return json.dumps(doc, indent=2, ensure_ascii=False) + "\n"
+
+
+def main() -> int:
+    check = "--check" in sys.argv
+    artifacts = build_artifacts()
 
     EXPORT_DIR.mkdir(exist_ok=True)
     stale = 0
     for name, doc in artifacts.items():
-        validate(name, doc)
         path = EXPORT_DIR / f"{name}.json"
-        rendered = json.dumps(doc, indent=2, ensure_ascii=False) + "\n"
+        rendered = render(doc)
         if check:
             existing = path.read_text() if path.exists() else ""
             if stable_json(json.loads(existing)) != stable_json(doc) if existing else True:
