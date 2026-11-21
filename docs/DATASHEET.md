@@ -238,7 +238,7 @@ rebuild of the same corpus is byte-identical; neither is a build time.
 **What has it been used for?** The site at https://swarmproof.github.io/agent-postmortems/
 (filterable index, per-record permalinks with BibTeX, RSS) and the machine-readable exports
 consumed by sibling tools: `scenarios.json` by
-[stampede](https://github.com/swarmproof/stampede) for replayable chaos scenarios and
+[stampede](https://github.com/swarmproof/stampede) as natural-language chaos-scenario hints and
 `seeds.json` by [costbomb](https://github.com/swarmproof/costbomb) for denial-of-wallet
 fuzzing (ADR-0006).
 
