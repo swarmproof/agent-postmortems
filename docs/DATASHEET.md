@@ -23,7 +23,7 @@ tools.
 **Who created it, and who funded it?** Created and maintained by the Swarm Proof
 toolkit maintainer (see [`CITATION.cff`](../CITATION.cff)) as an unfunded open-source
 project. Contributors are credited in git history; the schema's `submitted_by` field is
-unused on all 180 records, so authorship is not recoverable per record from the data.
+not set on any record, so authorship is not recoverable per record from the data.
 
 ## Composition
 
@@ -240,7 +240,7 @@ rebuild of the same corpus is byte-identical; neither is a build time.
 **What has it been used for?** The site at https://swarmproof.github.io/agent-postmortems/
 (filterable index, per-record permalinks with BibTeX, RSS) and the machine-readable exports
 consumed by sibling tools: `scenarios.json` by
-[stampede](https://github.com/swarmproof/stampede) for replayable chaos scenarios and
+[stampede](https://github.com/swarmproof/stampede) as natural-language chaos-scenario hints and
 `seeds.json` by [costbomb](https://github.com/swarmproof/costbomb) for denial-of-wallet
 fuzzing (ADR-0006).
 

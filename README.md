@@ -64,7 +64,7 @@ sources:
   - {url: "https://…", type: news, publisher: Fortune}
 ```
 
-Required core + a large optional body (`causation`, `attack_vector`, `timeline`, `cve`/`cwe`, `related_incidents`, …). Records are cross-referenced to **OWASP Top 10 for LLM Applications**, **OWASP Agentic AI Threats**, and **MITRE ATLAS** wherever the crosswalk in [`schema/framework-mappings.yaml`](./schema/framework-mappings.yaml) defines an equivalent for their failure classes; classes with no counterpart in those frameworks (such as `autonomous-misuse` and `task-failure`) carry no `mappings` block. Mappings are derived from the crosswalk, never hand-written. Full field reference: **[SCHEMA.md](./SCHEMA.md)** · taxonomy: **[TAXONOMY.md](./TAXONOMY.md)**.
+Required core + a large optional body (`causation`, `attack_vector`, `timeline`, `cve`/`cwe`, `related_incidents`, …). Records are cross-referenced to **OWASP Top 10 for LLM Applications**, **OWASP Agentic AI Threats**, and **MITRE ATLAS** wherever the crosswalk in [`schema/framework-mappings.yaml`](./schema/framework-mappings.yaml) defines an equivalent for their failure classes; classes with no counterpart in those frameworks (`double-side-effect`, `task-failure` and `other`) add nothing, so a record carries no `mappings` block only when every class in its chain is one of these. Mappings are derived from the crosswalk, never hand-written. Full field reference: **[SCHEMA.md](./SCHEMA.md)** · taxonomy: **[TAXONOMY.md](./TAXONOMY.md)**.
 
 **Standard stability:** `schema_version` and `taxonomy_version` are both `1.0`; additive optional fields and new classes do not bump the major version, while renaming or removing a field, class, or subclass does — and any taxonomy change bumps `taxonomy_version` and requires an ADR, per the governance note in [TAXONOMY.md](./TAXONOMY.md).
 
@@ -103,7 +103,7 @@ print(data["count"], [r["incident_id"] for r in data["incidents"] if r["primary_
 
 **Releases:** versioned snapshots of the three feeds (`incidents.json`, `scenarios.json`, `seeds.json`) are attached to tagged [GitHub releases](https://github.com/swarmproof/agent-postmortems/releases), so a downstream consumer can pin a tag instead of tracking `main`.
 
-Two more feeds project the corpus for downstream tooling — `scenarios.json` (replayable chaos scenarios for [stampede](https://github.com/swarmproof/stampede)) and `seeds.json` (denial-of-wallet seeds for [costbomb](https://github.com/swarmproof/costbomb)). Export entries carry natural-language trigger *shapes*, never runnable exploit payloads.
+Two more feeds project the corpus for downstream tooling — `scenarios.json` (natural-language scenario hints, each a trigger shape, an expected failure and success criteria, for [stampede](https://github.com/swarmproof/stampede)) and `seeds.json` (denial-of-wallet seeds for [costbomb](https://github.com/swarmproof/costbomb)). Export entries carry natural-language trigger *shapes*, never runnable exploit payloads.
 
 The site also offers a per-incident permalink with a copyable **BibTeX** citation and an [RSS feed](https://swarmproof.github.io/agent-postmortems/feed.xml).
 
