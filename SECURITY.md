@@ -44,3 +44,9 @@ This project is maintained by volunteers. There is no SLA.
 - Tooling fixes ship as ordinary pull requests once a fix is ready. If a workflow is the problem, it may be disabled first and fixed later.
 
 We will credit reporters in the fixing pull request unless asked not to.
+
+## Related
+
+- [`DISPUTES.md`](./DISPUTES.md): correcting or contesting the facts of a record.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md): reporting a new failure or writing a record.
+- [`docs/METHODS.md`](./docs/METHODS.md): how records are sourced and reviewed, and the limits of the corpus.

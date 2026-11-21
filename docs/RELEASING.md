@@ -70,7 +70,7 @@ git show "$SHA:README.md" | sed -n '/STATS:START/,/STATS:END/p'
 Structure, top to bottom:
 
 1. One line: *A versioned snapshot of the **agent-postmortems** corpus — a structured, public
-   database of real AI-agent failures.*
+   database of AI-agent incidents and demonstrated hazards.*
 2. **This snapshot** — three bullets: `N incidents (R realized · H demonstrated hazards /
    near-misses), YYYY–YYYY`; `C of 19 failure classes represented; K CVE-backed`; the
    schema/taxonomy conformance line.

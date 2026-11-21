@@ -14,13 +14,13 @@ work; a maintainer decides what becomes an incident.
 ## The parts
 
 ```
-  discover_incidents.py ──┐  DISCOVERY  weekly-discovery.yml  (Mondays, no secrets)
+  discover_incidents.py ──┐  DISCOVERY  discover.yml  (Mondays, no secrets)
   (research feeds, lab     │    find + dedup ──> "Candidate incidents" issue
    disclosures, arXiv,     │
-   Google News, NVD CVE    │  AUTO-DRAFT  weekly-autocurate.yml  (opt-in: ANTHROPIC_API_KEY)
+   Google News, NVD CVE    │  AUTO-DRAFT  autocurate.yml  (opt-in: ANTHROPIC_API_KEY)
    + GitHub advisories)    │    find + dedup ──> Claude drafts v1 YAML ──> validate ──> PR
                            │
-  coverage_gaps.py ────────┘  COMPLETENESS CRITIC  weekly-coverage.yml  (Wednesdays, no secrets)
+  coverage_gaps.py ────────┘  COMPLETENESS CRITIC  coverage.yml  (Wednesdays, no secrets)
   (curated external lists)     diff corpus vs external lists ──> "Coverage gaps" issue
                                                         │
                                        human reviews the issue / PR ──> merges
@@ -117,6 +117,13 @@ Edit `scripts/discovery_sources.yaml` — no code change needed:
 - `github_advisories` — toggle the GitHub advisory pull.
 - `relevance_keywords` — the vocabulary that scores and filters candidates.
 - `coverage_sources` — the curated external lists the completeness critic diffs against.
+
+## Reports from people
+
+Failures reported through the "Report an agent failure" issue form are not part of this
+pipeline: no workflow reads those issues, and they are triaged by hand as described in
+[`docs/TRIAGE.md`](./TRIAGE.md). The definitions and limits that apply to every record,
+however it was found, are in [`docs/METHODS.md`](./METHODS.md).
 
 ## What the pipeline deliberately does NOT do
 
