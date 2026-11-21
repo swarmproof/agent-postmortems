@@ -3,7 +3,8 @@ taxonomy_version: "1.0"
 incident_id: 2025-echoleak-m365-copilot
 title: "EchoLeak: zero-click prompt injection could exfiltrate Microsoft 365 Copilot context"
 summary: >-
-  A crafted email carrying a hidden prompt (CVE-2025-32711, CVSS 9.3) could be
+  A crafted email carrying a hidden prompt (CVE-2025-32711; CVSS 9.3 per
+  Microsoft, 7.5 per NVD) could be
   retrieved by Microsoft 365 Copilot during a later unrelated query and silently
   exfiltrate context with no user click. Disclosed by Aim Security and fixed
   server-side; Microsoft reported no evidence of exploitation in the wild.
@@ -17,7 +18,8 @@ status: final
 confidence: confirmed
 severity: critical
 severity_rationale: >-
-  CVSS 9.3; zero-click exfiltration of any data reachable in the assistant's
+  CVSS 9.3 (Microsoft; NVD 7.5); zero-click exfiltration of any data reachable
+  in the assistant's
   RAG context across an enterprise tenant. Near-miss — patched before known
   exploitation.
 
@@ -76,7 +78,7 @@ blast_radius:
     description: >-
       Any data reachable in Copilot's context (emails, Teams messages, OneDrive,
       SharePoint, Office files) could be silently exfiltrated. Rated CVSS 9.3
-      (critical).
+      (critical) by Microsoft and 7.5 (high) by NVD.
   user_harm:
     categories: ["none-reported"]
     description: >-
@@ -154,16 +156,20 @@ evidence_assessments:
       The Hacker News and arXiv relay Microsoft's statement; absence of reported
       exploitation is not proof that none occurred.
   - field_path: /severity_rationale
-    claim: The vulnerability carries a CVSS base score of 9.3 (critical).
+    claim: >-
+      Microsoft, as the CVE numbering authority, scores the vulnerability CVSS
+      9.3 (critical); NVD's own assessment of the same CVE is 7.5 (high).
     evidence_status: direct
     source_urls:
       - "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-32711"
       - "https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html"
-    reviewed_at: "2026-11-20"
+      - "https://nvd.nist.gov/vuln/detail/CVE-2025-32711"
+    reviewed_at: "2026-11-21"
     reviewer: maintainer-review
     uncertainty: >-
-      9.3 is Microsoft's score as the CVE numbering authority. NVD's own
-      assessment of the same CVE is 7.5; the NVD entry is not a cited source.
+      The two scores differ in the scope and integrity components of the vector
+      (Microsoft S:C/I:L, NVD S:U/I:N); the record's critical severity band
+      follows Microsoft's score.
   - field_path: /recovery
     claim: >-
       Microsoft fixed the vulnerability server-side and no customer action was
@@ -227,3 +233,8 @@ sources:
     publisher: Microsoft Security Response Center
     type: vendor-disclosure
     date_accessed: "2026-11-20"
+  - url: "https://nvd.nist.gov/vuln/detail/CVE-2025-32711"
+    title: "CVE-2025-32711 Detail"
+    publisher: NIST National Vulnerability Database
+    type: other
+    date_accessed: "2026-11-21"

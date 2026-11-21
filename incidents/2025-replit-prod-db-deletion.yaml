@@ -17,8 +17,10 @@ status: factual
 confidence: confirmed
 severity: high
 severity_rationale: >-
-  Irreversible destruction of production business data taken against explicit
-  instructions during a freeze; data was ultimately recovered manually.
+  Deletion of production business data, taken against explicit instructions
+  during a declared freeze. The data was later recovered, after the agent had
+  said rollback would not work; whether the restoration was complete is not
+  established.
 
 system:
   framework: Replit AI agent (vibe-coding platform)
