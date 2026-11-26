@@ -28,6 +28,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
+import email.utils
 import re
 import sys
 from pathlib import Path
@@ -82,6 +84,17 @@ def covered(entry: dict, cited_urls: set, corpus_titles: list[set], cited_cves: 
     return any(len(toks & t) >= 4 for t in corpus_titles)
 
 
+def feed_date(value: str) -> str:
+    """Normalize an ISO or RFC 822 feed timestamp to its stated calendar date."""
+    try:
+        return datetime.datetime.fromisoformat(value.replace("Z", "+00:00")).date().isoformat()
+    except (ValueError, TypeError):
+        try:
+            return email.utils.parsedate_to_datetime(value).date().isoformat()
+        except (ValueError, TypeError, AttributeError):
+            return ""
+
+
 def find_gaps(limit: int) -> tuple[list[dict], int]:
     cfg = yaml.safe_load(SOURCES_FILE.read_text())
     cov = cfg.get("coverage_sources", {}) or {}
@@ -102,7 +115,7 @@ def find_gaps(limit: int) -> tuple[list[dict], int]:
             if score(it, rss_keywords) == 0:        # must match an agent-identity term
                 continue
             entries.append({
-                "title": it["title"], "date": (it.get("date") or "")[:10],
+                "title": it["title"], "date": feed_date(it.get("date") or ""),
                 "url": it["url"], "cves": sorted({c.upper() for c in CVE_RE.findall(it.get("summary", ""))}),
                 "ref": "aiid",
             })
