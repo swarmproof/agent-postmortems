@@ -1070,7 +1070,7 @@ def render_robots() -> str:
 CSS = """
 .features {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:2rem;margin:2rem 0 4rem}
 .feature {padding:1.5rem;border:1px solid var(--line);border-radius:.5rem}
-.feature h2 {font-size:1.5rem;line-height:1.25;margin-top:0}
+.feature h2 {font-size:1.5rem;line-height:1.25;margin-top:0;text-transform:none;letter-spacing:normal}
 .reader-question {font-size:1.2rem;font-weight:600}
 #archive {scroll-margin-top:1rem}
 
