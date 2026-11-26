@@ -16,7 +16,7 @@ status: preliminary
 confidence: confirmed
 severity: critical
 severity_rationale: >-
-  Largest cryptocurrency theft on record (about $6.34B per Binance), with
+  About $6.34B in affected assets per Binance, with
   roughly $2.85B frozen or intercepted; the internal AI tool was the step that
   turned one compromised endpoint into control of the wallet-infrastructure
   team's devices. Binance covered the losses from its own reserves.
@@ -53,18 +53,13 @@ trigger: >-
   bypassed normal withdrawal procedures, including an Ethereum EIP-7702
   delegation to an attacker-controlled contract.
 root_cause: >-
-  An internal AI tool reachable from an authenticated engineer session had
-  enough reach to control other engineers' devices across the
-  wallet-infrastructure team, so a single compromised endpoint became
-  team-wide access without an additional trust boundary. Binance's report does
-  not describe the tool's purpose or permission model; its remediation list
-  includes rebuilding the tool and strengthening its access controls. Preceding
-  stages were a June 2026 tampered Homebrew installation on a Wallet DevOps
-  engineer's device (detected and remediated, but it exposed the team's
-  composition) and September 2026 malware that endpoint protection did not
-  detect. Elliptic found no evidence that an AI agent made decisions in the
-  laundering, and no published source shows AI agents carrying out the
-  intrusion autonomously.
+  Binance reports that human attackers extended their access through an internal
+  AI tool after compromising an engineer’s device. Later stages used stolen
+  deployment credentials and unauthorized access to a signing service. The
+  report leaves the AI tool’s function, exact permissions and degree of autonomy
+  unresolved. Its role in extending access is documented; a specific missing
+  authorization check is an analyst hypothesis. Binance says it rebuilt the
+  affected tool and strengthened access controls.
 contributing_factors:
   - A June 2026 tampered Homebrew installer, downloaded while searching for an AI coding tool, exposed the identity of a Wallet DevOps engineer and the composition of the wallet team even after device replacement and credential rotation.
   - A September 2026 fake recruitment process delivered a repository that replaced a legitimate development-tool component with malware on a work computer; endpoint protection did not detect it.
@@ -143,7 +138,11 @@ related_incidents:
   - "2026-aws-bedrock-agentcore-god-mode"
   - "2026-google-adk-agent-privilege-escalation"
   - "2025-gtg1002-ai-orchestrated-espionage"
-last_updated: "2026-11-16"
+last_updated: "2026-11-26"
+occurred_on: "2026-10-29"
+disclosed_on: "2026-10-31"
+published_on: "2026-11-03"
+temporal_basis: occurred
 machine_export:
   replayable: true
   stampede_scenario_hint: >-
@@ -153,12 +152,11 @@ machine_export:
     credentials without an independent approval gate or boundary alert.
 
 sources:
-  - url: "https://www.binance.com/square/post/384314395829022"
+  - url: "https://www.binance.com/en/blog/community/3229153443759566763"
     title: "Binance initial incident report on the October 2026 security incident"
     publisher: Binance
     type: vendor-disclosure
     date_accessed: "2026-11-16"
-    archive_url: "https://web.archive.org/web/20261116112624/https://www.binance.com/square/post/384314395829022"
   - url: "https://www.fbi.gov/investigate/cyber/alerts/2026/north-korea-responsible-for-6-billion-binance-attack"
     title: "North Korea Responsible for $6 Billion Binance Attack"
     publisher: Federal Bureau of Investigation
@@ -194,3 +192,58 @@ sources:
     type: news
     date_accessed: "2026-11-16"
     archive_url: "https://web.archive.org/web/20261112061748/https://fortune.com/2026/11/02/binance-hack-ai-north-korean-cybercrime-black-october/"
+
+evidence_assessments:
+- field_path: /summary
+  claim: Binance describes an internal AI tool as one step in a human-directed campaign; the FBI attributes
+    the theft to North Korea.
+  evidence_status: corroborated
+  source_urls:
+  - https://www.binance.com/en/blog/community/3229153443759566763
+  - https://www.fbi.gov/investigate/cyber/alerts/2026/north-korea-responsible-for-6-billion-binance-attack
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+  uncertainty: The FBI attribution does not establish autonomous AI execution.
+- field_path: /trigger
+  claim: Binance reports that attackers used a compromised employee device and an internal AI tool to
+    gain control of two further engineers’ devices on October 20.
+  evidence_status: direct
+  source_urls:
+  - https://www.binance.com/en/blog/community/3229153443759566763
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+- field_path: /root_cause
+  claim: The public report leaves the internal AI tool’s exact function, permissions and autonomy unresolved.
+  evidence_status: unknown
+  source_urls:
+  - https://www.binance.com/en/blog/community/3229153443759566763
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+  uncertainty: A proposed authorization boundary is an engineering hypothesis, not a confirmed description
+    of Binance’s implementation.
+- field_path: /blast_radius/cost
+  claim: Binance estimates approximately $6.34 billion in digital assets were affected by the overall
+    incident.
+  evidence_status: direct
+  source_urls:
+  - https://www.binance.com/en/blog/community/3229153443759566763
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+  uncertainty: The amount cannot be assigned specifically to the internal AI tool’s contribution.
+- field_path: /recovery
+  claim: Binance says it rebuilt the affected internal AI tool and strengthened access controls.
+  evidence_status: direct
+  source_urls:
+  - https://www.binance.com/en/blog/community/3229153443759566763
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+- field_path: /prevention
+  claim: A compromised-session scope check can exercise a proposed boundary between synthetic workspaces.
+  evidence_status: inferred
+  source_urls:
+  - https://www.binance.com/en/blog/community/3229153443759566763
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+  uncertainty: A passing check does not establish that it would have prevented the Binance theft.
+  analyst_note: Proposed engineering control derived from the reported behavior. Its effectiveness requires
+    testing in the target environment.
