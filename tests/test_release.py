@@ -114,3 +114,42 @@ def test_drift_detects_stale_committed_export(tmp_path):
     (tmp_path / "incidents.json").write_text('{"count": 0}\n')
     assert br.drift(rendered, tmp_path) == ["incidents"]
     assert br.drift({"seeds": "{}\n"}, tmp_path) == ["seeds"]  # missing file is drift
+
+
+def test_enriched_download_preserves_all_record_fields(tmp_path):
+    out = _build(tmp_path, "enriched")
+    doc = json.loads((out / "incidents.v2.json").read_text())
+    expected = be.load_incidents()
+    assert doc["export_schema_version"] == "2.0"
+    assert doc["incidents"] == expected
+    assert doc["corpus_as_of"] == doc["generated_at"]
+    core = json.loads((out / "incidents.json").read_text())
+    assert "corpus_as_of" not in core
+    assert core["count"] == doc["count"]
+    assert core["export_schema_version"] == "1.0"
+    enriched_by_id = {r["incident_id"]: r for r in expected}
+    for record in core["incidents"]:
+        assert all(enriched_by_id[record["incident_id"]][key] == value
+                   for key, value in record.items())
+    assert any("evidence_assessments" in r for r in doc["incidents"])
+    assert all("evidence_assessments" not in r for r in core["incidents"])
+
+
+def test_all_attached_export_schemas_validate_their_download(tmp_path):
+    from jsonschema import Draft202012Validator
+
+    out = _build(tmp_path, "schemas")
+    for name in br.EXPORT_NAMES:
+        schema = json.loads((out / f"{name}.export.schema.json").read_text())
+        assert list(Draft202012Validator(schema).iter_errors(
+            json.loads((out / f"{name}.json").read_text()))) == []
+
+
+def test_invalid_source_property_cannot_disappear_in_projection(monkeypatch):
+    import pytest
+
+    records = be.load_incidents()
+    records[0]["undeclared_property"] = "unexpected"
+    monkeypatch.setattr(be, "load_incidents", lambda: records)
+    with pytest.raises(SystemExit, match="failed its schema"):
+        be.build_artifacts()

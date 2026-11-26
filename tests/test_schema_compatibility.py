@@ -53,17 +53,25 @@ def test_corpus_is_not_empty():
 EXTENSION_FIELDS = set(LIVE_SCHEMA["properties"]) - set(FROZEN_SCHEMA["properties"])
 
 
-@pytest.mark.parametrize("path", CORPUS, ids=lambda p: p.stem)
-def test_corpus_record_valid_under_frozen_v1_schema(path):
-    """The v1 core of every record still validates against the schema as adopted.
+def test_downloaded_records_validate_without_reader_projection(tmp_path):
+    spec = importlib.util.spec_from_file_location("compat_release", REPO / "scripts" / "build_release.py")
+    release = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(release)
+    release.build(tmp_path / "assets", epoch=0, tag="test", check_drift=False)
+    for name in ("incidents", "scenarios", "seeds"):
+        doc = json.loads((tmp_path / "assets" / f"{name}.json").read_text())
+        schema = json.loads((COMPAT / f"{name}.export.v1.schema.json").read_text())
+        assert list(Draft202012Validator(schema).iter_errors(doc)) == []
+        if name == "incidents":
+            assert len(doc["incidents"]) == len(CORPUS)
+            for record in doc["incidents"]:
+                assert list(FROZEN.iter_errors(record)) == []
+    attached = json.loads((tmp_path / "assets" / "incident.schema.json").read_text())
+    assert attached == FROZEN_SCHEMA
 
-    Optional fields added since adoption are set aside first: a reader pinned to
-    the old schema rejects them by design (ADR-0011), but everything else in the
-    record must be exactly what that reader accepts.
-    """
-    record = validate.load_yaml(path)
-    core = {k: v for k, v in record.items() if k not in EXTENSION_FIELDS}
-    assert list(FROZEN.iter_errors(core)) == []
+
+def test_production_v1_schema_matches_frozen_consumer():
+    assert json.loads((REPO / "schema" / "incident.v1.schema.json").read_text()) == FROZEN_SCHEMA
 
 
 def test_extension_fields_are_all_optional_additions():

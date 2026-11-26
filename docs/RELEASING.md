@@ -64,7 +64,10 @@ cd - && git worktree remove /tmp/release-src
 | asset | content |
 |---|---|
 | `incidents.json`, `scenarios.json`, `seeds.json` | the export contract, rebuilt from `incidents/` at `$SHA` |
-| `incident.schema.json` | `schema/incident.schema.json` at `$SHA` |
+| `incident.schema.json` | Frozen v1 reader schema from `schema/incident.v1.schema.json` |
+| `incidents.v2.json` | Complete enriched records in an explicitly versioned 2.0 envelope |
+| `incident.enriched.schema.json` | Current source-record schema from `schema/incident.schema.json` |
+| `*.export.schema.json` | Matching envelope schema for each of the four JSON exports |
 | `CITATION.cff` | `CITATION.cff` at `$SHA` |
 | `manifest.json` | tag, full commit SHA, record/incident/hazard/scenario/seed counts, schema, taxonomy and export-schema versions, sha256 and size of every other asset |
 | `SHA256SUMS` | `sha256sum -c` checksums of all of the above |
@@ -114,7 +117,7 @@ Structure, top to bottom:
    git diff --name-only --diff-filter=A "$PREV" "$SHA" -- 'incidents/2*.yaml' \
      | while read f; do git show "$SHA:$f" | grep -m1 '^incident_type:'; done | sort | uniq -c
    ```
-4. **Assets** — the three export files, with `scenarios.json` linked to stampede and `seeds.json`
+4. **Assets** — the three compatible v1 export files and the enriched `incidents.v2.json`, with `scenarios.json` linked to stampede and `seeds.json`
    to costbomb, followed by the line *Export entries carry natural-language trigger
    \*shapes\*, never runnable exploit payloads.*
    Then one line naming `manifest.json` and `SHA256SUMS` and how to verify:
@@ -202,6 +205,33 @@ Until step 1 is done, cite by tag and release URL as `CITATION.cff` currently do
 - [ ] Tag follows CalVer and is the next free one
 - [ ] Assets built with `scripts/build_release.py` from a clean checkout of `$SHA`; no drift error; `sha256sum -c SHA256SUMS` passes
 - [ ] Notes follow the structure above; **This snapshot** figures equal the README stats block at `$SHA`
-- [ ] `gh release create … --target "$SHA"` with the full SHA and all seven assets; tag resolves to `$SHA`
+- [ ] `gh release create … --target "$SHA"` with the full SHA and every generated asset; tag resolves to `$SHA`
 - [ ] Downloaded release assets pass `sha256sum -c SHA256SUMS`
 - [ ] `CITATION.cff` `version`, `date-released`, `repository-artifact` (and `doi` once Zenodo is enabled) updated and validated
+
+## Reader contract check
+
+The three original downloads retain `export_schema_version: "1.0"`. Each complete
+v1 envelope and each incident record must validate against the corresponding
+schema from `2026.11.2`, with no key removal by the reader. The exporter performs
+the projection, and validates both the compatible projection and the complete
+v2 records before writing files. The release tests validate the actual built
+bytes against frozen copies of those schemas and check the matching attached
+schema files. Run before release:
+
+```bash
+uv run --with pytest --with pyyaml --with jsonschema pytest -q tests/test_schema_compatibility.py tests/test_release.py
+```
+
+For a pinned release, a consumer may fetch the original file directly:
+
+```bash
+TAG=2026.11.2
+curl -fLO "https://github.com/swarmproof/agent-postmortems/releases/download/$TAG/incidents.json"
+python3 -c 'import json; print(json.load(open("incidents.json"))["count"])'
+```
+
+Replace the tag with the newly verified release for the updated compatible
+corpus. Consumers needing claim evidence and explicit date semantics select
+`incidents.v2.json` and its attached envelope and enriched record schemas.
+Use the manifest and `SHA256SUMS` to identify and verify the downloaded files.

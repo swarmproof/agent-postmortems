@@ -102,7 +102,21 @@ Status meanings:
 
 The validator (G-EVIDENCE) rejects an unresolvable `field_path` and any `source_urls` entry not in `sources[]`. Prose in `claim`, `analyst_note` and `uncertainty` is held to the same neutrality lint as the factual fields.
 
-Both extensions — provenance and date semantics — are optional and additive within v1. [ADR-0011](./adr/0011-optional-provenance-and-date-semantics-in-v1.md) records the compatibility evidence, the export behaviour, and the effect on readers that validate against an older copy of the schema.
+The source YAML and enriched export support these optional fields. The compatible
+`export/incidents.json` download projects records onto the schema published at
+`2026.11.2`, preserved as `schema/incident.v1.schema.json`. Its records omit the
+five extension fields. The exporter retains every source field in
+`export/incidents.v2.json`, whose envelope declares `export_schema_version: "2.0"`.
+This file includes `corpus_as_of` and uses the current `schema/incident.schema.json`
+for its records. The inner record version retains its existing meaning; the
+explicit v2 envelope identifies the enriched representation.
+
+`scenarios.json` and `seeds.json` retain their original v1 envelopes and named
+entry fields. All three v1 envelopes omit `corpus_as_of`; their deterministic
+`generated_at` value is the latest incident date at midnight UTC. The release
+manifest and enriched export expose that same value as `corpus_as_of`.
+[ADR-0012](./adr/0012-compatible-v1-downloads-and-enriched-export.md) specifies
+this producer-side compatibility boundary and supersedes ADR-0011’s export policy.
 
 ## What changed vs. v0
 

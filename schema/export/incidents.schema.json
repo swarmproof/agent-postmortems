@@ -4,17 +4,10 @@
   "title": "agent-postmortems incidents export",
   "type": "object",
   "additionalProperties": false,
-  "required": ["export_schema_version", "generated_at", "corpus_as_of", "taxonomy_version", "count", "incidents"],
+  "required": ["export_schema_version", "generated_at", "taxonomy_version", "count", "incidents"],
   "properties": {
     "export_schema_version": { "type": "string", "const": "1.0" },
-    "generated_at": {
-      "type": "string",
-      "description": "Deterministic: equals corpus_as_of, the newest incident date (YYYY-MM-DDT00:00:00Z); not the build time. Kept under this name for existing consumers of the 1.0 contract."
-    },
-    "corpus_as_of": {
-      "type": "string",
-      "description": "The newest incident `date` in the corpus at build time, as YYYY-MM-DDT00:00:00Z. Identifies the corpus snapshot; it is not the time the file was built."
-    },
+    "generated_at": { "type": "string" },
     "taxonomy_version": { "type": "string" },
     "count": { "type": "integer", "minimum": 0 },
     "incidents": {

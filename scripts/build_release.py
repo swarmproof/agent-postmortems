@@ -6,8 +6,11 @@
 """Build the assets of a corpus release from a clean checkout of its tag.
 
 Writes into --out (default dist/release/):
-  incidents.json, scenarios.json, seeds.json   the export contract, rebuilt from incidents/
-  incident.schema.json                          schema/incident.schema.json, verbatim
+  incidents.json, scenarios.json, seeds.json   compatible v1 exports, rebuilt from incidents/
+  incidents.v2.json                             full enriched records, envelope version 2.0
+  incident.schema.json                          frozen v1 reader schema
+  incident.enriched.schema.json                 current source-record schema
+  *.export.schema.json                          matching envelope schemas
   CITATION.cff                                  verbatim
   manifest.json                                 counts, versions, git commit, per-file sha256
   SHA256SUMS                                    `sha256sum -c` format, covers every file above
@@ -43,7 +46,7 @@ from pathlib import Path
 import yaml
 
 REPO = Path(__file__).resolve().parent.parent
-EXPORT_NAMES = ("incidents", "scenarios", "seeds")
+EXPORT_NAMES = ("incidents", "scenarios", "seeds", "incidents.v2")
 # Paths whose uncommitted edits would make the assets differ from the tag.
 TRACKED_INPUTS = ("incidents", "schema", "scripts", "export", "CITATION.cff")
 
@@ -108,7 +111,10 @@ def build(out: Path, *, epoch: int, tag: str | None = None, check_drift: bool = 
                              "a rebuild; tag the publish-workflow commit (docs/RELEASING.md)")
 
     files: dict[str, bytes] = {f"{n}.json": rendered[n].encode("utf-8") for n in EXPORT_NAMES}
-    files["incident.schema.json"] = (REPO / "schema" / "incident.schema.json").read_bytes()
+    files["incident.schema.json"] = (REPO / "schema" / "incident.v1.schema.json").read_bytes()
+    files["incident.enriched.schema.json"] = (REPO / "schema" / "incident.schema.json").read_bytes()
+    for name in EXPORT_NAMES:
+        files[f"{name}.export.schema.json"] = (REPO / "schema" / "export" / f"{name}.schema.json").read_bytes()
     files["CITATION.cff"] = (REPO / "CITATION.cff").read_bytes()
 
     inc = artifacts["incidents"]
@@ -120,7 +126,8 @@ def build(out: Path, *, epoch: int, tag: str | None = None, check_drift: bool = 
         "source_date_epoch": epoch,
         "built_at": datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
                     .strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "corpus_as_of": inc["corpus_as_of"],
+        "corpus_as_of": artifacts["incidents.v2"]["corpus_as_of"],
+        "enriched_export_schema_version": "2.0",
         "schema_version": schema_versions[0] if len(schema_versions) == 1 else schema_versions,
         "taxonomy_version": inc["taxonomy_version"],
         "export_schema_version": inc["export_schema_version"],

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/swarmproof/agent-postmortems/schema/export/incidents.v2.schema.json",
+  "title": "agent-postmortems enriched incidents export v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "export_schema_version",
+    "generated_at",
+    "taxonomy_version",
+    "count",
+    "incidents",
+    "corpus_as_of"
+  ],
+  "properties": {
+    "export_schema_version": {
+      "type": "string",
+      "const": "2.0"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "taxonomy_version": {
+      "type": "string"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "incidents": {
+      "type": "array",
+      "description": "Full records validated against schema/incident.schema.json, including optional evidence and date semantics.",
+      "items": {
+        "type": "object",
+        "required": [
+          "incident_id",
+          "primary_failure_class"
+        ]
+      }
+    },
+    "corpus_as_of": {
+      "type": "string",
+      "description": "Newest incident date at midnight UTC; independent of file build time."
+    }
+  }
+}

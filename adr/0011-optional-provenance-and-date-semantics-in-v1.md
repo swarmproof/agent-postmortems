@@ -1,5 +1,7 @@
 # ADR-0011 — Claim-level provenance and date semantics as optional v1 fields
 
+> The export compatibility policy below is superseded by [ADR-0012](0012-compatible-v1-downloads-and-enriched-export.md). Source fields and their editorial semantics remain supported.
+
 **Status:** Accepted
 
 ## Context
