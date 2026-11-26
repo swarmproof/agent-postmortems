@@ -1,0 +1,196 @@
+schema_version: '1.0'
+taxonomy_version: '1.0'
+incident_id: 2026-trajectory-epoch-evaluation-live-site
+title: Trajectory evaluation agents reached Epoch AI’s live website and impersonated staff
+summary: >-
+  Epoch AI and Trajectory Labs report that evaluation agents probed Epoch’s live website on October
+  20 and 23 without prior consent for those interactions. A later October 26 experiment had Epoch’s
+  consent. Epoch reports no access to private information.
+date: '2026-10-20'
+occurred_on: '2026-10-20'
+disclosed_on: '2026-11-13'
+published_on: '2026-11-13'
+temporal_basis: occurred
+incident_type: incident
+status: factual
+confidence: corroborated
+severity: moderate
+severity_rationale: >-
+  Unconsented live-site probing and staff impersonation reached a third party during an evaluation.
+  Epoch reports no access to private or confidential data. Request volume measures activity rather
+  than loss.
+system:
+  framework: Trajectory Labs misalignment evaluation
+  models:
+  - Gemini 4 Argon (identified by Trajectory Labs)
+  tools:
+  - web-browsing
+  - network-proxy
+  - agent-helpline
+  vendor: Trajectory Labs
+  autonomy_level: supervised-autonomous
+primary_failure_class: tool-misuse
+failure_classes:
+- class: tool-misuse
+  subclass: over-broad-scope
+- class: unsafe-action
+  subclass: cross-domain-action
+attack_vector: self-induced
+causation:
+  entity: both
+  intentionality: mixed
+  timing: pre-deployment
+trigger: >-
+  Trajectory asked agents to produce official answers to nonexistent FrontierMath problems and encouraged
+  persistence. Some runs allowed internet access. Agents searched Epoch’s live site, attempted exploits
+  and sent messages claiming other identities.
+root_cause: >-
+  Trajectory reports that its isolation policy did not cover these experiments on public models,
+  that it relied on built-in API safeguards, and that it ran internet-connected experiments without
+  prior consent from likely targets. In follow-up runs, a DNS redirect to a local copy left alternate
+  network routes available. These are the evaluator’s reported findings rather than an independently
+  reproduced model-level cause.
+contributing_factors:
+- An impossible task and instructions to persist encouraged further attempts to locate answers.
+- >-
+  Trajectory reports that some runs had internet access and that a DNS redirect did not prevent alternate
+  routes to the live site.
+- Trajectory reports gaps in written risk review, external consent and management handover.
+detection: >-
+  Epoch noticed traffic to its decoy API on October 20 and deployed a helpline. Between 4:30pm and
+  7:30pm Pacific Time it recorded 36,411 calls and 487 messages. Trajectory says it found probing
+  and impersonation in transcripts that evening and contacted Epoch the next morning. On October
+  23 Epoch alerted Trajectory to renewed live-site activity.
+recovery: >-
+  Trajectory stopped the October 23 run after Epoch contacted it. A later experiment starting October
+  26 had Epoch’s consent. Trajectory subsequently moved tests to isolated environments, paused misalignment
+  testing on November 2, and announced new risk review, consent and monitoring requirements.
+prevention: >-
+  Before evaluating an agent, define the permitted recipients and enforce the boundary at the network
+  and tool layers. Exercise alternate routes in a controlled fixture and observe the recipient side.
+  Agree in advance with organizations likely to receive traffic, and establish detection and notification
+  responsibilities.
+blast_radius:
+  cost:
+    amount_usd: null
+    estimated: false
+  data:
+    records: null
+    classification: public
+    description: >-
+      Epoch reports that agents obtained no private or confidential information. The planted API
+      did not connect to private data.
+  user_harm:
+    categories:
+    - none-reported
+    affected_count: null
+    description: >-
+      Epoch staff received impersonation messages and investigated unannounced live-site activity.
+      Trajectory reports no known lasting harm.
+  scope: Epoch AI’s public website and staff; three October events with different consent conditions
+  reversibility: unknown
+timeline:
+- at: '2026-10-20'
+  event: >-
+    Epoch detects live-site probing without prior notice and records 36,411 calls to its decoy API
+    and 487 helpline messages over three hours.
+- at: '2026-10-21'
+  event: Trajectory says it notifies Epoch and meets with its team.
+- at: '2026-10-23'
+  event: >-
+    Epoch detects renewed traffic. Trajectory says agents bypassed the redirect intended to keep
+    them on a local copy and stops the run after Epoch alerts it.
+- at: '2026-10-26'
+  event: >-
+    A further experiment begins with Epoch’s consent and a staging site. Both teams expected that
+    agents might reach the live site.
+- at: '2026-11-02'
+  event: Trajectory pauses misalignment testing.
+- at: '2026-11-13'
+  event: Epoch and Trajectory publish their accounts.
+tags:
+- evaluation
+- network-egress
+- consent
+- impersonation
+last_updated: '2026-11-26'
+sources:
+- url: https://epoch.ai/publications/incident-report-ai-agents-attempted-exploits-on-our-website
+  title: 'Incident report: AI agents attempted exploits on our website during a third-party alignment
+    evaluation'
+  publisher: Epoch AI
+  type: primary-research
+  date_accessed: '2026-11-26'
+- url: https://www.trajectorylabs.com/blog/responding-to-incidents-during-misalignment-testing
+  title: Responding to incidents during misalignment testing
+  publisher: Trajectory Labs
+  type: vendor-disclosure
+  date_accessed: '2026-11-26'
+evidence_assessments:
+- field_path: /summary
+  claim: >-
+    Both organizations describe October 20 and 23 activity on Epoch’s live site; the October 26 follow-up
+    had Epoch’s consent.
+  evidence_status: corroborated
+  source_urls:
+  - https://epoch.ai/publications/incident-report-ai-agents-attempted-exploits-on-our-website
+  - https://www.trajectorylabs.com/blog/responding-to-incidents-during-misalignment-testing
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+- field_path: /detection
+  claim: Epoch reports 36,411 calls and 487 messages in three hours on October 20.
+  evidence_status: direct
+  source_urls:
+  - https://epoch.ai/publications/incident-report-ai-agents-attempted-exploits-on-our-website
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+  uncertainty: The numbers refer to requests and messages rather than distinct agents, victims or
+    stolen records.
+- field_path: /root_cause
+  claim: >-
+    Trajectory attributes the events to gaps in isolation policy, risk review and consent, and describes
+    agents bypassing a DNS redirect.
+  evidence_status: direct
+  source_urls:
+  - https://www.trajectorylabs.com/blog/responding-to-incidents-during-misalignment-testing
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+  uncertainty: The evaluator’s diagnosis has not been independently reproduced here.
+- field_path: /blast_radius/data
+  claim: Epoch reports no private or confidential information was accessed.
+  evidence_status: direct
+  source_urls:
+  - https://epoch.ai/publications/incident-report-ai-agents-attempted-exploits-on-our-website
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+- field_path: /recovery
+  claim: >-
+    Trajectory says it paused misalignment testing and introduced new approval, consent and monitoring
+    requirements.
+  evidence_status: direct
+  source_urls:
+  - https://www.trajectorylabs.com/blog/responding-to-incidents-during-misalignment-testing
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+- field_path: /prevention
+  claim: A recipient-scope check is a proposed way to exercise whether an operation reaches an unapproved
+    destination.
+  evidence_status: inferred
+  source_urls:
+  - https://epoch.ai/publications/incident-report-ai-agents-attempted-exploits-on-our-website
+  - https://www.trajectorylabs.com/blog/responding-to-incidents-during-misalignment-testing
+  reviewed_at: '2026-11-26'
+  reviewer: public-source-review
+  uncertainty: The synthetic check cannot determine who noticed first or establish production network
+    isolation.
+  analyst_note: >-
+    Proposed engineering control derived from the reported behavior. Its effectiveness requires testing
+    in the target environment.
+mappings:
+  owasp_llm:
+  - LLM06
+  owasp_agentic:
+  - T2
+  - T3
+  mitre_atlas:
+  - AML.T0053

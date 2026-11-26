@@ -6,12 +6,16 @@
 """Corpus validator — the CI gatekeeper for agent-postmortems.
 
 Gates:
-  G-SCHEMA   record matches schema/incident.schema.json
+  G-SCHEMA   record matches schema/incident.schema.json; source url/archive_url are http(s)
   G-TAX      classes/subclasses exist in schema/taxonomy.yaml at a known version;
              failure_classes[0] == primary_failure_class; 'other' requires tags
   G-ID       incident_id unique across corpus + filename == incident_id
   G-NEUTRAL  no blame adjectives in factual fields
   G-DRIFT    SCHEMA.md field table lists exactly the JSON Schema's top-level properties
+  G-EVIDENCE evidence_assessments[] point at values that exist in the record and
+             cite only URLs listed in the record's own sources[]
+  G-DATES    occurred_on <= disclosed_on <= published_on, and the field named by
+             temporal_basis, when present, equals the legacy `date`
 
 Usage:
   uv run scripts/validate.py               # validate the whole corpus, all gates
@@ -24,6 +28,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
@@ -76,6 +81,29 @@ def gate_schema(record: dict, validator: Draft202012Validator) -> list[str]:
     ]
 
 
+def gate_source_urls(record: dict) -> list[str]:
+    """sources[].url and archive_url must be web links: http(s) with a host and no userinfo.
+    `format: uri` alone admits javascript:, data:, file: and similar schemes, and a
+    userinfo prefix (https://trusted.example@other.example/) disguises the real host."""
+    errors = []
+    for i, src in enumerate(record.get("sources") or []):
+        if not isinstance(src, dict):
+            continue  # shape errors are reported by G-SCHEMA
+        for key in ("url", "archive_url"):
+            value = src.get(key)
+            if value is None:
+                continue
+            try:
+                parts = urlsplit(value) if isinstance(value, str) else None
+            except ValueError:
+                parts = None
+            if not parts or parts.scheme.lower() not in ("http", "https") or not parts.hostname:
+                errors.append(f"G-SCHEMA: sources/{i}/{key}: {value!r} is not an http(s) URL with a host")
+            elif "@" in parts.netloc:
+                errors.append(f"G-SCHEMA: sources/{i}/{key}: {value!r} contains userinfo ('@' before the host)")
+    return errors
+
+
 def gate_taxonomy(record: dict, tax_version: str, classes: dict[str, set[str]]) -> list[str]:
     errors = []
     rec_tax = record.get("taxonomy_version")
@@ -116,10 +144,85 @@ def gate_neutrality(record: dict) -> list[str]:
     errors = []
     texts = [(f, record.get(f) or "") for f in FACTUAL_FIELDS]
     texts += [("contributing_factors", " ".join(record.get("contributing_factors") or []))]
+    for i, item in enumerate(record.get("evidence_assessments") or []):
+        if isinstance(item, dict):
+            for key in ("claim", "analyst_note", "uncertainty"):
+                if isinstance(item.get(key), str):
+                    texts.append((f"evidence_assessments[{i}].{key}", item[key]))
     for field, text in texts:
         for adj in BANNED_ADJECTIVES:
             if re.search(rf"\b{re.escape(adj)}\b", text, re.IGNORECASE):
                 errors.append(f"G-NEUTRAL: banned adjective '{adj}' in '{field}'")
+    return errors
+
+
+_MISSING = object()
+
+
+def resolve_pointer(doc, pointer: str):
+    """Resolve an RFC 6901 JSON Pointer against doc; return _MISSING if it does not resolve."""
+    if pointer == "":
+        return doc
+    if not pointer.startswith("/"):
+        return _MISSING
+    node = doc
+    for raw in pointer[1:].split("/"):
+        token = raw.replace("~1", "/").replace("~0", "~")
+        if isinstance(node, dict):
+            if token not in node:
+                return _MISSING
+            node = node[token]
+        elif isinstance(node, list):
+            if not re.fullmatch(r"0|[1-9][0-9]*", token) or int(token) >= len(node):
+                return _MISSING
+            node = node[int(token)]
+        else:
+            return _MISSING
+    return node
+
+
+def gate_evidence(record: dict) -> list[str]:
+    """Each evidence assessment must point at a real value and cite only the record's own sources."""
+    errors = []
+    assessments = record.get("evidence_assessments")
+    if not isinstance(assessments, list):
+        return errors
+    known = {s.get("url") for s in record.get("sources") or [] if isinstance(s, dict)}
+    for i, item in enumerate(assessments):
+        if not isinstance(item, dict):
+            continue  # shape errors are reported by G-SCHEMA
+        path = item.get("field_path")
+        if isinstance(path, str):
+            if path == "/evidence_assessments" or path.startswith("/evidence_assessments/"):
+                errors.append(f"G-EVIDENCE: evidence_assessments[{i}]: field_path '{path}' must not point into evidence_assessments")
+            elif resolve_pointer(record, path) is _MISSING:
+                errors.append(f"G-EVIDENCE: evidence_assessments[{i}]: field_path '{path}' does not resolve in this record")
+        for url in item.get("source_urls") or []:
+            if url not in known:
+                errors.append(f"G-EVIDENCE: evidence_assessments[{i}]: source_url '{url}' is not one of this record's sources[].url")
+    return errors
+
+
+DATE_FIELDS = ("occurred_on", "disclosed_on", "published_on")  # chronological order
+_FULL_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+
+
+def gate_dates(record: dict) -> list[str]:
+    """Optional date-semantics fields must be in order and agree with `date` via temporal_basis."""
+    errors = []
+    dates = {f: record[f] for f in DATE_FIELDS
+             if isinstance(record.get(f), str) and _FULL_DATE.fullmatch(record[f])}
+    present = [f for f in DATE_FIELDS if f in dates]
+    for earlier, later in zip(present, present[1:]):
+        if dates[earlier] > dates[later]:
+            errors.append(f"G-DATES: {earlier} '{dates[earlier]}' is after {later} '{dates[later]}'")
+    basis = record.get("temporal_basis")
+    field = f"{basis}_on" if basis in ("occurred", "disclosed", "published") else None
+    if field in dates and dates[field] != record.get("date"):
+        errors.append(
+            f"G-DATES: temporal_basis '{basis}' means date should equal {field}, "
+            f"but date is '{record.get('date')}' and {field} is '{dates[field]}'"
+        )
     return errors
 
 
@@ -148,9 +251,12 @@ def validate_file(path: Path, validator, tax_version, classes, seen) -> list[str
     if not isinstance(record, dict):
         return ["G-SCHEMA: record is not a mapping"]
     errors = gate_schema(record, validator)
+    errors += gate_source_urls(record)
     errors += gate_taxonomy(record, tax_version, classes)
     errors += gate_id(record, path, seen)
     errors += gate_neutrality(record)
+    errors += gate_evidence(record)
+    errors += gate_dates(record)
     return errors
 
 

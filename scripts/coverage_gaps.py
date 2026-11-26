@@ -28,6 +28,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import datetime
+import email.utils
 import re
 import sys
 from pathlib import Path
@@ -36,6 +38,9 @@ import yaml
 
 # Reuse the discovery helpers (same directory is on sys.path when run directly).
 from discover_incidents import fetch, load_corpus, parse_rss_items, score, tokenize, url_key
+import issue_markdown as md
+
+CVE_ID = re.compile(r"CVE-\d{4}-\d{4,}")
 
 SOURCES_FILE = Path(__file__).resolve().parent / "discovery_sources.yaml"
 CVE_RE = re.compile(r"CVE-\d{4}-\d+", re.IGNORECASE)
@@ -79,6 +84,17 @@ def covered(entry: dict, cited_urls: set, corpus_titles: list[set], cited_cves: 
     return any(len(toks & t) >= 4 for t in corpus_titles)
 
 
+def feed_date(value: str) -> str:
+    """Normalize an ISO or RFC 822 feed timestamp to its stated calendar date."""
+    try:
+        return datetime.datetime.fromisoformat(value.replace("Z", "+00:00")).date().isoformat()
+    except (ValueError, TypeError):
+        try:
+            return email.utils.parsedate_to_datetime(value).date().isoformat()
+        except (ValueError, TypeError, AttributeError):
+            return ""
+
+
 def find_gaps(limit: int) -> tuple[list[dict], int]:
     cfg = yaml.safe_load(SOURCES_FILE.read_text())
     cov = cfg.get("coverage_sources", {}) or {}
@@ -99,7 +115,7 @@ def find_gaps(limit: int) -> tuple[list[dict], int]:
             if score(it, rss_keywords) == 0:        # must match an agent-identity term
                 continue
             entries.append({
-                "title": it["title"], "date": (it.get("date") or "")[:10],
+                "title": it["title"], "date": feed_date(it.get("date") or ""),
                 "url": it["url"], "cves": sorted({c.upper() for c in CVE_RE.findall(it.get("summary", ""))}),
                 "ref": "aiid",
             })
@@ -119,18 +135,21 @@ def find_gaps(limit: int) -> tuple[list[dict], int]:
 
 
 def emit_markdown(gaps: list[dict], total: int) -> str:
+    # Dates, titles and URLs come from third-party lists and land in a public
+    # issue: render them through issue_markdown, never raw.
     if not gaps:
         return "_No new candidate incidents to review this week._\n"
-    lines = [f"**{total}** candidate incident(s) to review for the corpus "
-             f"(showing newest {len(gaps)}). Each is a candidate to draft from "
-             "`incidents/_TEMPLATE.yaml`; some may be surveys or reports rather than "
-             "incidents — triage before drafting.\n"]
+    header = (f"**{total}** candidate incident(s) to review for the corpus "
+              f"(showing newest {len(gaps)}). Each is a candidate to draft from "
+              "`incidents/_TEMPLATE.yaml`; some may be surveys or reports rather than "
+              "incidents — triage before drafting.\n")
+    lines = []
     for g in gaps:
-        cves = (" · " + ", ".join(sorted(g["cves"]))) if g["cves"] else ""
-        title = f"[{g['title']}]({g['url']})" if g.get("url") else g["title"]
-        lines.append(f"- [ ] **{g['date']}** — {title}{cves}")
-    return "\n".join(lines) + "\n"
-
+        cves = sorted(c for c in g["cves"] if CVE_ID.fullmatch(c))
+        cve_txt = (" · " + ", ".join(cves)) if cves else ""
+        url = f" {md.link(g['url'])}" if g.get("url") else ""
+        lines.append(f"- [ ] {md.code(g['date'], 32)} — {md.code(g['title'])}{url}{cve_txt}")
+    return md.cap(header, lines)
 
 def main() -> int:
     ap = argparse.ArgumentParser()

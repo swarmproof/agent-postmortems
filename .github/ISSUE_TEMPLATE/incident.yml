@@ -1,64 +1,110 @@
-name: Submit an incident
-description: Report an AI-agent failure or demonstrated hazard for the corpus. Public sources required.
-title: "[incident] "
-labels: ["candidates"]
+name: Report an agent failure
+description: Tell us about an AI-agent failure or a demonstrated hazard. No YAML needed. A public source is required.
+title: "[report] "
+labels: ["submission", "needs-review"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting. Every record in this corpus needs at least one **public, linkable source**: no rumours, no private accounts, no speculation about intent. A maintainer or contributor will turn an accepted candidate into an `incidents/<incident_id>.yaml` record. If you would rather write the record yourself, copy `incidents/_TEMPLATE.yaml` and open a pull request instead.
+        Thanks for reporting. You do not need to know the record format. A maintainer reads your report, checks every source, and writes the record.
 
-        To dispute or correct an existing record, do not use this form. See [DISPUTES.md](https://github.com/swarmproof/agent-postmortems/blob/main/DISPUTES.md).
-  - type: input
-    id: title
-    attributes:
-      label: Title of the failure
-      description: One line, factual, naming the system. No blame adjectives.
-      placeholder: "Replit AI agent deleted a production database during a declared code freeze"
-    validations:
-      required: true
+        **How this works**
+        - Every record needs at least one **public, linkable source**: a researcher writeup, a vendor disclosure or postmortem, a court or regulator filing, or news coverage. Private accounts, rumours and speculation about intent cannot be used.
+        - **A human maintainer reviews every report. Nothing is published automatically.** A report may be reworded to the project's neutral, blameless style, merged with an existing record, or declined with a reason.
+        - Accepted reports become records under `incidents/`, published under [CC-BY-4.0](https://github.com/swarmproof/agent-postmortems/blob/main/LICENSE-DATA).
+
+        **Privacy: this issue is public.** Do not include personal data about anyone, credentials or secrets, private logs or screenshots, or information that has not already been published. Describe an attack as a *shape* ("a hidden instruction in a fetched web page"), never as a payload: no exploit strings, injection text or runnable code.
+
+        **Other routes**
+        - To correct or dispute an existing record, follow [DISPUTES.md](https://github.com/swarmproof/agent-postmortems/blob/main/DISPUTES.md) instead.
+        - To report a vulnerability in this repository's tooling, or a record that exposes a payload or personal data, follow [SECURITY.md](https://github.com/swarmproof/agent-postmortems/blob/main/SECURITY.md) instead.
+        - Comfortable with YAML? Copy [`incidents/_TEMPLATE.yaml`](https://github.com/swarmproof/agent-postmortems/blob/main/incidents/_TEMPLATE.yaml) and open a pull request, as described in [CONTRIBUTING.md](https://github.com/swarmproof/agent-postmortems/blob/main/CONTRIBUTING.md).
   - type: textarea
     id: sources
     attributes:
-      label: Public source(s)
-      description: One URL per line. Prefer the strongest available type, such as the researcher writeup, the vendor disclosure, or a court or regulatory record, over news coverage.
+      label: Public source URL(s)
+      description: One URL per line, strongest first. A firsthand writeup, vendor disclosure, or court or regulatory record is preferred over news coverage. Add a second, independent source if you know one.
       placeholder: |
         https://
         https://
     validations:
       required: true
-  - type: input
-    id: date
-    attributes:
-      label: Date
-      description: When the failure happened or was disclosed, as YYYY-MM-DD. Approximate is fine; say so.
-      placeholder: "2025-07-18"
-    validations:
-      required: false
-  - type: dropdown
-    id: incident_type
-    attributes:
-      label: Realized incident or demonstrated hazard?
-      description: "`incident` is realized harm in the wild. `hazard` is a researcher proof-of-concept or a near-miss caught before exploitation. Both are recorded; label honestly."
-      options:
-        - incident (realized harm in the wild)
-        - hazard (proof-of-concept or near-miss)
-        - not sure
-    validations:
-      required: true
   - type: textarea
     id: what_happened
     attributes:
-      label: What the agent did
-      description: In plain language, what the agent did, what set it off, and what the impact was. Describe the trigger as a shape ("a hidden instruction in a fetched web page"), not as a payload. Do not paste exploit strings, injection text, or runnable code. Records store natural-language trigger shapes only, and the export build rejects anything that looks like a payload.
+      label: What happened
+      description: In plain, neutral language, what the agent did, what set it off, and what was observed. Stick to what the sources say. Name systems, not people, and avoid blame words.
       placeholder: "The agent was asked to summarise a GitHub issue. The issue body contained an instruction to read a private repository and post its contents in a comment, which the agent followed."
     validations:
       required: true
   - type: input
+    id: system
+    attributes:
+      label: Product or system involved
+      description: The agent, product, framework, model or tool named in the sources, for example "Claude Code", "a custom LangGraph agent with a Stripe tool", or "unknown".
+      placeholder: "Replit Agent"
+    validations:
+      required: true
+  - type: dropdown
+    id: incident_type
+    attributes:
+      label: Realized incident or demonstrated hazard?
+      description: |
+        **Realized incident**: the failure happened in real use, outside a test, and caused or exposed real consequences.
+        **Demonstrated hazard**: someone showed it *could* happen, such as a researcher proof of concept, a red-team or lab evaluation, or a near miss caught before harm. Both are recorded, labelled differently.
+      options:
+        - Realized incident (it happened in real use)
+        - Demonstrated hazard (proof of concept, evaluation, or near miss)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Reported impact (optional)
+      description: What the sources say the consequences were, such as data exposed, money lost, or actions taken, and what is still unknown. Mark estimates as estimates.
+    validations:
+      required: false
+  - type: input
+    id: date
+    attributes:
+      label: Date (optional)
+      description: YYYY-MM-DD if known. Approximate is fine; say so.
+      placeholder: "2025-07-18"
+    validations:
+      required: false
+  - type: dropdown
+    id: date_basis
+    attributes:
+      label: What does that date refer to? (optional)
+      options:
+        - When the failure occurred
+        - When it was first publicly disclosed
+        - The publication date of the source I linked
+        - Not sure
+    validations:
+      required: false
+  - type: input
     id: cve
     attributes:
       label: Known CVE (optional)
-      description: If the failure has a CVE identifier, list it here, for example CVE-2025-12345. Leave blank if none.
+      description: If the failure has a CVE identifier, list it, for example CVE-2025-12345.
       placeholder: "CVE-"
     validations:
       required: false
+  - type: input
+    id: credit
+    attributes:
+      label: Credit (optional)
+      description: A name or handle to record as the submitter if the report is accepted. Leave blank for no credit.
+    validations:
+      required: false
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Before you submit
+      options:
+        - label: This report contains only information that is already public. It includes no personal data, credentials or secrets, private logs, or exploit payloads.
+          required: true
+        - label: I understand that a human maintainer reviews every report against its sources, that nothing is published automatically, and that the report may be reworded, merged with an existing record, or declined.
+          required: true

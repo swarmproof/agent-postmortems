@@ -5,9 +5,10 @@
 # ///
 """Build the machine-readable export contract from incidents/*.yaml.
 
-Produces three artifacts, each versioned and validated
+Produces four artifacts, each versioned and validated
 against schema/export/*.schema.json:
-  export/incidents.json  full corpus (researcher dataset)          — REQ-A1
+  export/incidents.json  compatible v1 projection          — REQ-A1
+  export/incidents.v2.json  enriched corpus (export envelope 2.0)
   export/scenarios.json  stampede replayable-chaos contract         — REQ-A2
   export/seeds.json      costbomb denial-of-wallet fuzz contract    — REQ-A3
 
@@ -36,6 +37,8 @@ INCIDENTS_DIR = REPO / "incidents"
 EXPORT_DIR = REPO / "export"
 EXPORT_SCHEMA_DIR = REPO / "schema" / "export"
 EXPORT_SCHEMA_VERSION = "1.0"
+V1_RECORD_SCHEMA = json.loads((REPO / "schema" / "incident.v1.schema.json").read_text())
+LIVE_RECORD_SCHEMA = json.loads((REPO / "schema" / "incident.schema.json").read_text())
 
 # Cost/loop classes that qualify an incident for the costbomb seed contract (TS-24).
 COST_CLASSES = {"cost-blowup", "runaway-loop", "double-side-effect"}
@@ -80,8 +83,22 @@ def taxonomy_version(incidents: list[dict]) -> str:
 
 
 def build_incidents(incidents, tax_v, stamp) -> dict:
+    """Project records at the producer boundary for pinned v1 readers."""
+    extension_fields = set(LIVE_RECORD_SCHEMA["properties"]) - set(V1_RECORD_SCHEMA["properties"])
+    records = [{key: value for key, value in rec.items() if key not in extension_fields}
+               for rec in incidents]
     return {
         "export_schema_version": EXPORT_SCHEMA_VERSION,
+        "generated_at": stamp,
+        "taxonomy_version": tax_v,
+        "count": len(incidents),
+        "incidents": records,
+    }
+
+
+def build_enriched_incidents(incidents, tax_v, stamp) -> dict:
+    return {
+        "export_schema_version": "2.0",
         "generated_at": stamp,
         "corpus_as_of": stamp,
         "taxonomy_version": tax_v,
@@ -118,7 +135,6 @@ def build_scenarios(incidents, tax_v, stamp) -> dict:
     return {
         "export_schema_version": EXPORT_SCHEMA_VERSION,
         "generated_at": stamp,
-        "corpus_as_of": stamp,
         "taxonomy_version": tax_v,
         "count": len(scenarios),
         "scenarios": scenarios,
@@ -155,7 +171,6 @@ def build_seeds(incidents, tax_v, stamp) -> dict:
     return {
         "export_schema_version": EXPORT_SCHEMA_VERSION,
         "generated_at": stamp,
-        "corpus_as_of": stamp,
         "taxonomy_version": tax_v,
         "count": len(seeds),
         "seeds": seeds,
@@ -165,6 +180,11 @@ def build_seeds(incidents, tax_v, stamp) -> dict:
 def validate(name: str, doc: dict) -> None:
     schema = json.loads((EXPORT_SCHEMA_DIR / f"{name}.schema.json").read_text())
     errors = list(Draft202012Validator(schema).iter_errors(doc))
+    if name in ("incidents", "incidents.v2"):
+        record_schema = V1_RECORD_SCHEMA if name == "incidents" else LIVE_RECORD_SCHEMA
+        validator = Draft202012Validator(record_schema)
+        for record in doc["incidents"]:
+            errors.extend(validator.iter_errors(record))
     if errors:
         for e in errors:
             print(f"  export {name}: {'/'.join(str(p) for p in e.absolute_path)}: {e.message}")
@@ -178,28 +198,41 @@ def stable_json(doc: dict) -> str:
     return json.dumps(clone, indent=2, ensure_ascii=False, sort_keys=False)
 
 
-def main() -> int:
-    check = "--check" in sys.argv
+def build_artifacts() -> dict[str, dict]:
+    """Build and schema-validate compatible and enriched exports in memory."""
     incidents = load_incidents()
     tax_v = taxonomy_version(incidents)
     # Deterministic stamp: the newest incident `date` at midnight UTC, NOT the
-    # wall-clock build time, so --check compares equal across machines and runs.
-    # It is written as both `corpus_as_of` (the honest name) and `generated_at`
-    # (kept for the consumers of the 1.0 export contract, ADR-0006).
+    # wall-clock build time, so output is a pure function of the corpus and a
+    # rebuild from any checkout is byte-identical (release reproducibility).
+    # The v1 envelope retains generated_at. Only v2 adds corpus_as_of.
     stamp = max((r["date"] for r in incidents), default="") + "T00:00:00Z"
 
     artifacts = {
         "incidents": build_incidents(incidents, tax_v, stamp),
+        "incidents.v2": build_enriched_incidents(incidents, tax_v, stamp),
         "scenarios": build_scenarios(incidents, tax_v, stamp),
         "seeds": build_seeds(incidents, tax_v, stamp),
     }
+    for name, doc in artifacts.items():
+        validate(name, doc)
+    return artifacts
+
+
+def render(doc: dict) -> str:
+    """The exact bytes written to export/<name>.json."""
+    return json.dumps(doc, indent=2, ensure_ascii=False) + "\n"
+
+
+def main() -> int:
+    check = "--check" in sys.argv
+    artifacts = build_artifacts()
 
     EXPORT_DIR.mkdir(exist_ok=True)
     stale = 0
     for name, doc in artifacts.items():
-        validate(name, doc)
         path = EXPORT_DIR / f"{name}.json"
-        rendered = json.dumps(doc, indent=2, ensure_ascii=False) + "\n"
+        rendered = render(doc)
         if check:
             existing = path.read_text() if path.exists() else ""
             if stable_json(json.loads(existing)) != stable_json(doc) if existing else True:

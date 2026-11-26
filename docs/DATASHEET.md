@@ -12,16 +12,18 @@ the live export is `https://raw.githubusercontent.com/swarmproof/agent-postmorte
 ## Motivation
 
 **Why was the dataset created?** AI agents take real actions (tool calls, code
-execution, payments, browsing, messaging) and fail in novel but repeating ways, and there
-was no shared, structured, machine-validated record of those failures. The corpus is that
-record: one schema ([`SCHEMA.md`](../SCHEMA.md)), one versioned failure taxonomy
-([`TAXONOMY.md`](../TAXONOMY.md)), and sourced records that conform to both, so failures
-can be compared, counted, cited, and replayed as test scenarios.
+execution, payments, browsing, messaging) and fail in novel but repeating ways. Broader
+AI incident databases cover AI harms of every kind; this corpus is scoped to failures in
+which an agent took or recommended an action, covering both realized incidents and
+demonstrated hazards, recorded against one schema ([`SCHEMA.md`](../SCHEMA.md)) and one
+versioned failure taxonomy ([`TAXONOMY.md`](../TAXONOMY.md)) and validated by machine, so
+records can be compared, counted and cited, and exported as scenario hints for testing
+tools.
 
 **Who created it, and who funded it?** Created and maintained by the Swarm Proof
 toolkit maintainer (see [`CITATION.cff`](../CITATION.cff)) as an unfunded open-source
 project. Contributors are credited in git history; the schema's `submitted_by` field is
-unused on all 180 records, so authorship is not recoverable per record from the data.
+not set on any record, so authorship is not recoverable per record from the data.
 
 ## Composition
 
@@ -208,7 +210,7 @@ including a historical backlog reaching to 2023.
 
 ## Preprocessing and validation
 
-Records are validated, not transformed. The gates in `.github/workflows/validate.yml`
+Source records are validated before exports are projected. The gates in `.github/workflows/validate.yml`
 run on every pull request and on `main`:
 
 - `scripts/validate.py`: JSON Schema conformance (`schema/incident.schema.json`,
@@ -222,23 +224,32 @@ run on every pull request and on `main`:
 - `scripts/check_links.py`: every `sources[].url` must be reachable; a pull request checks
   only the records it changes. On `main` the daily publish workflow also backfills
   `archive_url` with Wayback snapshots.
-- `scripts/build_exports.py`: the three exports build and validate against
+- `scripts/build_exports.py`: the four exports build and validate against
   `schema/export/*.schema.json`; a payload lint refuses scenario or seed shapes that look
   like exploit code.
 - `scripts/build_site.py`: the static site builds from every record.
 
-The exports are projections, not new data: `incidents.json` is the full validated
-corpus; `scenarios.json` keeps records with a `stampede_scenario_hint`; `seeds.json` keeps
-records with a cost dimension (a cost-related failure class or a dollar figure). Their
-`generated_at` and `corpus_as_of` fields both equal the newest incident `date`, so a
-rebuild of the same corpus is byte-identical; neither is a build time.
+The v1 download `incidents.json` contains all records projected onto the frozen
+`2026.11.2` record schema, preserving compatibility with pinned consumers. Its
+records omit the five optional provenance and date extensions. The enriched
+`incidents.v2.json` contains every source-record field, including those extensions,
+and declares envelope version `2.0`. Both contain the same stable incident IDs.
+`scenarios.json` keeps records with a `stampede_scenario_hint`; `seeds.json` keeps
+records with a cost dimension (a cost-related failure class or a dollar figure).
+
+All four exports have a deterministic `generated_at` value equal to the newest
+incident date at midnight UTC. The three v1 envelopes omit `corpus_as_of`.
+The enriched export and release manifest expose the same snapshot timestamp as
+`corpus_as_of`. These timestamps describe corpus coverage. The manifest separately
+records the reproducible build time. See [ADR-0012](../adr/0012-compatible-v1-downloads-and-enriched-export.md)
+for the consumer boundary and [SCHEMA.md](../SCHEMA.md) for field semantics.
 
 ## Uses
 
 **What has it been used for?** The site at https://swarmproof.github.io/agent-postmortems/
 (filterable index, per-record permalinks with BibTeX, RSS) and the machine-readable exports
 consumed by sibling tools: `scenarios.json` by
-[stampede](https://github.com/swarmproof/stampede) for replayable chaos scenarios and
+[stampede](https://github.com/swarmproof/stampede) as natural-language chaos-scenario hints and
 `seeds.json` by [costbomb](https://github.com/swarmproof/costbomb) for denial-of-wallet
 fuzzing (ADR-0006).
 
@@ -277,10 +288,11 @@ deliberately non-executable, and records are descriptions of failures, not explo
 
 - **Repository:** https://github.com/swarmproof/agent-postmortems (`incidents/*.yaml`
   is the source of truth).
-- **Always-latest export:** `https://raw.githubusercontent.com/swarmproof/agent-postmortems/main/export/{incidents,scenarios,seeds}.json`,
+- **Always-latest export:** `https://raw.githubusercontent.com/swarmproof/agent-postmortems/main/export/{incidents,incidents.v2,scenarios,seeds}.json`,
   regenerated on every merge to `main` and daily.
 - **Versioned snapshots:** GitHub Releases under CalVer tags (`2026.10`, `2026.11`,
-  `2026.11.1`, `2026.11.2`), each with the three export files as assets; procedure in
+  `2026.11.1`, `2026.11.2`), with their original export assets. New snapshots also
+  include the enriched `incidents.v2.json` and matching reader schemas; procedure in
   [`docs/RELEASING.md`](./RELEASING.md).
 - **Site:** https://swarmproof.github.io/agent-postmortems/ with RSS and per-record
   BibTeX.
@@ -302,12 +314,13 @@ deliberately non-executable, and records are descriptions of failures, not explo
   Exports, README statistics and archive snapshots refresh daily at 07:00 UTC and on every
   qualifying push to `main`. Versioned snapshots are released on a CalVer cadence.
 - **Corrections and disputes.** A sourced record is never deleted (ADR-0008). If a vendor
-  or other party contests the facts, the record is downgraded to
-  `confidence: disputed`, their reply is added as a `vendor-response` source, and the
-  dispute becomes part of the record. The process is described in
+  or other party contests the facts, their public reply is added as a `vendor-response`
+  source; an error the source establishes is corrected, and where the sources genuinely
+  conflict the record is set to `confidence: disputed` and carries both accounts. The process is described in
   [`DISPUTES.md`](../DISPUTES.md).
 - **Versioning.** Records carry `schema_version: "1.0"` and `taxonomy_version: "1.0"`;
-  the exports carry `export_schema_version: "1.0"`. Breaking changes to any of these are
+  the three original export filenames carry `export_schema_version: "1.0"`. The
+  enriched `incidents.v2.json` carries `export_schema_version: "2.0"`. Breaking changes to any of these are
   recorded in `adr/` and bump the respective version; older releases remain available
   under their tags.
 - **Contributing.** See [`CONTRIBUTING.md`](../CONTRIBUTING.md) and

@@ -8,10 +8,10 @@
 Liveness policy:
   2xx/3xx                       -> ok
   403/405/429                   -> warn (bot-blocked or rate-limited; reachable to humans)
-  404/410, other 4xx/5xx        -> FAIL (the host answered: the page is gone), UNLESS the
+  404/410, other definitive 4xx -> FAIL, UNLESS the
                                    source carries a reachable archive_url, in which case the
                                    citation survives via Wayback -> warn.
-  timeout / connection error    -> "unreachable": no answer, so not evidence the page is gone.
+  5xx / timeout / connection error -> "unreachable": transient failure, not evidence of removal.
                                    warn if the source carries an archive_url (whether or not
                                    Wayback itself answered just now); FAIL only when there is
                                    no archive on file, i.e. nothing else vouches for the cite.
@@ -43,7 +43,7 @@ UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit
 RETRIES = 2
 # "Reachable but refusing this client" — anti-bot / auth responses, not dead links.
 # These warn (verify manually) rather than fail; only 404/410, other 4xx, 5xx and
-# DNS/connection errors block the link gate.
+# DNS/connection errors without an archive block the link gate.
 WARN_CODES = {401, 403, 405, 406, 429, 451}
 
 
@@ -54,7 +54,7 @@ def probe(url: str) -> tuple[str, str]:
     (timeout, DNS, reset) after retries, which is a transient-or-dead ambiguity.
     """
     last = ""
-    answered = False
+    verdict = "unreachable"
     for attempt in range(RETRIES + 1):
         try:
             resp = requests.head(url, headers=UA, timeout=15, allow_redirects=True)
@@ -62,17 +62,18 @@ def probe(url: str) -> tuple[str, str]:
                 resp = requests.get(url, headers=UA, timeout=20, allow_redirects=True, stream=True)
                 resp.close()
             code = resp.status_code
-            answered = True
             if code < 400:
                 return "ok", str(code)
             if code in WARN_CODES:
                 return "warn", f"{code} (likely bot-block; verify manually)"
             last = f"HTTP {code}"
+            verdict = "unreachable" if code >= 500 else "fail"
         except requests.RequestException as exc:
             last = type(exc).__name__
+            verdict = "unreachable"
         if attempt < RETRIES:
-            time.sleep(2 * (attempt + 1))
-    return ("fail" if answered else "unreachable"), last
+            time.sleep(5 * (attempt + 1))
+    return verdict, last
 
 
 def wayback_lookup(url: str) -> str | None:
@@ -130,7 +131,8 @@ def main() -> int:
             # rather than blocking the gate.
             has_archive = isinstance(src, dict) and bool(src.get("archive_url"))
             if verdict == "fail" and has_archive:
-                arc_verdict, _ = probe(src["archive_url"])
+                arc_verdict, arc_detail = probe(src["archive_url"])
+                detail += f"; archive {arc_verdict}: {arc_detail}"
                 if arc_verdict != "fail":
                     verdict, detail = "warn", f"{detail}; primary dead, archive live"
             # No answer is not evidence of death. With an archive on file the citation

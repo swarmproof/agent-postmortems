@@ -8,6 +8,7 @@ summary: >-
   that overwrote and destroyed nearly all of a user's files during a
   vibe-coding session. Recovery attempts failed.
 date: "2025-07-21"
+last_updated: "2026-11-19"
 incident_type: incident
 status: factual
 confidence: corroborated
@@ -87,12 +88,11 @@ machine_export:
     operations.
 
 sources:
-  - url: "https://github.com/google-gemini/gemini-cli/issues/15821"
-    title: "Gemini CLI destructive file operation report (issue #15821)"
+  - url: "https://github.com/google-gemini/gemini-cli/issues/4586"
+    title: "Gemini CLI 'lost' files during a failed file move operation. [Windows] (issue #4586)"
     publisher: google-gemini/gemini-cli (GitHub)
     type: social-primary
-    date_accessed: "2026-07-14"
-    archive_url: "https://web.archive.org/web/20260714183708/https://github.com/google-gemini/gemini-cli/issues/15821"
+    date_accessed: "2026-11-19"
   - url: "https://incidentdatabase.ai/cite/1178/"
     title: "Incident 1178: Google Gemini CLI File Deletion"
     publisher: AI Incident Database
