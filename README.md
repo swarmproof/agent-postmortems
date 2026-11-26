@@ -108,7 +108,7 @@ data = json.load(urllib.request.urlopen(URL))
 print(data["count"], [r["incident_id"] for r in data["incidents"] if r["primary_failure_class"] == "prompt-injection"][:3])
 ```
 
-**Releases:** versioned snapshots of the three feeds (`incidents.json`, `scenarios.json`, `seeds.json`) are attached to tagged [GitHub releases](https://github.com/swarmproof/agent-postmortems/releases), so a downstream consumer can pin a tag instead of tracking `main`.
+**Releases:** tagged snapshots include the compatible v1 feeds (`incidents.json`, `scenarios.json`, `seeds.json`) and `incidents.v2.json`, which preserves all source-record fields including claim evidence and explicit date semantics. The enriched envelope declares version `2.0`. Release assets include matching record and envelope schemas, a manifest and checksums. Pin a [GitHub release](https://github.com/swarmproof/agent-postmortems/releases) for reproducible use.
 
 Two more feeds project the corpus for downstream tooling — `scenarios.json` (natural-language scenario hints, each a trigger shape, an expected failure and success criteria, for [stampede](https://github.com/swarmproof/stampede)) and `seeds.json` (denial-of-wallet seeds for [costbomb](https://github.com/swarmproof/costbomb)). Export entries carry natural-language trigger *shapes*, never runnable exploit payloads.
 
