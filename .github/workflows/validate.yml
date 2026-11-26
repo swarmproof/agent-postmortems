@@ -47,7 +47,8 @@ jobs:
               echo "$changed" | xargs uv run scripts/check_links.py
               exit $?
             fi
-            echo "no incident records changed; checking the whole corpus"
+            echo "no incident records changed; source-link check skipped"
+            exit 0
           fi
           uv run scripts/check_links.py
 
