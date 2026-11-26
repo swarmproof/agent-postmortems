@@ -199,23 +199,23 @@ def test_every_offered_filter_option_matches_a_record():
 
 # --------------------------------------------------------------------------- default list
 def test_default_list_contains_all_records_in_deterministic_order():
-    page = bs.render_index(RECS)
+    page = bs.render_archive(RECS)
     ids = card_ids(page)
     assert ids == [r["incident_id"] for r in RECS]
     assert len(ids) == len(set(ids)) == len(RECS)
     # newest first; records sharing a date are ordered by incident_id
     keyed = [(r.get("date", ""), r["incident_id"]) for r in RECS]
     assert all(a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]) for a, b in zip(keyed, keyed[1:]))
-    assert bs.render_index(bs.load_incidents()) == page
+    assert bs.render_archive(bs.load_incidents()) == page
     # every card links to its permanent /<incident_id>/ URL
     for rid in ids:
-        assert f'href="{html.escape(rid)}/"' in page
+        assert f'href="../{html.escape(rid)}/"' in page
     # an empty query with no filters shows everything, in that order
     assert js_search([("", {})])[0] == ids
 
 
 def test_index_page_controls_are_labelled_and_progressive():
-    page = bs.render_index(RECS)
+    page = bs.render_archive(RECS)
     assert re.search(r'<form class="filters"[^>]*\bhidden\b', page)  # revealed by JS only
     assert 'aria-live="polite"' in page and 'id="count"' in page
     assert '<label for="q">' in page
@@ -260,7 +260,7 @@ def test_hostile_record_is_schema_valid_so_rendering_must_neutralise_it():
 def test_xss_payloads_render_inert_in_static_html():
     bad = _hostile_record()
     recs = [bad, *RECS]
-    index_page = bs.render_index(recs)
+    index_page = bs.render_archive(recs)
     incident_page = bs.render_incident(bad, {r["incident_id"] for r in recs})
     _assert_inert(index_page)
     _assert_inert(incident_page)
@@ -317,7 +317,7 @@ def test_only_neutral_sort_orders_are_offered():
     for v, label in bs.SORTS:
         if v in ("newest", "oldest"):
             assert "occurred or disclosed" in label  # the label states what the date means
-    page = bs.render_index(RECS)
+    page = bs.render_archive(RECS)
     assert all(f'<option value="{v}">' in page for v in values)
 
 
@@ -341,7 +341,7 @@ def test_sort_orders_match_independent_expectations():
 
 def test_list_wording_says_records_because_the_list_includes_hazards():
     assert {r.get("incident_type") for r in RECS} >= {"incident", "hazard"}
-    page = bs.render_index(RECS)
+    page = bs.render_archive(RECS)
     assert "No records match this search and these filters." in page
     assert 'aria-label="Records"' in page
     js = bs.SEARCH_JS
@@ -353,4 +353,4 @@ def test_list_wording_says_records_because_the_list_includes_hazards():
     assert "No incidents match" not in page and 'aria-label="Incidents"' not in page
     rec = next(r for r in RECS if r.get("incident_type") == "hazard")
     record_page = bs.render_incident(rec, {r["incident_id"] for r in RECS})
-    assert "← all records</a>" in record_page and "all incidents" not in record_page
+    assert 'href="../archive/">All records</a>' in record_page and "all incidents" not in record_page

@@ -81,7 +81,7 @@ def test_record_text_is_escaped():
     rec["summary"] = '"><img src=x onerror=alert(1)>'
     rec["incident_type"] = 'hazard"><script>x()</script>'
     page = build_site.render_incident(rec, IDS)
-    index = build_site.render_index([rec])
+    index = build_site.render_archive([rec])
     for html in (page, index):
         assert "<script>alert(1)" not in html
         assert "<img src=x" not in html

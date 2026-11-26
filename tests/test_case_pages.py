@@ -264,8 +264,8 @@ def test_hostile_claim_text_is_escaped():
 # --------------------------------------------------------------------------- flagship sections
 def test_flagship_has_every_case_section_in_reading_order():
     page = bs.render_incident(flagship_fixture(), IDS)
-    order = ["Summary", "At a glance", "What the sources establish", "Assessment, not established fact",
-             "Unknown or contested", "How it happened, as recorded", "Impact and reversibility",
+    order = ["How it happened, as recorded", "At a glance", "What the sources establish", "Assessment, not established fact",
+             "Unknown or contested", "Impact and reversibility",
              "Proposed safeguards", "Timeline", "Coverage and limitations", "References", "Sources",
              "Cite and reuse"]
     positions = [page.index(f">{h}</h2>") for h in order]
@@ -376,14 +376,15 @@ SHELL_UPDATES = [
     ("a structured database of AI-agent incidents and hazards</span>", "a SwarmProof publication</span>"),
     ("<body>\n<header", '<body>\n<a class="skip-link" href="#main">Skip to content</a>\n<header'),
     ("<main>\n", '<main id="main" tabindex="-1">\n'),
-    ('<a href="../">← all incidents</a>', '<a href="../">← all records</a>'),
+    ('<a href="../">← all incidents</a>', '<a href="../archive/">All records</a>'),
+    ('<a href="../">← all records</a>', '<a href="../archive/">All records</a>'),
 ]
 
 
 def shell_updated(page: str) -> str:
     for old, new in SHELL_UPDATES:
         page = page.replace(old, new)
-    return page
+    return re.sub(r'<header class="site-head">.*?</header>', "", page, flags=re.S)
 
 
 def test_legacy_pages_differ_from_the_baseline_only_by_the_date_note(tmp_path):
@@ -395,7 +396,7 @@ def test_legacy_pages_differ_from_the_baseline_only_by_the_date_note(tmp_path):
     legacy = [r for r in RECS if not bs.has_provenance(r)]
     assert legacy
     for r in legacy:
-        now, before = bs.render_incident(r, IDS), shell_updated(base.render_incident(r, IDS))
+        now, before = shell_updated(bs.render_incident(r, IDS)), shell_updated(base.render_incident(r, IDS))
         note = bs.legacy_date_note(r)
         # beyond the shared page-shell updates, the only change is the date note after the id/date line
         assert now.count(note) == 1 and now.replace(note, "", 1) == before, r["incident_id"]
@@ -437,7 +438,7 @@ def test_real_flagship_pages_render_the_flagship_layout(rid):
     page = bs.render_incident(rec, IDS)
     assert 'class="incident case"' in page and ">Coverage and limitations</h2>" in page
     assert '<a href="incident.json">' in page and 'class="date-note"' not in page
-    assert "← all records</a>" in page and "all incidents" not in page
+    assert 'href="../archive/">Archive</a>' in page and "all incidents" not in page
 
 
 def _row(page: str, label: str) -> str:

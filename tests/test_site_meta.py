@@ -92,7 +92,7 @@ def pages(site: Path) -> dict[str, Path]:
 # --------------------------------------------------------------------------- per-page metadata
 def test_every_page_has_one_canonical_title_and_description(site):
     built = pages(site)
-    assert len(built) == len(RECS) + 1
+    assert len(built) == len(RECS) + 2
     canonicals = []
     for path, f in built.items():
         h = parse(f.read_text())
@@ -129,12 +129,12 @@ def test_meta_description_helper():
 
 
 def test_index_dataset_jsonld_states_only_verifiable_facts(site):
-    h = parse((site / "index.html").read_text())
+    h = parse((site / "archive" / "index.html").read_text())
     assert len(h.ld) == 1
     ld = json.loads(h.ld[0])
     assert set(ld) == {"@context", "@type", "name", "description", "url", "license",
                        "isAccessibleForFree", "distribution"}
-    assert ld["@type"] == "Dataset" and ld["url"] == f"{bs.SITE_BASE}/"
+    assert ld["@type"] == "Dataset" and ld["url"] == f"{bs.SITE_BASE}/archive/"
     assert ld["description"] == h.meta("description")[0]
     # licence matches the data licence file
     assert ld["license"] == "https://creativecommons.org/licenses/by/4.0/"
@@ -155,14 +155,14 @@ def test_sitemap_lists_index_and_every_permalink(site):
     ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
     entries = root.findall("s:url", ns)
     locs = [e.find("s:loc", ns).text for e in entries]
-    expected = {f"{bs.SITE_BASE}/"} | {f"{bs.SITE_BASE}/{r['incident_id']}/" for r in RECS}
+    expected = {f"{bs.SITE_BASE}/", f"{bs.SITE_BASE}/archive/"} | {f"{bs.SITE_BASE}/{r['incident_id']}/" for r in RECS}
     assert len(locs) == len(set(locs)) and set(locs) == expected
     assert set(locs) == {f"{bs.SITE_BASE}/{p}" for p in pages(site)}  # every loc is a built page
     by_id = {r["incident_id"]: r for r in RECS}
     for e in entries:
         rid = e.find("s:loc", ns).text.removeprefix(bs.SITE_BASE + "/").rstrip("/")
         lastmod = e.find("s:lastmod", ns)
-        stated = by_id[rid].get("last_updated") if rid else None
+        stated = by_id[rid].get("last_updated") if rid in by_id else None
         assert (lastmod.text if lastmod is not None else None) == stated  # never invented
 
 
@@ -249,7 +249,7 @@ def test_every_page_starts_with_a_skip_link_to_main(site):
 
 
 def test_index_result_cards_have_one_heading_each(site):
-    text = (site / "index.html").read_text()
+    text = (site / "archive" / "index.html").read_text()
     cards = re.findall(r'<a class="card"[^>]*>(.*?)</a>', text, re.S)
     assert len(cards) == len(RECS)
     for c in cards:
@@ -259,7 +259,7 @@ def test_index_result_cards_have_one_heading_each(site):
 
 
 def test_index_card_dates_name_their_ambiguous_basis(site):
-    text = (site / "index.html").read_text()
+    text = (site / "archive" / "index.html").read_text()
     spans = re.findall(r'<span class="card-date">(.*?)</span>', text)
     assert len(spans) == len(RECS)
     stated = {"occurred": "Occurred", "disclosed": "Disclosed", "published": "Source published"}

@@ -64,13 +64,13 @@ def test_readme_stats_block_is_current():
 
 
 def test_site_intro_states_export_counts():
-    html = _squash(build_site.render_index(build_site.load_incidents()))
+    html = _squash(build_site.render_archive(build_site.load_incidents()))
     assert _sentence(_export_counts()) in html
 
 
 def test_site_and_readme_carry_reporting_limits():
     readme = _squash((REPO / "README.md").read_text()).lower()
-    html = _squash(build_site.render_index(build_site.load_incidents())).lower()
+    html = _squash(build_site.render_archive(build_site.load_incidents())).lower()
     for text in (readme, html):
         assert "not a representative prevalence sample" in text
         assert "safety ranking" in text
@@ -78,7 +78,7 @@ def test_site_and_readme_carry_reporting_limits():
 
 def test_no_uniqueness_or_real_failure_overclaims():
     readme = (REPO / "README.md").read_text().lower()
-    html = build_site.render_index(build_site.load_incidents()).lower()
+    html = build_site.render_archive(build_site.load_incidents()).lower()
     for phrase in ("no shared, structured record", "real ai-agent failures",
                    "post-mortems of real", "postmortems of real"):
         assert phrase not in readme, phrase

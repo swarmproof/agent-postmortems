@@ -11,7 +11,7 @@
 
 Agents now take real actions in production — they call tools, spend money, write to databases, browse the web, and run code. They fail in novel but **repeating** ways. This repo records those failures in one structured form: one rigorous schema, a growing corpus of sourced records that conform to it, and the tooling to keep it honest. Each record is either a realized incident (harm or an unintended action occurred) or a demonstrated hazard (a researcher proof of concept, disclosed vulnerability or near-miss), and is labelled as such.
 
-**→ Browse and search the corpus at [swarmproof.github.io/agent-postmortems](https://swarmproof.github.io/agent-postmortems/)**
+**→ [Read the investigations](https://swarmproof.github.io/agent-postmortems/) · [Search the incident archive](https://swarmproof.github.io/agent-postmortems/archive/)**
 
 > **Limitations.** Records come from public reporting: disclosures, research write-ups, news and court filings. Public reporting is not a representative prevalence sample — what gets reported depends on disclosure practices, researcher attention and media interest — so counts here do not measure how often agents fail, and comparing vendors by record count is not a safety ranking. Hazards are demonstrations, not evidence of harm in the wild.
 

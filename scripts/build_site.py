@@ -170,8 +170,9 @@ def page(title: str, body: str, css_href: str, description: str = "", *,
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">
-  <a class="brand" href="{'.' if css_href == 'style.css' else '..'}/">agent-postmortems</a>
-  <span class="tagline">a SwarmProof publication</span>
+  <div class="masthead"><a class="brand" href="{'.' if css_href == 'style.css' else '..'}/">Agent Postmortems</a>
+  <span class="tagline">A SwarmProof publication</span></div>
+  <nav aria-label="Publication"><a href="{'.' if css_href == 'style.css' else '..'}/archive/">Archive</a><a href="{REPO_URL}/blob/main/docs/METHODS.md">Our methods</a><a href="{REPO_URL}">GitHub</a></nav>
 </header>
 <main id="main" tabindex="-1">
 {body}
@@ -388,17 +389,11 @@ def card_date_label(rec: dict) -> str:
     return "Demonstrated or disclosed" if hazard else "Occurred or disclosed"
 
 
-def render_index(recs: list[dict]) -> str:
-    by_id = {r["incident_id"]: r for r in recs}
-    featured = []
-    for rid, story in INVESTIGATIONS.items():
-        if rid in by_id:
-            featured.append(f'<article class="feature"><h2><a href="{esc(rid)}/">{esc(story["headline"])}</a></h2>'
-                            f'<p>{esc(story["finding"])}</p><a href="{esc(rid)}/">Read the investigation →</a></article>')
+def render_archive(recs: list[dict]) -> str:
     rows = []
     for r in recs:
         rid = r["incident_id"]
-        rows.append(f"""<a class="card" href="{esc(rid)}/" data-id="{esc(rid)}">
+        rows.append(f"""<a class="card" href="../{esc(rid)}/" data-id="{esc(rid)}">
   <div class="card-head">
     <span class="card-date">{esc(card_date_label(r))}: <time datetime="{esc(r.get('date',''))}">{esc(r.get('date',''))}</time></span>
     {badge(r.get('incident_type','?'), 'type-' + esc(r.get('incident_type','')))}
@@ -411,15 +406,8 @@ def render_index(recs: list[dict]) -> str:
     n_incident = sum(1 for r in recs if r.get("incident_type") == "incident")
     n_hazard = sum(1 for r in recs if r.get("incident_type") == "hazard")
     body = f"""
-<section class="intro">
-  <h1>When agents act, who bears the consequences?</h1>
-  <p>Investigations into what happened, who was affected, and what the evidence establishes about AI’s role.</p>
-  <p>Agent failures repeat. A shared record helps another team recognize the same failure and decide what to check.</p>
-  <p><a href="#archive">Browse the archive</a> · <a href="{REPO_URL}">Use the records on GitHub</a></p>
-</section>
-<section class="features" aria-label="Featured investigations">{''.join(featured)}</section>
 <section class="intro" id="archive">
-  <h2>Incident archive</h2>
+  <h1>Incident archive</h1>
   <p>{len(recs)} sourced records: {n_incident} realized incidents and {n_hazard} demonstrated hazards.
   Each record follows <a href="{REPO_URL}/blob/main/SCHEMA.md">one schema</a> and cites public sources.</p>
   <p class="limits">Public reports are not a representative prevalence sample. Counts do not measure how often agents fail or establish a vendor safety ranking.</p>
@@ -430,9 +418,46 @@ def render_index(recs: list[dict]) -> str:
 </section>
 <script src="search.js" defer></script>
 """
-    description = "Investigations into consequential AI-agent incidents, with a shared, sourced record of how failures recur."
-    return page("Agent Postmortems — investigations and shared lessons", body, "style.css", description,
-                canonical=f"{SITE_BASE}/", jsonld=dataset_jsonld(description))
+    description = "A sourced archive of AI-agent incidents and demonstrated hazards."
+    return page("Incident archive — Agent Postmortems", body, "../style.css", description,
+                canonical=f"{SITE_BASE}/archive/", jsonld=dataset_jsonld(description))
+
+
+def render_index(recs: list[dict]) -> str:
+    records = {r["incident_id"]: r for r in recs}
+    stories = [(rid, story) for rid, story in INVESTIGATIONS.items() if rid in records]
+    features = []
+    for index, (rid, story) in enumerate(stories):
+        rec = records[rid]
+        date = datetime.date.fromisoformat(rec["date"]).strftime("%d %B %Y").lstrip("0")
+        heading = "h1" if index == 0 else "h2"
+        context = "Evaluation and external consequences" if index == 0 else "Access and authority"
+        features.append(f"""<article class="cover-story {'cover-lead' if index == 0 else 'cover-secondary'}">
+          <div class="story-context"><span>{esc(context)}</span><time datetime="{esc(rec['date'])}">Incident began {esc(date)}</time></div>
+          <{heading}><a href="{esc(rid)}/">{esc(story['headline'])}</a></{heading}>
+          <p class="cover-deck">{esc(story['finding'])}</p>
+          <a class="read-story" href="{esc(rid)}/">Read the investigation <span aria-hidden="true">↗</span></a>
+        </article>""")
+    body = f"""<div class="publication-intro"><p>Agent failures repeat. We investigate what happened, who was affected, and what another team can learn.</p></div>
+<section class="edition-stories" aria-label="Featured investigations">{''.join(features)}</section>
+<section class="publication-purpose"><h2>One team’s incident.<br>Something the next team can learn from.</h2>
+  <div><p>The consequences of AI depend on what its software can reach and who can direct it. We follow those actions to the people and organizations that bear the consequences.</p>
+  <p>Every investigation links to its evidence and names what remains unknown. The shared record helps others recognize recurring failures. Where a safeguard can be measured, a regression test lets a team check its own system.</p>
+  <a href="{REPO_URL}/blob/main/docs/METHODS.md">How we build a case</a></div></section>
+<section class="archive-invitation"><div><h2>The shared record</h2><p>{len(recs)} sourced records of realized incidents and demonstrated hazards, available to read, cite, and reuse.</p></div><a href="archive/">Explore the archive <span aria-hidden="true">↗</span></a></section>
+<script>{HOME_REDIRECT_JS}</script>"""
+    description = "Investigations into consequential AI-agent incidents, and a shared record of what others can learn."
+    return page("Agent Postmortems — what happens when agents act", body, "style.css", description,
+                canonical=f"{SITE_BASE}/")
+
+
+HOME_REDIRECT_JS = """(function () {
+  var params = new URLSearchParams(window.location.search);
+  var searchKeys = ['q', 'type', 'severity', 'class', 'year', 'vendor', 'tool', 'autonomy', 'confidence', 'sort'];
+  if (searchKeys.some(function (key) { return params.has(key); }) || window.location.hash === '#archive') {
+    window.location.replace('archive/' + window.location.search);
+  }
+})();"""
 
 
 def dataset_jsonld(description: str) -> dict:
@@ -442,7 +467,7 @@ def dataset_jsonld(description: str) -> dict:
         "@type": "Dataset",
         "name": "agent-postmortems",
         "description": description,
-        "url": f"{SITE_BASE}/",
+        "url": f"{SITE_BASE}/archive/",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": True,
         "distribution": [{
@@ -741,7 +766,7 @@ def render_safeguards(rec: dict) -> str:
             f'<p class="ev-intro">For education: general controls suggested by this record. They are not a verified '
             f'fix, not vendor guidance, and not evidence that the system named here lacks them today.</p>'
             f'{prevention}'
-            f'{render_test_links(rec)}</section>')
+            f'</section>')
 
 
 def render_case_timeline(rec: dict) -> str:
@@ -800,39 +825,44 @@ def render_flagship(rec: dict, all_ids: set[str]) -> str:
         field("Failure chain", esc(chain_str(rec))),
     ])
     yaml_url = f"{REPO_URL}/blob/main/incidents/{rid}.yaml"
-    body = f"""
-<article class="incident case">
-  <p class="crumb"><a href="../">← all records</a></p>
-  <div class="badges">
-    {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
-    {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
-    {badge('confidence: ' + esc(conf or '?'), 'neutral') if conf else ''}
-    {badge('status: ' + esc(rec.get('status','?')), 'neutral') if rec.get('status') else ''}
-  </div>
-  {case_callout(rec)}
-  <h1>{esc(INVESTIGATIONS.get(rid, {}).get("headline", rec.get("title", rid)))}</h1>
-  {render_investigation(rec)}
-  <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
-  {f'<section class="prose"><h2>Summary</h2><p class="summary">{esc(rec.get("summary"))}</p>{note_p(rec, "/summary")}</section>' if rec.get('summary') else ''}
-  <section class="prose"><h2>At a glance</h2><dl class="kvs">{glance}</dl></section>
-  {render_evidence(rec)}
-  {render_narrative(rec)}
-  {render_blast(rec, "Impact and reversibility", notes=True)}
-  {render_safeguards(rec)}
-  {render_case_timeline(rec)}
-  {render_coverage(rec)}
-  <section class="prose"><h2>References</h2><dl class="kvs">{render_references(rec, all_ids)}</dl></section>
-  {render_sources(rec)}
-
-  <section class="cite">
-    <h2>Cite and reuse</h2>
-    <p class="permalink">Permalink: <a href="{url}">{esc(url)}</a></p>
-    <p>Data: <a href="incident.json">this record as JSON</a> · <a href="{esc(yaml_url)}">source YAML</a></p>
-    <pre id="bib">{esc(bibtex(rec, url))}</pre>
-    <button onclick="navigator.clipboard.writeText(document.getElementById('bib').textContent)">Copy BibTeX</button>
-  </section>
-</article>
-"""
+    story = INVESTIGATIONS.get(rid)
+    if story:
+        opening = (f'<p class="article-deck">{esc(story["finding"])}</p>'
+                   + render_investigation(rec))
+    else:
+        opening = (f'<p class="article-deck">{esc(rec.get("summary", ""))}</p>'
+                   + render_narrative(rec))
+    events = ''.join(f'<li><time>{esc(e.get("at", ""))}</time><p>{esc(e.get("event", ""))}</p></li>'
+                     for e in rec.get("timeline", []))
+    timeline = f'<section class="editorial-timeline"><h2>The timeline</h2><ol>{events}</ol></section>' if events else ''
+    body = f"""<article class="incident case">
+  <p class="crumb"><a href="../">Investigations</a> / <a href="../archive/">Archive</a></p>
+  <h1>{esc(story["headline"] if story else rec.get("title", rid))}</h1>
+  {opening}
+  {timeline}
+  {render_test_links(rec)}
+  <p class="article-correction">Have evidence that changes this account? <a href="{REPO_URL}/blob/main/DISPUTES.md">Request a correction</a>.</p>
+  <details class="technical-record"><summary>Sources, evidence and the structured record</summary>
+    <div class="technical-content">
+    {badge(rec.get("incident_type", "?"), "type-" + esc(rec.get("incident_type", "")))}
+    {case_callout(rec)}
+    <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
+    <section class="prose"><h2>At a glance</h2><dl class="kvs">{glance}</dl></section>
+    {render_evidence(rec)}
+    {render_blast(rec, "Impact and reversibility", notes=True)}
+    {render_safeguards(rec)}
+    {render_case_timeline(rec)}
+    {render_coverage(rec)}
+    <section class="prose"><h2>References</h2><dl class="kvs">{render_references(rec, all_ids)}</dl></section>
+    {render_sources(rec)}
+    <section class="cite"><h2>Cite and reuse</h2>
+      <p class="permalink">Permalink: <a href="{url}">{esc(url)}</a></p>
+      <p><a href="incident.json">Record as JSON</a> · <a href="{esc(yaml_url)}">Source YAML</a></p>
+      <pre id="bib">{esc(bibtex(rec, url))}</pre>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('bib').textContent)">Copy BibTeX</button>
+    </section></div>
+  </details>
+</article>"""
     return page(f"{INVESTIGATIONS.get(rid, {}).get('headline', rec.get('title', rid))} — Agent Postmortems", body, "../style.css",
                 meta_description(rec.get("summary") or rec.get("trigger")),
                 canonical=url, og_type="article", og_title=INVESTIGATIONS.get(rid, {}).get("headline", rec.get("title", rid)))
@@ -892,7 +922,7 @@ def render_incident(rec: dict, all_ids: set[str]) -> str:
 
     body = f"""
 <article class="incident">
-  <p class="crumb"><a href="../">← all records</a></p>
+  <p class="crumb"><a href="../archive/">All records</a></p>
   <div class="badges">
     {badge(rec.get('incident_type','?'), 'type-' + esc(rec.get('incident_type','')))}
     {badge(rec.get('severity','?'), 'sev-' + esc(rec.get('severity','')))}
@@ -1054,7 +1084,7 @@ def render_feed(recs: list[dict], built: datetime.datetime | None = None,
 # --------------------------------------------------------------------------- crawl files
 def render_sitemap(recs: list[dict]) -> str:
     """Index plus every permalink. lastmod only where the record states last_updated."""
-    urls = [f"  <url><loc>{esc(SITE_BASE)}/</loc></url>"]
+    urls = [f"  <url><loc>{esc(SITE_BASE)}/</loc></url>", f"  <url><loc>{esc(SITE_BASE)}/archive/</loc></url>"]
     for r in sorted(recs, key=lambda r: r["incident_id"]):
         lastmod = f"<lastmod>{esc(r['last_updated'])}</lastmod>" if r.get("last_updated") else ""
         urls.append(f"  <url><loc>{esc(SITE_BASE)}/{esc(r['incident_id'])}/</loc>{lastmod}</url>")
@@ -1068,16 +1098,7 @@ def render_robots() -> str:
 
 
 CSS = """
-.features {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:2rem;margin:2rem 0 4rem}
-.feature {padding:1.5rem;border:1px solid var(--line);border-radius:.5rem}
-.feature h2 {font-size:1.5rem;line-height:1.25;margin-top:0;text-transform:none;letter-spacing:normal}
-.reader-question {font-size:1.2rem;font-weight:600}
-#archive {scroll-margin-top:1rem}
-
-:root { --bg:#fbfbfa; --fg:#1a1a1a; --muted:#666; --card:#fff; --line:#e5e5e3; --accent:#3b5bdb; }
-@media (prefers-color-scheme: dark) {
-  :root { --bg:#15161a; --fg:#e8e8ea; --muted:#9a9aa2; --card:#1e1f25; --line:#2c2d34; --accent:#8aa0ff; }
-}
+:root { --bg:#f7f9f7; --fg:#173d35; --muted:#5d6e67; --card:#fff; --line:#d9e2dc; --accent:#225d48; }
 * { box-sizing: border-box; }
 body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
 a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
@@ -1135,16 +1156,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .badge-type-hazard { background:#f2f4f7; color:#475467; border-color:#e0e4ea; }
 .badge-neutral { color:var(--muted); }
 .type-note { font-size:14px; color:var(--muted); margin:0 0 8px; } .limits { color:var(--muted); font-size:14px; }
-@media (prefers-color-scheme: dark) { /* dark-badges: text colours keep >= 4.5:1 on --bg and --card */
-  .badge { background:transparent !important; }
-  .badge-sev-critical { color:#ff8b80; }
-  .badge-sev-high { color:#ffa46b; }
-  .badge-sev-moderate { color:#e6c35c; }
-  .badge-sev-low { color:#6fd49a; }
-  .badge-sev-informational { color:#b6bfcc; }
-  .badge-type-incident { color:#a6b4ff; }
-  .badge-type-hazard { color:#b6bfcc; }
-}
+
 .crumb { margin:0 0 12px; font-size:14px; }
 .sub { color:var(--muted); margin:0 0 16px; }
 .sub code { background:var(--card); padding:2px 6px; border-radius:6px; border:1px solid var(--line); }
@@ -1176,6 +1188,63 @@ a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible
 .narrative h3, .prose h3 { font-size:15px; margin:14px 0 4px; }
 .test-status { color:var(--muted); font-size:14px; cursor:default; }
 .test-status-label { font-weight:600; }
+body {font-family:"DM Sans",Arial,sans-serif;background:var(--bg);color:var(--fg)}
+main {max-width:1200px;padding:0 48px 80px}
+.site-head {max-width:1200px;padding:34px 48px 30px;justify-content:space-between;align-items:center;gap:26px;border-bottom:1px solid var(--line)}
+.masthead {display:flex;flex-direction:column;gap:2px}
+.brand {font-family:"Baskervville",Georgia,serif;font-size:37px;letter-spacing:-1.5px;line-height:1.15;font-weight:400}
+.tagline {font-size:12px;color:var(--muted)}
+.site-head nav {display:flex;gap:25px;font-size:14px}
+.site-foot {max-width:1104px;padding:28px 0 40px;font-size:13px}
+.site-foot nav {gap:18px}
+h1,h2,h3 {text-transform:none;letter-spacing:normal}
+.publication-intro {max-width:590px;font-size:17px;padding:26px 0 30px;line-height:1.55}
+.publication-intro p {margin:0}
+.edition-stories {display:grid;grid-template-columns:1.65fr 1fr;gap:64px;align-items:start;padding:20px 0 64px}
+.story-context {display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--muted);margin-bottom:20px}
+.cover-story h1,.cover-story h2 {font-family:"Baskervville",Georgia,serif;font-weight:400;letter-spacing:-1.9px;line-height:1.04;margin:0 0 24px}
+.cover-story h1 {font-size:clamp(42px,4.6vw,64px)}
+.cover-story h2 {font-size:clamp(30px,3.1vw,42px);letter-spacing:-1.1px;line-height:1.09}
+.cover-story h1 a,.cover-story h2 a {color:var(--fg)}
+.cover-deck {font-family:"Baskervville",Georgia,serif;font-size:20px;line-height:1.6;max-width:40rem;margin:0 0 27px}
+.cover-secondary {margin-top:76px;padding:30px;background:#e8f0e9;border-radius:3px}
+.cover-secondary .cover-deck {font-size:17px;line-height:1.65}
+.read-story {font-size:14px;font-weight:600;padding:0 0 7px;border-bottom:1px solid var(--accent)}
+.read-story span {margin-left:6px}
+.publication-purpose {display:grid;grid-template-columns:1fr 1.25fr;gap:70px;padding:50px 0;border-top:1px solid var(--line)}
+.publication-purpose h2,.archive-invitation h2 {font-family:"Baskervville",Georgia,serif;font-weight:400;font-size:34px;line-height:1.2;letter-spacing:-.6px;margin:0}
+.publication-purpose p {font-size:16px;line-height:1.85;margin:0 0 18px}
+.publication-purpose a {font-size:14px;text-decoration:underline;text-underline-offset:4px}
+.archive-invitation {margin-top:15px;background:var(--fg);color:#f7faf7;padding:35px 40px;display:flex;align-items:center;gap:40px;justify-content:space-between;border-radius:3px}
+.archive-invitation h2 {font-size:30px}
+.archive-invitation p {max-width:540px;font-size:15px;margin:12px 0 0;color:#d4e0d8;line-height:1.7}
+.archive-invitation a {color:#fff;white-space:nowrap;border-bottom:1px solid #8ba99b;padding:8px 0;font-size:14px}
+.incident.case {max-width:760px;margin:38px auto 0}
+.case>h1 {font-family:"Baskervville",Georgia,serif;font-size:clamp(38px,4.8vw,60px);font-weight:400;letter-spacing:-1.7px;line-height:1.1;margin:22px 0}
+.case .article-deck {font-family:"Baskervville",Georgia,serif;font-size:23px;line-height:1.6;margin:0 0 42px;color:var(--muted)}
+.case .investigation h2,.editorial-timeline h2 {font-family:"Baskervville",Georgia,serif;font-size:29px;font-weight:400;line-height:1.25;letter-spacing:-.4px;margin:38px 0 16px}
+.case .investigation>p {font-family:"Baskervville",Georgia,serif;font-size:20px;line-height:1.85;margin:0 0 25px}
+.case .investigation a {font-family:"DM Sans",Arial,sans-serif;font-size:13px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.case .reader-question {background:#e8f0e9;padding:25px 28px;border-left:3px solid var(--accent)}
+.editorial-timeline {margin:45px 0}
+.editorial-timeline ol {list-style:none;padding:0;margin:25px 0}
+.editorial-timeline li {display:grid;grid-template-columns:140px 1fr;gap:20px;margin:0;padding:18px 0;border-top:1px solid var(--line)}
+.editorial-timeline time {font-size:13px;color:var(--muted);padding-top:3px}
+.editorial-timeline p {margin:0;font-size:16px;line-height:1.65}
+.technical-record {margin-top:35px;border:1px solid var(--line);border-radius:3px;font-size:15px;background:var(--card)}
+.technical-record>summary {padding:20px 24px;cursor:pointer;font-weight:600}
+.technical-content {padding:5px 24px 28px}
+.article-correction {font-size:14px;line-height:1.7;margin-top:35px;color:var(--muted)}
+.article-correction a {text-decoration:underline}
+.intro {margin-top:36px}
+.intro h2 {font-size:38px;font-family:"Baskervville",Georgia,serif;font-weight:400}
+@media(max-width:760px) {
+ main {padding:0 24px 55px}.site-head {padding:24px;align-items:flex-start}.brand {font-size:30px}.site-head nav {gap:20px;font-size:13px;flex-wrap:wrap}.masthead {gap:7px}
+ .publication-intro {padding:25px 0;font-size:16px}.edition-stories {grid-template-columns:1fr;gap:36px;padding:10px 0 45px}.cover-secondary {margin:0;padding:25px}.cover-story h1 {font-size:48px}.cover-story h2 {font-size:35px}.story-context {font-size:12px;margin-bottom:18px}.cover-deck {font-size:19px}
+ .publication-purpose {grid-template-columns:1fr;gap:20px;padding:32px 0}.publication-purpose h2 {font-size:31px}.archive-invitation {padding:25px;display:block}.archive-invitation a {display:inline-block;margin-top:20px}.site-foot {margin:0 24px;padding:24px 0}.site-foot nav {gap:13px}
+ .case .article-deck {font-size:21px;margin-bottom:32px}.case .investigation>p {font-size:19px}.editorial-timeline li {grid-template-columns:1fr;gap:6px}.technical-content {padding:0 16px 20px}.technical-record>summary {padding:18px 16px}.case .reader-question {padding:20px}
+}
+
 """
 
 
@@ -1348,6 +1417,11 @@ def main() -> int:
     OUT.mkdir(parents=True)
     (OUT / "style.css").write_text(CSS)
     (OUT / "index.html").write_text(render_index(recs))
+    archive = OUT / "archive"
+    archive.mkdir()
+    (archive / "index.html").write_text(render_archive(recs))
+    (archive / "search-index.json").write_text(search_index_json(recs), encoding="utf-8")
+    (archive / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (OUT / "search-index.json").write_text(search_index_json(recs), encoding="utf-8")
     (OUT / "search.js").write_text(SEARCH_JS, encoding="utf-8")
     (OUT / "sitemap.xml").write_text(render_sitemap(recs), encoding="utf-8")

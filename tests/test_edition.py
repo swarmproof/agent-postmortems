@@ -14,12 +14,16 @@ BINANCE = "2026-binance-internal-ai-tool-lateral-movement"
 
 def test_feature_order_and_archive_search_are_independent():
     page = site.render_index(RECORDS)
-    features = page.split('aria-label="Featured investigations"', 1)[1].split('id="archive"', 1)[0]
+    features = page.split('aria-label="Featured investigations"', 1)[1].split('</section>', 1)[0]
     assert features.index(EPOCH) < features.index(BINANCE)
-    assert 'href="#archive"' in page
-    assert 'data-index="search-index.json"' in page
-    assert page.count('class="card"') == len(RECORDS)
-    assert 'a SwarmProof publication' in page
+    assert 'href="archive/"' in page
+    assert 'class="card"' not in page
+    assert 'id="filters"' not in page
+    assert 'A SwarmProof publication' in page
+    archive = site.render_archive(RECORDS)
+    assert 'data-index="search-index.json"' in archive
+    assert archive.count('class="card"') == len(RECORDS)
+    assert f'href="../{EPOCH}/"' in archive
 
 
 def test_epoch_dates_consent_and_reader_question_survive_rendering():
@@ -32,7 +36,7 @@ def test_epoch_dates_consent_and_reader_question_survive_rendering():
     assert "Epoch’s consent" in page
     assert "no private or confidential information" in page
     assert site.INVESTIGATIONS[EPOCH]["question"] in page
-    assert "Detection" in page
+    assert "The timeline" in page
     assert "Request a correction" in page
 
 
@@ -55,3 +59,27 @@ def test_each_feature_claim_uses_its_record_sources():
         assert all(set(a["source_urls"]) <= urls for a in rec["evidence_assessments"])
         assert all(a.get("uncertainty") for a in rec["evidence_assessments"]
                    if a["evidence_status"] in ("unknown", "inferred"))
+
+
+def test_legacy_home_query_routes_preserve_search_parameters():
+    import json
+    import subprocess
+    for query, fragment, expected in (
+        ("?q=refund&severity=high", "", "archive/?q=refund&severity=high"),
+        ("?type=hazard&sort=oldest", "", "archive/?type=hazard&sort=oldest"),
+        ("", "#archive", "archive/"),
+        ("?unrelated=1", "", None),
+        ("", "", None),
+    ):
+        program = "const window={location:{search:" + json.dumps(query) + ",hash:" + json.dumps(fragment) + ",replace:x=>console.log(x)}};" + site.HOME_REDIRECT_JS
+        result = subprocess.run(["node", "-e", program], text=True, capture_output=True, check=True)
+        assert result.stdout.strip() == (expected or "")
+
+
+def test_investigation_starts_with_narrative_and_collapses_technical_record():
+    page = site.render_incident(BY_ID[EPOCH], set(BY_ID))
+    technical = page.index('<details class="technical-record">')
+    assert page.index("An impossible assignment, a real recipient") < technical
+    assert page.index("The timeline") < technical
+    assert " open" not in page[technical:page.index(">", technical)]
+    assert page.index("What the sources establish") > technical
