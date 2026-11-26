@@ -153,3 +153,19 @@ def test_invalid_source_property_cannot_disappear_in_projection(monkeypatch):
     monkeypatch.setattr(be, "load_incidents", lambda: records)
     with pytest.raises(SystemExit, match="failed its schema"):
         be.build_artifacts()
+
+
+def test_export_entrypoint_writes_and_checks_every_variant(tmp_path, monkeypatch):
+    monkeypatch.setattr(be, "REPO", tmp_path)
+    monkeypatch.setattr(be, "EXPORT_DIR", tmp_path / "export")
+    monkeypatch.setattr(be.sys, "argv", ["build_exports.py"])
+    assert be.main() == 0
+    assert {p.name for p in (tmp_path / "export").iterdir()} == {
+        "incidents.json", "incidents.v2.json", "scenarios.json", "seeds.json"}
+    monkeypatch.setattr(be.sys, "argv", ["build_exports.py", "--check"])
+    assert be.main() == 0
+    enriched = tmp_path / "export" / "incidents.v2.json"
+    doc = json.loads(enriched.read_text())
+    doc["incidents"][0]["root_cause"] = "stale value"
+    enriched.write_text(json.dumps(doc))
+    assert be.main() == 1
