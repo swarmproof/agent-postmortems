@@ -302,6 +302,17 @@ def test_only_existing_regular_test_files_are_linked(tmp_path, monkeypatch):
     assert "test_symlink.py" not in page
 
 
+
+def test_published_test_link_uses_the_public_checkout_revision(tmp_path, monkeypatch):
+    monkeypatch.setattr(bs, "REPO", tmp_path)
+    rec = flagship_fixture()
+    folder = tmp_path / "regression-tests" / rec["incident_id"]
+    folder.mkdir(parents=True)
+    (folder / "test_scope.py").write_text("pass")
+    revision = "a" * 40
+    monkeypatch.setattr(bs.subprocess, "check_output", lambda *args, **kwargs: revision + "\n")
+    assert f"/blob/{revision}/regression-tests/" in bs.render_test_links(rec)
+
 def test_coverage_counts_and_unassessed_fields_follow_the_data():
     rec = flagship_fixture()
     page = bs.render_incident(rec, IDS)

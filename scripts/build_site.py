@@ -121,7 +121,14 @@ def render_test_links(rec: dict) -> str:
     paths = [p for p in paths if p.is_file() and not p.is_symlink()]
     if not paths:
         return '<p class="test-status">A companion check has not been published with this record.</p>'
-    links = ''.join(f'<li><a href="{REPO_URL}/blob/main/{esc(p.relative_to(REPO).as_posix())}">{esc(p.stem)}</a></li>' for p in paths)
+    try:
+        revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO,
+                                           text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError):
+        revision = "main"
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        revision = "main"
+    links = ''.join(f'<li><a href="{REPO_URL}/blob/{revision}/{esc(p.relative_to(REPO).as_posix())}">{esc(p.stem)}</a></li>' for p in paths)
     return ('<section class="prose"><h2>Test this safeguard</h2><p>Run the standalone checks on GitHub. '
             'Each file describes its synthetic inputs, expected results, adapter requirements and limits.</p>'
             f'<ul>{links}</ul></section>')
