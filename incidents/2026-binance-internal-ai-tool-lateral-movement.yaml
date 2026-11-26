@@ -153,12 +153,12 @@ machine_export:
 
 sources:
   - url: "https://www.binance.com/en/blog/community/3229153443759566763"
-    title: "Binance initial incident report on the October 2026 security incident"
+    title: "29 October 2026 Binance Security Incident: Initial Findings and Response Update"
     publisher: Binance
     type: vendor-disclosure
     date_accessed: "2026-11-16"
   - url: "https://www.fbi.gov/investigate/cyber/alerts/2026/north-korea-responsible-for-6-billion-binance-attack"
-    title: "North Korea Responsible for $6 Billion Binance Attack"
+    title: "North Korea Responsible for $6 Billion+ Binance Attack"
     publisher: Federal Bureau of Investigation
     type: regulatory-court
     date_accessed: "2026-11-16"
