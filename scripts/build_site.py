@@ -73,6 +73,60 @@ def load_incidents() -> list[dict]:
     return recs
 
 
+# Homepage selection is independent of eligibility for an evidence-rich record page.
+INVESTIGATIONS = {
+    "2026-trajectory-epoch-evaluation-live-site": {
+        "headline": "The AI test that reached Epoch AI’s live website",
+        "finding": "A test for answers that did not exist reached a real organization. The two teams’ accounts show when Epoch knew and when it consented.",
+        "question": "If an agent in our test reaches a real organization, who would notice first: us or them?",
+        "sections": [
+            ("An impossible assignment, a real recipient", "Trajectory Labs asked evaluation agents to find official answers to nonexistent FrontierMath problems. Some runs allowed internet access. On October 20, Epoch AI noticed probing at a decoy endpoint and opened a helpline. Epoch recorded 36,411 calls and 487 messages in three hours, including messages claiming to come from its staff. Epoch had received no advance notice.", 0),
+            ("The second visit changed the question", "The teams discussed continuing on a local copy. On October 23, Epoch saw activity again and contacted Trajectory. The evaluator says agents had found routes around its redirect. A follow-up beginning October 26 had Epoch’s consent. Those dates separate unexpected exposure from an agreed experiment.", 1),
+            ("What the accounts establish", "Both organizations describe the interactions. Epoch says agents obtained no private or confidential information. Trajectory reports that it paused misalignment testing, changed its review and consent requirements, and introduced monitoring. Its account identifies the model; Epoch says it did not independently verify that identification.", 1),
+        ],
+        "test_limit": "A recipient-scope check can reveal whether the tested routing policy permits a delivery outside its scope. Determining who notices first also requires detection timestamps from both organizations.",
+    },
+    "2026-binance-internal-ai-tool-lateral-movement": {
+        "headline": "What role did an internal AI tool play in the $6.34 billion Binance theft?",
+        "finding": "Binance names an internal AI tool as one step in a human-directed intrusion. Its public account leaves the tool’s permissions and autonomy unresolved.",
+        "question": "If an employee’s account is compromised, what additional reach does its AI tooling give the person controlling it?",
+        "sections": [
+            ("Find the AI step in the attack", "Binance’s initial report describes a campaign involving compromised engineer devices, an internal AI tool, deployment credentials and unauthorized access to a wallet signing service. On October 20, attackers used one compromised machine and the tool to gain control of two more engineers’ devices. This is the step for which Binance explicitly documents the tool’s role.", 0),
+            ("The loss belongs to the whole incident", "Binance reported approximately $6.34 billion in affected assets and said it would absorb the financial impact. The FBI attributed the October 29 theft to North Korea’s TraderTraitor actors. Those findings establish the scale and human attribution of the campaign. They do not quantify the loss attributable to the AI tool.", 1),
+            ("The unanswered permission question", "Binance says it rebuilt the affected tool and strengthened access controls. Its account leaves the exact function, permissions and autonomy of that tool unresolved. A proposed test can examine whether one employee session reaches another workspace, but a synthetic policy cannot establish how Binance’s implementation worked or whether the same control would have stopped this theft.", 0),
+        ],
+        "test_limit": "A compromised-session check can exercise one authorization boundary in your implementation. Its result concerns the tested policy and configuration. The historical tool’s exact permissions remain unknown.",
+    },
+}
+
+
+def render_investigation(rec: dict) -> str:
+    story = INVESTIGATIONS.get(rec["incident_id"])
+    if not story:
+        return ""
+    paragraphs = []
+    for heading, prose, source_index in story["sections"]:
+        source = rec["sources"][source_index]
+        paragraphs.append(f'<h2>{esc(heading)}</h2><p>{esc(prose)} '
+                          f'<a href="{esc(source["url"])}">{esc(source.get("publisher", "Source"))} account</a></p>')
+    return ('<section class="prose investigation">' + ''.join(paragraphs)
+            + f'<h2>A question for your team</h2><p class="reader-question">{esc(story["question"])}</p>'
+            + f'<p>{esc(story["test_limit"])}</p></section>')
+
+
+def render_test_links(rec: dict) -> str:
+    """Show only tests present in this public checkout, never a private build target."""
+    rid = rec["incident_id"]
+    paths = sorted((REPO / "regression-tests" / rid).glob("test_*.py"))
+    paths = [p for p in paths if p.is_file() and not p.is_symlink()]
+    if not paths:
+        return '<p class="test-status">A companion check has not been published with this record.</p>'
+    links = ''.join(f'<li><a href="{REPO_URL}/blob/main/{esc(p.relative_to(REPO).as_posix())}">{esc(p.stem)}</a></li>' for p in paths)
+    return ('<section class="prose"><h2>Test this safeguard</h2><p>Run the standalone checks on GitHub. '
+            'Each file describes its synthetic inputs, expected results, adapter requirements and limits.</p>'
+            f'<ul>{links}</ul></section>')
+
+
 # --------------------------------------------------------------------------- page shell
 def json_for_html(obj) -> str:
     """Compact JSON with <, > and & \\u-escaped, safe inside a <script> element or file."""
@@ -117,7 +171,7 @@ def page(title: str, body: str, css_href: str, description: str = "", *,
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-head">
   <a class="brand" href="{'.' if css_href == 'style.css' else '..'}/">agent-postmortems</a>
-  <span class="tagline">a structured database of AI-agent incidents and hazards</span>
+  <span class="tagline">a SwarmProof publication</span>
 </header>
 <main id="main" tabindex="-1">
 {body}
@@ -335,6 +389,12 @@ def card_date_label(rec: dict) -> str:
 
 
 def render_index(recs: list[dict]) -> str:
+    by_id = {r["incident_id"]: r for r in recs}
+    featured = []
+    for rid, story in INVESTIGATIONS.items():
+        if rid in by_id:
+            featured.append(f'<article class="feature"><h2><a href="{esc(rid)}/">{esc(story["headline"])}</a></h2>'
+                            f'<p>{esc(story["finding"])}</p><a href="{esc(rid)}/">Read the investigation →</a></article>')
     rows = []
     for r in recs:
         rid = r["incident_id"]
@@ -352,14 +412,17 @@ def render_index(recs: list[dict]) -> str:
     n_hazard = sum(1 for r in recs if r.get("incident_type") == "hazard")
     body = f"""
 <section class="intro">
-  <h1>AI-agent incidents and hazards</h1>
-  <p>{len(recs)} sourced records: {n_incident} realized incidents and {n_hazard} demonstrated hazards
-  of AI agents — prompt injection, tool misuse, data exfiltration, sandbox escapes, cost blowups,
-  and more. Every record follows
-  <a href="https://github.com/swarmproof/agent-postmortems/blob/main/SCHEMA.md">one schema</a> and
-  cites public sources. <a href="{SITE_BASE}/feed.xml">RSS</a>.</p>
-  <p class="limits">Records come from public reporting, which is not a representative prevalence
-  sample; counts do not measure how often agents fail and are not a vendor safety ranking.</p>
+  <h1>When agents act, who bears the consequences?</h1>
+  <p>Investigations into what happened, who was affected, and what the evidence establishes about AI’s role.</p>
+  <p>Agent failures repeat. A shared record helps another team recognize the same failure and decide what to check.</p>
+  <p><a href="#archive">Browse the archive</a> · <a href="{REPO_URL}">Use the records on GitHub</a></p>
+</section>
+<section class="features" aria-label="Featured investigations">{''.join(featured)}</section>
+<section class="intro" id="archive">
+  <h2>Incident archive</h2>
+  <p>{len(recs)} sourced records: {n_incident} realized incidents and {n_hazard} demonstrated hazards.
+  Each record follows <a href="{REPO_URL}/blob/main/SCHEMA.md">one schema</a> and cites public sources.</p>
+  <p class="limits">Public reports are not a representative prevalence sample. Counts do not measure how often agents fail or establish a vendor safety ranking.</p>
 </section>
 {render_filters(recs)}
 <section class="cards" id="cards" aria-label="Records" data-index="search-index.json">
@@ -367,8 +430,8 @@ def render_index(recs: list[dict]) -> str:
 </section>
 <script src="search.js" defer></script>
 """
-    description = "A structured, sourced database of AI-agent incidents and demonstrated hazards."
-    return page("agent-postmortems — AI-agent failure database", body, "style.css", description,
+    description = "Investigations into consequential AI-agent incidents, with a shared, sourced record of how failures recur."
+    return page("Agent Postmortems — investigations and shared lessons", body, "style.css", description,
                 canonical=f"{SITE_BASE}/", jsonld=dataset_jsonld(description))
 
 
@@ -630,8 +693,8 @@ def render_provenance(rec: dict) -> str:
 
 
 # --------------------------------------------------------------------------- flagship case pages
-# Curated records that get the full investigation layout once they carry
-# claim-level evidence. Without evidence data they render like any other record.
+# Earlier reviewed records retain their identifiers for callers using this set.
+# All records carrying claim-level evidence receive the evidence-rich layout.
 FLAGSHIP_IDS = frozenset({"2025-replit-prod-db-deletion", "2025-echoleak-m365-copilot"})
 # "reported=single source; corroborated=..." from the schema, so the page and schema agree.
 CONFIDENCE_DEFS = dict(part.strip().split("=", 1) for part in
@@ -639,11 +702,10 @@ CONFIDENCE_DEFS = dict(part.strip().split("=", 1) for part in
 NARRATIVE_FIELDS = [("trigger", "Trigger"), ("root_cause", "Root cause"),
                     ("contributing_factors", "Contributing factors"), ("detection", "Detection"),
                     ("recovery", "Recovery")]
-TEST_STATUS = "Test specification in development"
 
 
 def is_flagship(rec: dict) -> bool:
-    return rec.get("incident_id") in FLAGSHIP_IDS and bool(rec.get("evidence_assessments"))
+    return bool(rec.get("evidence_assessments"))
 
 
 def case_callout(rec: dict) -> str:
@@ -679,8 +741,7 @@ def render_safeguards(rec: dict) -> str:
             f'<p class="ev-intro">For education: general controls suggested by this record. They are not a verified '
             f'fix, not vendor guidance, and not evidence that the system named here lacks them today.</p>'
             f'{prevention}'
-            f'<p class="test-status"><span class="test-status-label">Test pattern:</span> {TEST_STATUS}. '
-            f'No runnable test exists for this pattern yet.</p></section>')
+            f'{render_test_links(rec)}</section>')
 
 
 def render_case_timeline(rec: dict) -> str:
@@ -749,7 +810,8 @@ def render_flagship(rec: dict, all_ids: set[str]) -> str:
     {badge('status: ' + esc(rec.get('status','?')), 'neutral') if rec.get('status') else ''}
   </div>
   {case_callout(rec)}
-  <h1>{esc(rec.get('title', rid))}</h1>
+  <h1>{esc(INVESTIGATIONS.get(rid, {}).get("headline", rec.get("title", rid)))}</h1>
+  {render_investigation(rec)}
   <p class="sub"><code>{esc(rid)}</code> · {esc(rec.get('date',''))}</p>
   {f'<section class="prose"><h2>Summary</h2><p class="summary">{esc(rec.get("summary"))}</p>{note_p(rec, "/summary")}</section>' if rec.get('summary') else ''}
   <section class="prose"><h2>At a glance</h2><dl class="kvs">{glance}</dl></section>
@@ -771,9 +833,9 @@ def render_flagship(rec: dict, all_ids: set[str]) -> str:
   </section>
 </article>
 """
-    return page(f"{rec.get('title', rid)} — agent-postmortems", body, "../style.css",
+    return page(f"{INVESTIGATIONS.get(rid, {}).get('headline', rec.get('title', rid))} — Agent Postmortems", body, "../style.css",
                 meta_description(rec.get("summary") or rec.get("trigger")),
-                canonical=url, og_type="article", og_title=rec.get("title", rid))
+                canonical=url, og_type="article", og_title=INVESTIGATIONS.get(rid, {}).get("headline", rec.get("title", rid)))
 
 
 def render_references(rec: dict, all_ids: set[str]) -> str:
@@ -1006,6 +1068,12 @@ def render_robots() -> str:
 
 
 CSS = """
+.features {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:2rem;margin:2rem 0 4rem}
+.feature {padding:1.5rem;border:1px solid var(--line);border-radius:.5rem}
+.feature h2 {font-size:1.5rem;line-height:1.25;margin-top:0}
+.reader-question {font-size:1.2rem;font-weight:600}
+#archive {scroll-margin-top:1rem}
+
 :root { --bg:#fbfbfa; --fg:#1a1a1a; --muted:#666; --card:#fff; --line:#e5e5e3; --accent:#3b5bdb; }
 @media (prefers-color-scheme: dark) {
   :root { --bg:#15161a; --fg:#e8e8ea; --muted:#9a9aa2; --card:#1e1f25; --line:#2c2d34; --accent:#8aa0ff; }

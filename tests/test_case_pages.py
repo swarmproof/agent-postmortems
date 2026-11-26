@@ -187,7 +187,7 @@ def test_claims_render_under_the_heading_for_their_status(render):
     if render == "generic":
         rec["incident_id"] = "2099-not-a-flagship"
     page = bs.render_incident(rec, IDS | {rec["incident_id"]})
-    assert ('class="incident case"' in page) == (render == "flagship")
+    assert 'class="incident case"' in page  # any record with assessed evidence gets the rich layout
     got = claims_by_section(page)
     expected: dict[str, list[str]] = {}
     for a in rec["evidence_assessments"]:
@@ -283,27 +283,23 @@ def test_hazard_flagship_says_demonstrated_hazard():
     assert "realized" not in page.lower().replace("no realized", "")  # only the record's own prose may say it
 
 
-def test_test_cta_is_plain_text_never_a_control():
+def test_no_test_link_before_artifact_exists():
     page = bs.render_incident(flagship_fixture(), IDS)
-    d = parse(page)
-    holders = [n for n in d.nodes if bs.TEST_STATUS in n["text"]]
-    innermost = [n for n in holders if not any(bs.TEST_STATUS in m["text"] and any(
-        a["a"] is n["attrs"] for a in m["ancestors"]) for m in holders)]
-    assert innermost
-    for n in innermost:
-        assert n["tag"] not in ("a", "button", "input", "select", "summary")
-        assert not {"href", "onclick", "role", "tabindex"} & set(n["attrs"])
-        assert not [a for a in n["ancestors"] if a["t"] in ("a", "button", "summary", "label")]
-    # nothing interactive on the page mentions tests, and no runnable-test claims
-    for n in d.nodes:
-        if n["tag"] in ("a", "button"):
-            assert "test" not in n["text"].lower(), n["text"]
-    lower = page.lower()
-    for phrase in ("run this test", "run the test", "test available", "download the test", "swarmproof test"):
-        assert phrase not in lower
-    css = bs.CSS[bs.CSS.index(".test-status"):]
-    rule = css[: css.index("}")]
-    assert "cursor:default" in rule and "border" not in rule and "background" not in rule
+    assert "A companion check has not been published" in page
+    assert "Test this safeguard" not in page
+
+
+def test_only_existing_regular_test_files_are_linked(tmp_path, monkeypatch):
+    monkeypatch.setattr(bs, "REPO", tmp_path)
+    rec = flagship_fixture()
+    folder = tmp_path / "regression-tests" / rec["incident_id"]
+    folder.mkdir(parents=True)
+    (folder / "test_scope.py").write_text("pass")
+    (folder / "test_symlink.py").symlink_to(folder / "test_scope.py")
+    page = bs.render_test_links(rec)
+    assert "Test this safeguard" in page
+    assert "test_scope.py" in page
+    assert "test_symlink.py" not in page
 
 
 def test_coverage_counts_and_unassessed_fields_follow_the_data():
@@ -377,6 +373,7 @@ def _baseline_module(ref: str, tmp: Path):
 # landmark target, list wording). Applied to the baseline so the comparison isolates what
 # this branch changes on legacy pages. Each is a no-op when the baseline already has it.
 SHELL_UPDATES = [
+    ("a structured database of AI-agent incidents and hazards</span>", "a SwarmProof publication</span>"),
     ("<body>\n<header", '<body>\n<a class="skip-link" href="#main">Skip to content</a>\n<header'),
     ("<main>\n", '<main id="main" tabindex="-1">\n'),
     ('<a href="../">← all incidents</a>', '<a href="../">← all records</a>'),
