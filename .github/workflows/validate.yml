@@ -77,9 +77,18 @@ jobs:
       - name: Run tests
         run: |
           rc=0
-          uv run --with pytest --with pyyaml --with jsonschema pytest -q tests/ || rc=$?
+          uv run --with pytest --with pyyaml --with jsonschema --with requests pytest -q tests/ || rc=$?
           if [ "$rc" -eq 5 ]; then echo "::notice::no tests collected under tests/"; exit 0; fi
           exit "$rc"
+      - name: Run standalone regression checks
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import sys
+          for path in sorted(Path("regression-tests").glob("*/test_*.py")):
+              subprocess.run([sys.executable, "-I", str(path)], check=True, timeout=30)
+          PY
 
   # G-SECRETS — scan the commits this pull request or push introduces. gitleaks is
   # fetched as a pinned release binary and checked against its published sha256
